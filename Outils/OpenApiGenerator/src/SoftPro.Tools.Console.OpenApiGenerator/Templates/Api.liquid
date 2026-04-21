@@ -1,0 +1,18 @@
+﻿using {{ EndPointsNameSpace }};
+
+namespace {{ RootNameSpace }}
+{
+	public class {{ ClassName }} : {{ InterfaceClassName }}
+	{
+		public {{ ClassName }}(System.Net.Http.HttpClient httpClient)
+		{
+{% for endpoint in EndPoints -%}
+			{{ endpoint.PropertyName }} = new {{endpoint.EndpointType}}(httpClient);
+{%     endfor -%}
+		}
+
+{% for endpoint in EndPoints -%}
+		public {{endpoint.InterfaceType}} {{ endpoint.PropertyName }} { get; set;}
+{%     endfor -%}
+	}
+}

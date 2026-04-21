@@ -1,0 +1,17 @@
+﻿namespace {{ NameSpace }}
+{
+    public static class MockHelper
+    {
+        /// <summary>
+        /// Retourne un objet mocké 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="response"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async System.Threading.Tasks.Task<T> Generate<T>()
+        {
+            return await System.Threading.Tasks.Task.FromResult(SoftPro.Library.Mocks.SoftProMockGenerator.Generate<T>());
+        }
+    }
+}

@@ -1,0 +1,2 @@
+powershell ..\..\tools\scripts\PublishApi.ps1 -SourceProjectFileName Gestprojet.Core.ApiParamSociete\Gestprojet.Core.ApiParamSociete -ApiName Gestprojet.Core.ApiParamSociete.WebApi -DestPath '..\..\..\..\..\..\Packages' -BuildMode Release
+pause

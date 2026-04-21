@@ -1,0 +1,12 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Gestprojet.Core.ApiParamSociete.Domain.Models
+{
+    public class ModuleCore
+    {
+        public string Id { get; set; }
+        [MaxLength(100)]
+        public string Nom { get; set; }
+        public bool? Actif { get; set; }
+    }
+}

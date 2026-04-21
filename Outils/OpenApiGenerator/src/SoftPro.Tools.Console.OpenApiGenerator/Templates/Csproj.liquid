@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>{{TargetFramework}}</TargetFramework>
+    <Version>{{Version}}</Version>
+    <Description>{{OpenApiDocument.Info.Description}}</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+	<PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+	<PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.2.0" />
+	<PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.2.0" />
+	<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.2.0" />
+
+	  {% if TargetFramework contains "netstandard" -%}
+	  <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    {% endif -%}
+  </ItemGroup>
+  
+</Project>

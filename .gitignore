@@ -1,0 +1,31 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.cache
+*.lock.json
+
+# .NET build artifacts
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Node modules
+node_modules/
+
+# Angular
+dist/
+.angular/
+.cache/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Problematic files
+nul

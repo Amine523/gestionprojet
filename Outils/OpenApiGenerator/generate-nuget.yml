@@ -1,0 +1,8 @@
+steps:
+ - checkout : self
+   displayName : "Récupéreration des sources OpenApiGenerator"
+   path : "OpenApiGenerator"
+ - task: PowerShell@2
+   displayName: 'Génération du client Rest .Net Core'
+   inputs:
+      filePath: 'scripts/generate-nuget.ps1'

@@ -1,0 +1,18 @@
+﻿namespace {{ NameSpace }}
+{
+    public class SoftProRestResponse
+    {
+        public bool Success { get; set; }
+
+        public System.Net.HttpStatusCode StatutCode { get; set; }
+
+        public string ResponseText { get; set; }
+
+        public SoftProRestHeaders Headers { get; set; }
+    }
+
+    public class SoftProRestHeaders
+    {
+        public string Location { get; set; }
+    }
+}

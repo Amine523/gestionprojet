@@ -1,0 +1,24 @@
+﻿{%- if HasDescription -%}
+/// <summary>
+/// {{ Description | csharpdocs }}
+/// </summary>
+{%- endif -%}
+namespace {{ Namespace }}
+{
+    {%- if IsEnumAsBitFlags -%}
+    [System.Flags]
+    {%- endif -%}
+    {{ TypeAccessModifier }} enum {{ Name }}
+    {
+    {%- for enum in Enums %}
+    {%-   if IsStringEnum -%}
+    [System.Runtime.Serialization.EnumMember(Value = @"{{ enum.Value | replace: '"', '""' }}")]
+    {%-   endif -%}
+    {%- if IsEnumAsBitFlags -%}
+        {{ enum.Name }} = {{ enum.InternalFlagValue }},
+    {%- else -%}
+        {{ enum.Name }} = {{ enum.InternalValue }},
+    {%- endif -%}
+    {%- endfor %}
+    }
+}

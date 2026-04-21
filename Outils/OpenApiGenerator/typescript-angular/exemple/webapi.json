@@ -1,0 +1,562 @@
+{
+  "x-generator": "NSwag v13.11.3.0 (NJsonSchema v10.4.4.0 (Newtonsoft.Json v12.0.0.0))",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "[API][Revolution][Business][Développement]",
+    "description": "API Cycle de vie pour les offres révolution (Devis, Souscriptions, Avenants)",
+    "contact": {
+      "name": "Contact",
+      "email": "gomez.alexandre1e@ocianegroupematmut.fr"
+    },
+    "version": "v1"
+  },
+  "paths": {
+    "/devis": {
+      "post": {
+        "tags": [
+          "devis"
+        ],
+        "summary": "Demande de création d'un devis santé pour l'offre Révolution.\nRetourne les résultats du devis ",
+        "operationId": "devis_Devis",
+        "requestBody": {
+          "x-name": "devis",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Devis"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "Le résultat du devis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevisResultat"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devis/{id}/generer-pdf": {
+      "get": {
+        "tags": [
+          "devis"
+        ],
+        "summary": "Récupération d'un devis au format à partir de son identifiant",
+        "operationId": "devis_GenenerPdf",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "L'identifiant du devis",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retourne un objet contenant les données binaires et le nom du fichier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdfFile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devis/{id}/envoyer-mail": {
+      "post": {
+        "tags": [
+          "devis"
+        ],
+        "summary": "Récupération d'un devis au format à partir de son identifiant",
+        "operationId": "devis_EnvoyerMail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "L'identifiant du devis",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/devis/{id}/sauvegarde-espace-prospect": {
+      "post": {
+        "tags": [
+          "devis"
+        ],
+        "summary": "Récupération d'un devis au format à partir de son identifiant",
+        "operationId": "devis_SauvegardeEspaceProspect",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "L'identifiant du devis",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/referentiel/annees-tarifaire": {
+      "get": {
+        "tags": [
+          "referentiel"
+        ],
+        "summary": "Récupération de la liste des annees tarifaires disponibles ",
+        "operationId": "referentiel_GetAnneesTarifaire",
+        "responses": {
+          "200": {
+            "description": "Le résultat du devis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/referentiel/remboursements/exemples": {
+      "get": {
+        "tags": [
+          "referentiel"
+        ],
+        "summary": "Récupération de la liste des exemples de remboursements ",
+        "operationId": "referentiel_GetExempleRemboursements",
+        "responses": {
+          "200": {
+            "description": "Liste d'exemple de remboursement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExempleRemboursements"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/referentiel/remboursements": {
+      "get": {
+        "tags": [
+          "referentiel"
+        ],
+        "summary": "Récupération de la liste des remboursements (les tableaux de garanties)",
+        "operationId": "referentiel_GetRemboursements",
+        "responses": {
+          "200": {
+            "description": "Liste de remboursements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Remboursements"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/referentiel/remboursements/recuperer-pdf": {
+      "get": {
+        "tags": [
+          "referentiel"
+        ],
+        "summary": "Récupération du PDF contenant les remboursements (tableaux de garanties)",
+        "operationId": "referentiel_GetRemboursementsPdf",
+        "responses": {
+          "200": {
+            "description": "Nom du fichier PDF et contenu binaire",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Remboursements"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DevisResultat": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "devisId": {
+            "type": "string"
+          },
+          "tarifs": {
+            "$ref": "#/components/schemas/Tarifs"
+          }
+        }
+      },
+      "Tarifs": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "garanties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GarantieValorisee"
+            }
+          },
+          "options": {
+            "$ref": "#/components/schemas/OptionsValorisee"
+          }
+        }
+      },
+      "GarantieValorisee": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "bienEtreMaTete": {
+            "$ref": "#/components/schemas/EBienEtreMaTete"
+          },
+          "bienEtreMonCorps": {
+            "$ref": "#/components/schemas/EBienEtreMonCorps"
+          },
+          "confortPharmacie": {
+            "type": "boolean"
+          },
+          "confortHospitalisation": {
+            "type": "boolean"
+          },
+          "confortMedecineDouces": {
+            "type": "boolean"
+          },
+          "montantMensuelTTC": {
+            "type": "number",
+            "format": "decimal"
+          }
+        }
+      },
+      "EBienEtreMaTete": {
+        "type": "string",
+        "description": "",
+        "x-enumNames": [
+          "Aucun",
+          "Faible",
+          "Modere",
+          "Fort"
+        ],
+        "enum": [
+          "Aucun",
+          "Faible",
+          "Modere",
+          "Fort"
+        ]
+      },
+      "EBienEtreMonCorps": {
+        "type": "string",
+        "description": "",
+        "x-enumNames": [
+          "Faible",
+          "Modere",
+          "Fort"
+        ],
+        "enum": [
+          "Faible",
+          "Modere",
+          "Fort"
+        ]
+      },
+      "OptionsValorisee": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "montantTTCBienHopital": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "montantTTCRoleAidant": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "montantTTCSmac": {
+            "type": "number",
+            "format": "decimal"
+          }
+        }
+      },
+      "Devis": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "anneeTarification": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "commune": {
+            "$ref": "#/components/schemas/Commune"
+          },
+          "coordonnees": {
+            "$ref": "#/components/schemas/CoordonneesContacts"
+          },
+          "client": {
+            "$ref": "#/components/schemas/Client"
+          },
+          "garanties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GarantieDevis"
+            }
+          },
+          "conseiller": {
+            "$ref": "#/components/schemas/Conseiller"
+          },
+          "reponses": {
+            "$ref": "#/components/schemas/Reponses"
+          },
+          "siteReferent": {
+            "type": "string"
+          }
+        }
+      },
+      "Commune": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "codePostal": {
+            "type": "string"
+          },
+          "ville": {
+            "type": "string"
+          },
+          "codeInsee": {
+            "type": "string"
+          }
+        }
+      },
+      "CoordonneesContacts": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "telMobile": {
+            "type": "string"
+          },
+          "contactParEmail": {
+            "type": "boolean"
+          },
+          "contactParTelMobile": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Client": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "GarantieDevis": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "bienEtreMaTete": {
+            "$ref": "#/components/schemas/EBienEtreMaTete"
+          },
+          "eBienEtreMonCorps": {
+            "$ref": "#/components/schemas/EBienEtreMonCorps"
+          },
+          "confortHospitalisation": {
+            "type": "boolean"
+          },
+          "confortPharmacie": {
+            "type": "boolean"
+          },
+          "confortMedecinesDouces": {
+            "type": "boolean"
+          },
+          "personnes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonneDevis"
+            }
+          }
+        }
+      },
+      "PersonneDevis": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "civilite": {
+            "$ref": "#/components/schemas/ECivilite"
+          },
+          "nom": {
+            "type": "string"
+          },
+          "prenom": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/ERole"
+          },
+          "regimeTarification": {
+            "$ref": "#/components/schemas/ERegimeTarification"
+          }
+        }
+      },
+      "ECivilite": {
+        "type": "string",
+        "description": "",
+        "x-enumNames": [
+          "Mr",
+          "Mme"
+        ],
+        "enum": [
+          "Mr",
+          "Mme"
+        ]
+      },
+      "ERole": {
+        "type": "string",
+        "description": "",
+        "x-enumNames": [
+          "Souscripteur",
+          "Conjoint",
+          "Enfant"
+        ],
+        "enum": [
+          "Souscripteur",
+          "Conjoint",
+          "Enfant"
+        ]
+      },
+      "ERegimeTarification": {
+        "type": "string",
+        "description": "",
+        "x-enumNames": [
+          "General",
+          "AlsaceMoselle"
+        ],
+        "enum": [
+          "General",
+          "AlsaceMoselle"
+        ]
+      },
+      "Conseiller": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "agenceDeRattachement": {
+            "type": "string"
+          },
+          "agenceEffective": {
+            "type": "string"
+          },
+          "nom": {
+            "type": "string"
+          }
+        }
+      },
+      "Reponses": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "referentielId": {
+            "type": "string"
+          },
+          "elements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reponse"
+            }
+          }
+        }
+      },
+      "Reponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "questionId": {
+            "type": "string"
+          },
+          "reponseId": {
+            "type": "string"
+          }
+        }
+      },
+      "PdfFile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fileName": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string",
+            "format": "byte"
+          }
+        }
+      },
+      "ExempleRemboursements": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "Remboursements": {
+        "type": "object",
+        "additionalProperties": false
+      }
+    }
+  }
+}

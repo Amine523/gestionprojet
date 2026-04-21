@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Gestprojet.Core.ApiParamSociete.Client</id>
+    <version>1.0.0</version>
+    <authors>OpenAPI</authors>
+    <description>A library generated from a OpenAPI doc</description>
+    <releaseNotes>Minor update</releaseNotes>
+    <copyright>No Copyright</copyright>
+    <repository type="git" url="https://github.com/GIT_USER_ID/GIT_REPO_ID.git" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="JsonSubTypes" version="1.8.0" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="12.0.3" exclude="Build,Analyzers" />
+        <dependency id="Polly" version="7.2.1" exclude="Build,Analyzers" />
+        <dependency id="RestSharp" version="106.11.7" exclude="Build,Analyzers" />
+        <dependency id="System.ComponentModel.Annotations" version="5.0.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

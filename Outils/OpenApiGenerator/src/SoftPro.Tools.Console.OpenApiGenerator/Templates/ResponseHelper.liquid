@@ -1,0 +1,240 @@
+﻿using System;
+using System.Linq;
+
+namespace {{ SharedNameSpace }}
+{
+    public static class ResponseHelper
+    {
+       /// <summary>
+        /// Traite la réponse lorsque le type de retour est de type application/json
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="response"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async System.Threading.Tasks.Task<T> ProcessResponseAsync<T>( System.Net.Http.HttpResponseMessage response, System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>> headers, System.Threading.CancellationToken cancellationToken)
+        {
+             string responseText = await ReadResponseAsText(response);
+
+            // 404 : Pas d'exception levée, le retour sera null
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return default;
+
+            // Réponse OK : Dans la plage 200 - 299
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(responseText);
+                }
+                catch
+                {
+                    // throw new SoftProRestClientException 
+                    //throw new SoftPro.Framework.Core.Exceptions.SoftProRestClientException(System.Net.HttpStatusCode.InternalServerError, $"Impossible de caster en {typeof(T)} : {responseText} " , null, null);
+                    throw new Exception("Erreur de génération.");
+                }
+             }
+         
+             throw await CreateProblemDetailsExceptionAsync(response.StatusCode, response, responseText);
+        }
+
+        public static async System.Threading.Tasks.Task<FileResponse> ProcessFileResponseAsync<T>(System.Net.Http.HttpResponseMessage response, System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>> headers_, System.Threading.CancellationToken cancellationToken)
+        {
+            if (response.IsSuccessStatusCode)
+            {
+                byte[] fileContent = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                string fileName = string.Empty;
+
+                System.Collections.Generic.IEnumerable<string> contentDispositionHeaders = null;
+
+                foreach (System.Collections.Generic.KeyValuePair<string, System.Collections.Generic.IEnumerable<string>> header in headers_)
+                {
+                    string headerKey = header.Key.ToLower();
+
+                    if (string.Compare(headerKey, "content-disposition", true) == 0)
+                    {
+                        contentDispositionHeaders = header.Value;
+                        break;
+                    }
+                }
+
+                if(contentDispositionHeaders != null)
+                {
+                    string headerValue = contentDispositionHeaders.FirstOrDefault();
+                    if (!string.IsNullOrEmpty(headerValue))
+                    {
+                        string[] values = headerValue.Split(";");
+                        if (values != null && values.Length > 0)
+                        {
+                            foreach (string value in values)
+                            {
+                                if (string.IsNullOrEmpty(value)) continue;
+
+                                string[] keyValues = value.Split("=");
+                                if (keyValues == null || keyValues.Length != 2) continue;
+
+                                if (string.Compare(keyValues[0].Trim(), "filename", true) == 0)
+                                {
+                                    fileName = keyValues[1];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return new FileResponse()
+                {
+                    Datas = fileContent,
+                    FileName = fileName
+                };
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return default;
+            }
+            
+            string responseText = await ReadResponseAsText(response);
+            throw await CreateProblemDetailsExceptionAsync(response.StatusCode, response, responseText);
+        }
+
+        public static async System.Threading.Tasks.Task<SoftProRestResponse> CreateSoftProRestResponse(System.Net.Http.HttpResponseMessage response, System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>> headers, System.Threading.CancellationToken cancellationToken)
+        {
+            string responseText = await ReadResponseAsText(response);
+
+            if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return new SoftProRestResponse
+                {
+                    Success = response.IsSuccessStatusCode,
+                    StatutCode = response.StatusCode,
+                    ResponseText = responseText,
+                    Headers = new SoftProRestHeaders()
+                    {
+                        Location = GetLocation(headers)
+                    }
+                };
+            }
+
+            throw await CreateProblemDetailsExceptionAsync(response.StatusCode, response, responseText);
+        }
+
+        private static async System.Threading.Tasks.Task<System.Exception> CreateProblemDetailsExceptionAsync(System.Net.HttpStatusCode statusCode, System.Net.Http.HttpResponseMessage response, string responseText)
+        {
+            //SoftPro.Framework.Core.Exceptions.SoftProRestClientException exception = new SoftPro.Framework.Core.Exceptions.SoftProRestClientException(statusCode);
+            //exception.Uri = response.RequestMessage.RequestUri?.ToString();
+            //exception.Method = response.RequestMessage.Method?.Method;
+            //exception.Body = await ReadBodyAsync(response.RequestMessage.Content);
+
+            if (TryParseProblemDetails(responseText, out System.Collections.Generic.Dictionary<string, object> problemDetails))
+            {
+                //exception.ProblemDetails = problemDetails;
+                //exception.Detail = GetDetail(problemDetails);
+                //exception.Errors = GetErrors(problemDetails);
+            }
+
+            Exception exception = new Exception("Erreur de génération.");
+           
+            return exception;
+        }
+
+        private static System.Collections.Generic.List<string> GetErrors(System.Collections.Generic.Dictionary<string, object> problemDetails)
+        {
+            if (problemDetails == null || !problemDetails.Any()) return null;
+
+            string errorList = null;
+
+            foreach (string key in problemDetails.Keys)
+            {
+                if (string.Compare(key, "errors", true) == 0)
+                {
+                    object value = problemDetails[key];
+                    if (value == null) continue;
+
+                    try
+                    {
+                        var completeErrorList = new System.Collections.Generic.List<string>();
+                        var errorDetailList = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.IDictionary<string, string[]>>(value.ToString());
+                        foreach (var errorDetail in errorDetailList)
+                        {
+                            completeErrorList.Add(Newtonsoft.Json.JsonConvert.SerializeObject(errorDetail));
+                        }
+                        return completeErrorList;
+                    }
+                    catch
+                    {
+                        errorList = value.ToString();
+                    }
+                    break;
+                }
+
+                if (string.Compare(key, "extensions", true) == 0)
+                {
+                    System.Collections.Generic.Dictionary<string, object> extensions = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.Dictionary<string, object>>(problemDetails[key].ToString());
+                    return GetErrors(extensions);
+                }
+            }
+
+            if (string.IsNullOrEmpty(errorList)) return null;
+
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.List<string>>(errorList);
+        }
+
+        private static string GetDetail(System.Collections.Generic.Dictionary<string, object> problemDetails)
+        {
+            foreach(string key in problemDetails.Keys)
+            {
+                if (string.Compare(key, "detail", true) == 0 && problemDetails[key] != null) return problemDetails[key].ToString();
+            }
+            return string.Empty;
+        }
+
+        private static string GetLocation(System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>> headers)
+        {
+            if (headers == null || !headers.Any() || !headers.Any(p => p.Key.ToLower() == "location")) return null;
+
+            System.Collections.Generic.IEnumerable<string> values = headers.FirstOrDefault(p => p.Key.ToLower() == "location").Value;
+            if (values == null || !values.Any()) return null;
+
+            string value = values.FirstOrDefault();
+
+            if (value.StartsWith("http")) return value.Substring(value.LastIndexOf('/')+1);
+
+            return value;
+        }
+
+        private static async System.Threading.Tasks.Task<string> ReadResponseAsText(System.Net.Http.HttpResponseMessage response)
+        {
+            if (response == null || response.Content == null) return string.Empty;
+
+            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        }
+
+        private static bool TryParseProblemDetails(string responseText, out System.Collections.Generic.Dictionary<string, object> problemDetails)
+        {
+            problemDetails = null;
+
+            if (string.IsNullOrEmpty(responseText)) return false;
+
+            try
+            {
+                System.Collections.Generic.Dictionary<string, object> value = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.Dictionary<string, object>>(responseText);
+                if (value == null) return false;
+
+                problemDetails = value;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+         private static async  System.Threading.Tasks.Task<string> ReadBodyAsync(System.Net.Http.HttpContent content)
+        {
+            if (content == null) return null;
+
+            return await content.ReadAsStringAsync();
+        }
+    }
+}

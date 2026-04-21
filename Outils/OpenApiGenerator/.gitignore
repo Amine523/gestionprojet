@@ -1,0 +1,7 @@
+*.suo
+*.user
+
+.vs/
+csharp-netcore/exemple/client/
+/tu/Ociane.Tools.OpenApiGenerator.Tests/obj
+/tu/Ociane.Tools.OpenApiGenerator.Tests/bin

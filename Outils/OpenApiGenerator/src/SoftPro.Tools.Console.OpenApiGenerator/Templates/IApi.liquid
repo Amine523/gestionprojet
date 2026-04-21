@@ -1,0 +1,13 @@
+﻿using {{ EndPointsNameSpace }};
+
+namespace {{ RootNameSpace }}
+{
+    {% template Client.Interface.Annotations %}
+    [System.CodeDom.Compiler.GeneratedCode("NSwag", "{{ ToolchainVersion }}")]
+    public partial interface {{ InterfaceClassName }}{% if HasClientBaseInterface %} : {{ ClientBaseInterface }}{% endif %}
+    {
+{% for endpoint in EndPoints -%}
+		public {{endpoint.InterfaceType}} {{ endpoint.PropertyName }} { get; set;}
+{%     endfor -%}
+	}
+}

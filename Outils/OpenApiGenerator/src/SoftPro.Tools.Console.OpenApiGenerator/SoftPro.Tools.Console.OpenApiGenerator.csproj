@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Templates\Api.liquid" />
+    <None Remove="Templates\Class.liquid" />
+    <None Remove="Templates\CsProj.liquid" />
+    <None Remove="Templates\Enum.liquid" />
+    <None Remove="Templates\FileResponse.liquid" />
+    <None Remove="Templates\GitIgnore.liquid" />
+    <None Remove="Templates\IApi.liquid" />
+    <None Remove="Templates\IEndPoint.liquid" />
+    <None Remove="Templates\Model.liquid" />
+    <None Remove="Templates\Nuget.Config.liquid" />
+    <None Remove="Templates\SoftProRestResponse.liquid" />
+    <None Remove="Templates\ResponseHelper.liquid" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\Class.liquid" />
+    <EmbeddedResource Include="Templates\Enum.liquid" />
+    <EmbeddedResource Include="Templates\GitIgnore.liquid" />
+    <EmbeddedResource Include="Templates\IApi.liquid" />
+    <EmbeddedResource Include="Templates\Api.liquid" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\Csproj.liquid">
+      <Generator>
+      </Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Templates\EndPoint.liquid" />
+    <EmbeddedResource Include="Templates\IEndPoint.liquid" />
+    <EmbeddedResource Include="Templates\Model.liquid" />
+    <EmbeddedResource Include="Templates\Nuget.Config.liquid">
+      <Generator>
+      </Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Templates\FileResponse.liquid" />
+    <EmbeddedResource Include="Templates\SoftProRestResponse.liquid" />
+    <EmbeddedResource Include="Templates\ResponseHelper.liquid" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+    <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="14.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+</Project>

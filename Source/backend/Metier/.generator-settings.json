@@ -1,0 +1,5 @@
+{
+  "dbConnectionString": "Server=.;Database=GestionProjetDB;Trusted_Connection=True;TrustServerCertificate=True;",
+  "restClientRootPath": "D:\\projet pfe\\Source\\backend\\RestClient",
+  "restClientFolderPaths": []
+}
