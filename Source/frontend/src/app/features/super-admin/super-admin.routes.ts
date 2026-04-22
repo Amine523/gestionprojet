@@ -1,0 +1,37 @@
+import { Routes } from '@angular/router';
+import { SuperAdminDashboardComponent } from './pages/super-admin-dashboard/super-admin-dashboard.component';
+import { SuperAdminSocietesComponent } from './pages/super-admin-societes/super-admin-societes.component';
+import { SuperAdminUtilisateursComponent } from './pages/super-admin-utilisateurs/super-admin-utilisateurs.component';
+import { SuperAdminRolesComponent } from './pages/super-admin-roles/super-admin-roles.component';
+import { SuperAdminModulesComponent } from './pages/super-admin-modules/super-admin-modules.component';
+import { SuperAdminAbonnementsComponent } from './pages/super-admin-abonnements/super-admin-abonnements.component';
+import { SuperAdminLogsComponent } from './pages/super-admin-logs/super-admin-logs.component';
+import { SuperAdminParametresComponent } from './pages/super-admin-parametres/super-admin-parametres.component';
+import { SuperAdminSecuriteComponent } from './pages/super-admin-securite/super-admin-securite.component';
+import { SuperAdminIpBlockedComponent } from './pages/super-admin-ipblocked/super-admin-ipblocked.component';
+import { SuperAdminSurveillanceComponent } from './pages/super-admin-surveillance/super-admin-surveillance.component';
+import { SuperAdminPolitiqueComponent } from './pages/super-admin-politique/super-admin-politique.component';
+import { SuperAdminNotificationsComponent } from './pages/super-admin-notifications/super-admin-notifications.component';
+import { SuperAdminChatComponent } from './pages/super-admin-chat/super-admin-chat.component';
+import { TestsDisponiblesComponent } from '@shared/components/tests-disponibles/tests-disponibles.component';
+import { AdminProjetsComponent } from '../admin/pages/admin-projets/admin-projets.component';
+
+export const SUPER_ADMIN_ROUTES: Routes = [
+  { path: '', component: SuperAdminDashboardComponent },
+  { path: 'societes', component: SuperAdminSocietesComponent },
+  { path: 'projets', component: AdminProjetsComponent },
+  { path: 'utilisateurs', component: SuperAdminUtilisateursComponent },
+  { path: 'roles', component: SuperAdminRolesComponent },
+  { path: 'modules', component: SuperAdminModulesComponent },
+  { path: 'abonnements', component: SuperAdminAbonnementsComponent },
+  { path: 'statistiques', component: SuperAdminDashboardComponent },
+  { path: 'logs', component: SuperAdminLogsComponent },
+  { path: 'parametre', component: SuperAdminParametresComponent },
+  { path: 'alertes', component: SuperAdminSecuriteComponent },
+  { path: 'ipblocked', component: SuperAdminIpBlockedComponent },
+  { path: 'surveillance', component: SuperAdminSurveillanceComponent },
+  { path: 'politique', component: SuperAdminPolitiqueComponent },
+  { path: 'notifications', component: SuperAdminNotificationsComponent },
+  { path: 'chat', component: SuperAdminChatComponent },
+  { path: 'tests-disponibles', component: TestsDisponiblesComponent }
+];

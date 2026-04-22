@@ -1,0 +1,207 @@
+﻿
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unclosed block "for"[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Opening tag "div" not terminated.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Invalid ICU message. Missing '}'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected character "EOF" (Do you have an unescaped "{" in your template? Use "{{ '{' }}") to escape it.)[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Opening tag "div" not terminated.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing block. The block may have been closed earlier. If you meant to write the } character, you should use the "&#125;" HTML entity instead.[0m [1m[35m[plugin 
+angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing block. The block may have been closed earlier. If you meant to write the } character, you should use the "&#125;" HTML entity instead.[0m [1m[35m[plugin 
+angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'getSocieteById' does not exist on type 'ApiService'. Did you mean 'getSocietes'?[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 's' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2554: Expected 1 arguments, but got 2.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Opening tag "button" not terminated.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "button". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Opening tag "button" not terminated.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "button". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Opening tag "button" not terminated.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "button". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Opening tag "label" not terminated.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "label". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found "]"[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: Property 'String' does not exist on type 'ApplicantProfilComponent'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1490: File appears to be binary.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: Property 'projets' does not exist on type 'ChefProjetsComponent'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: Property 'projets' does not exist on type 'ChefProjetsComponent'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2420: Class 'ChefProjetsComponent' incorrectly implements interface 'OnInit'.
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1068: Unexpected token. A constructor, method, accessor, or property was expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: '}' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: Property 'openForm' does not exist on type 'RhEmployesComponent'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: Property 'closeDialog' does not exist on type 'RhEmployesComponent'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: Property 'closeDialog' does not exist on type 'RhEmployesComponent'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: Property 'closeDialog' does not exist on type 'RhEmployesComponent'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: Property 'saveEmploye' does not exist on type 'RhEmployesComponent'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mUnterminated string literal[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name '├®cosyst├¿me'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2554: Expected 0-1 arguments, but got 3.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1002: Unterminated string literal.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ':' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name '├®cosyst├¿me'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'Fermer'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2554: Expected 1-3 arguments, but got 5.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1002: Unterminated string literal.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ')' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1313: The body of an 'if' statement cannot be the empty statement.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'openForm'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ';' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'closeDialog'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ';' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'saveEmploye'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ';' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'identification'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'requis'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'Fermer'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1002: Unterminated string literal.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2532: Object is possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1128: Declaration or statement expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Opening tag "span" not terminated.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "span". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "mat-tab". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "mat-card". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Opening tag "div" not terminated.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing block. The block may have been closed earlier. If you meant to write the } character, you should use the "&#125;" HTML entity instead.[0m [1m[35m[plugin 
+angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'intrusion'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'intrusion' does not exist in type 'Anomalie'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ':' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'Multiples'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property '├®checs'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'de'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'connexion'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'd├®tect├®s'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'depuis'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'une'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'adresse'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'IP'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'suspecte'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'situ├®e'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'hors'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'de'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'la'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'zone'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'op├®rationnelle'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'habituelle'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1003: Identifier expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ':' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1121: Octal literals are not allowed. Use the syntax '0o4'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ':' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'critical'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ':' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'non_resolu'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1002: Unterminated string literal.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ':' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'endpoint'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'd'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1127: Invalid character.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1127: Invalid character.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ':' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'acc├¿s'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'en'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'cours'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2556: A spread argument must either have a tuple type or be passed to a rest parameter.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'Fermer'.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1002: Unterminated string literal.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mExpected identifier but found ":"[0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Opening tag "div" not terminated.[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing block. The block may have been closed earlier. If you meant to write the } character, you should use the "&#125;" HTML entity instead.[0m [1m[35m[plugin 
+angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing block. The block may have been closed earlier. If you meant to write the } character, you should use the "&#125;" HTML entity instead.[0m [1m[35m[plugin 
+angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing block. The block may have been closed earlier. If you meant to write the } character, you should use the "&#125;" HTML entity instead.[0m [1m[35m[plugin 
+angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see 
+https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+
+

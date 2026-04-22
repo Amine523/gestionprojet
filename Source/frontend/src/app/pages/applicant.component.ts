@@ -17,6 +17,7 @@ import { ApiService } from '../services/api.service';
   standalone: true,
   imports: [CommonModule, RouterModule, MatCardModule, MatButtonModule, MatIconModule],
   template: `
+
     <div class="home">
       <mat-card class="hero">
         <div class="hero-content">
