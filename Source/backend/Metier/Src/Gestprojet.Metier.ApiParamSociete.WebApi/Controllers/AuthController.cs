@@ -34,35 +34,66 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
         [HttpPost("register-candidate")]
         public async Task<IActionResult> RegisterCandidate([FromBody] RegisterRequest request)
         {
-            if (request == null) return BadRequest(new { Message = "Données invalides" });
-            
+            System.Console.WriteLine($"[AUTH] RegisterCandidate called with: {System.Text.Json.JsonSerializer.Serialize(request)}");
+
+            if (request == null)
+            {
+                System.Console.WriteLine("[AUTH] RegisterCandidate: request is null");
+                return BadRequest(new { Message = "Données invalides" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                System.Console.WriteLine("[AUTH] RegisterCandidate: Email is null or empty");
+                return BadRequest(new { Message = "Email requis" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+            {
+                System.Console.WriteLine("[AUTH] RegisterCandidate: Password is null or empty");
+                return BadRequest(new { Message = "Mot de passe requis" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Nom))
+            {
+                System.Console.WriteLine("[AUTH] RegisterCandidate: Nom is null or empty");
+                return BadRequest(new { Message = "Nom requis" });
+            }
+
             var user = new UtilisateurCore
             {
-                Id = "CAND_" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper(),
+                Id = "", // Let the repository generate the ID
                 Nom = request.Nom,
                 Email = request.Email,
                 MotDePasse = request.Password, // Ideally hash this
+                Cv = "", // Ensure CV is not null to avoid duplicate check issues
                 TypeUtilisateurId = "T007", // Candidat
                 SocieteId = "SP001", // Default society for recruitment
                 Actif = true
             };
 
+            System.Console.WriteLine($"[AUTH] Creating user: ID='{user.Id}', Email: {user.Email}, Nom: {user.Nom}, TypeUtilisateurId: {user.TypeUtilisateurId}, SocieteId: {user.SocieteId}");
+
             var result = await _utilisateurBusiness.AjouterOuModifierAsync(user);
-            
+
+            System.Console.WriteLine($"[AUTH] Repository result: Success={result.Success}, Message={result.Message}");
+
             if (result.Success)
             {
                 var token = GenererJwtToken(user);
+                System.Console.WriteLine("[AUTH] RegisterCandidate: Success");
                 return Ok(new { Token = token, Utilisateur = user });
             }
-            
+
+            System.Console.WriteLine($"[AUTH] RegisterCandidate: Failed - {result.Message}");
             return BadRequest(new { Message = result.Message });
         }
 
         public class RegisterRequest
         {
-            public string Email { get; set; }
-            public string Password { get; set; }
-            public string Nom { get; set; }
+            public string Email { get; set; } = string.Empty;
+            public string Password { get; set; } = string.Empty;
+            public string Nom { get; set; } = string.Empty;
         }
 
         [HttpPost("login")]
@@ -95,7 +126,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                 var utilisateurs = await _utilisateurBusiness.ListeAsync();
                 System.Console.WriteLine($"[AUTH] Fetched {utilisateurs?.Count() ?? 0} users from Core");
                 
-                var utilisateur = utilisateurs.FirstOrDefault(u => u.Email == request.Email);
+                var utilisateur = utilisateurs?.FirstOrDefault(u => u.Email == request.Email);
 
                 if (utilisateur == null)
                 {
@@ -131,21 +162,18 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                     bool isPasswordValid = false;
                     
                     // DEV MODE: Skip password check for development
-                    if (true) // Change to false in production
+                    // Bypass password verification in development
+                    isPasswordValid = true;
+                    /*
+                    try
                     {
-                        isPasswordValid = true;
+                        isPasswordValid = VerifyPassword(request.Password, utilisateur.MotDePasse);
                     }
-                    else
+                    catch
                     {
-                        try
-                        {
-                            isPasswordValid = VerifyPassword(request.Password, utilisateur.MotDePasse);
-                        }
-                        catch
-                        {
-                            isPasswordValid = utilisateur.MotDePasse == request.Password;
-                        }
+                        isPasswordValid = utilisateur.MotDePasse == request.Password;
                     }
+                    */
 
                     if (!isPasswordValid)
                     {

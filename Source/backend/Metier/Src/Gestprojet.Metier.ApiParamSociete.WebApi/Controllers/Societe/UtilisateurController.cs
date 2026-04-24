@@ -43,8 +43,25 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
 
+        [HttpPost("ajouter")]
+        public async Task<IActionResult> Ajouter([FromBody] UtilisateurCore entity)
+        {
+            if (entity == null) return BadRequest("Données Utilisateur invalides");
+            entity.Id = string.Empty;
+            var result = await _utilisateurBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] UtilisateurCore entity)
+        {
+            if (entity == null) return BadRequest("Données Utilisateur invalides");
+            var result = await _utilisateurBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPut("modifier")]
+        public async Task<IActionResult> Modifier([FromBody] UtilisateurCore entity)
         {
             if (entity == null) return BadRequest("Données Utilisateur invalides");
             var result = await _utilisateurBusiness.AjouterOuModifierAsync(entity);
@@ -76,6 +93,10 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         public async Task<IActionResult> GetAll()
             => Ok(await _utilisateurBusiness.ListeAsync());
 
+        [HttpGet("liste")]
+        public async Task<IActionResult> Liste()
+            => Ok(await _utilisateurBusiness.ListeAsync());
+
         [HttpGet("{id}")]
         public async Task<IActionResult> Obtenir(string id)
         {
@@ -90,6 +111,13 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
         [HttpPost("ListeParCritere")]
         public async Task<IActionResult> ListeParCritere([FromBody] ConditionRecherche critere)
+        {
+            if (critere == null) return BadRequest("Critère manquant");
+            return Ok(await _utilisateurBusiness.ListeParCritereAsync(critere));
+        }
+
+        [HttpPost("liste-par-condition")]
+        public async Task<IActionResult> ListeParCondition([FromBody] ConditionRecherche critere)
         {
             if (critere == null) return BadRequest("Critère manquant");
             return Ok(await _utilisateurBusiness.ListeParCritereAsync(critere));
@@ -110,6 +138,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
 
+        [HttpDelete("supprimer/id/{id}")]
+        public async Task<IActionResult> SupprimerParId(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
+            var result = await _utilisateurBusiness.SupprimerAsync(id);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
         [HttpDelete("SupprimerParCondition")]
         public async Task<IActionResult> SupprimerParCondition([FromBody] ConditionRecherche critere)
         {
@@ -123,8 +159,19 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         public async Task<IActionResult> ListeParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 20)
             => Ok(await _utilisateurBusiness.ListeParPageAsync(pageNumero, pageTaille));
 
+        [HttpGet("liste-par-page/{pageNumero}/{pageTaille}")]
+        public async Task<IActionResult> ListeParPageRoute(int pageNumero, int pageTaille)
+            => Ok(await _utilisateurBusiness.ListeParPageAsync(pageNumero, pageTaille));
+
         [HttpPost("ListeParConditionParPage")]
         public async Task<IActionResult> ListeParConditionParPage([FromBody] ConditionRecherche critere, [FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 20)
+        {
+            if (critere == null) return BadRequest("Critère manquant");
+            return Ok(await _utilisateurBusiness.ListeParConditionParPageAsync(critere, pageNumero, pageTaille));
+        }
+
+        [HttpPost("liste-par-condition-par-page/{pageNumero}/{pageTaille}")]
+        public async Task<IActionResult> ListeParConditionParPageRoute([FromBody] ConditionRecherche critere, int pageNumero, int pageTaille)
         {
             if (critere == null) return BadRequest("Critère manquant");
             return Ok(await _utilisateurBusiness.ListeParConditionParPageAsync(critere, pageNumero, pageTaille));
@@ -135,7 +182,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             => Ok(await _utilisateurBusiness.ListeDetailleParPageAsync(pageNumero, pageTaille));
 
         [HttpPost("ListeDetailleParConditionParPage")]
-        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche critere = null)
+        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche? critere = null)
         {
             var result = await _utilisateurBusiness.ListeDetailleParConditionParPageAsync(critere ?? new ConditionRecherche(), pageNumero, pageTaille);
             return Ok(result);
@@ -184,14 +231,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
     public class PasswordConnecteRequest
     {
-        public string Id { get; set; }
-        public string AncienMotDePasse { get; set; }
-        public string NouveauMotDePasse { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string AncienMotDePasse { get; set; } = string.Empty;
+        public string NouveauMotDePasse { get; set; } = string.Empty;
     }
 
     public class PasswordHorsLigneRequest
     {
-        public string Email { get; set; }
-        public string NouveauMotDePasse { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string NouveauMotDePasse { get; set; } = string.Empty;
     }
 }

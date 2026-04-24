@@ -105,7 +105,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
             return m.Success ? int.Parse(m.Value) : 0;
         }
 
-        public async Task<ProjetCore> ObtenirAsync(string id)
+        public async Task<ProjetCore?> ObtenirAsync(string id)
         {
             try
             {

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Gestprojet.Core.ApiParamSociete.Domain.Models
 {
@@ -7,6 +7,7 @@ namespace Gestprojet.Core.ApiParamSociete.Domain.Models
         public string Id { get; set; }
         [MaxLength(150)]
         public string Nom { get; set; }
+        public string? SocieteId { get; set; }
         public string Description { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

@@ -3,123 +3,116 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-applicant-postuler',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule, MatSnackBarModule],
   template: `
 
     <div class="postuler-page">
-      <div class="postuler-card">
-        <div class="postuler-header">
-          <div class="header-icon-group">
-             <div class="header-icon">
-               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-               <path d="m9 12 2 2 4-4"/>
-               <path d="M12 8v8"/>
-                 <path d="M12 16H8"/>
-               </svg>
-             </div>
-             <div>
-               <h1 class="header-title">{{ isLoginMode ? 'Terminal Sync' : 'Genetic Induction' }}</h1>
-               <p class="header-subtitle">{{ isLoginMode ? 'Link your existing node' : 'Initialize your career profile' }}</p>
-             </div>
+      <div class="postuler-container">
+        <div class="postuler-card">
+          <div class="card-header">
+            <div class="header-logo">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="header-text">
+              <h1>{{ isLoginMode ? 'Connexion' : 'Créer un compte' }}</h1>
+              <p>{{ isLoginMode ? 'Connectez-vous pour accéder à votre espace candidat' : 'Rejoignez notre plateforme de recrutement' }}</p>
+            </div>
           </div>
 
-          <div class="mode-toggle">
-            <button type="button" [class.active]="!isLoginMode" (click)="isLoginMode = false">SIGN UP</button>
-            <button type="button" [class.active]="isLoginMode" (click)="isLoginMode = true">SIGN IN</button>
+          <div class="mode-switch">
+            <button type="button" [class.active]="!isLoginMode" (click)="isLoginMode = false">Inscription</button>
+            <button type="button" [class.active]="isLoginMode" (click)="isLoginMode = true">Connexion</button>
+          </div>
+
+          <form [formGroup]="applyForm" (ngSubmit)="submit()" class="postuler-form">
+            @if (!isLoginMode) {
+              <div class="form-field">
+                <label for="nom">Nom complet</label>
+                <input id="nom" formControlName="nom" class="form-control" placeholder="Entrez votre nom complet">
+              </div>
+            }
+            
+            <div class="form-field">
+              <label for="email">Adresse email</label>
+              <input id="email" formControlName="email" type="email" class="form-control" placeholder="exemple@email.com">
+            </div>
+
+            <div class="form-field">
+              <label for="password">Mot de passe</label>
+              <input id="password" formControlName="password" type="password" class="form-control" placeholder="••••••••">
+            </div>
+            
+            @if (!isLoginMode) {
+              <div class="form-field">
+                <label for="telephone">Numéro de téléphone</label>
+                <input id="telephone" formControlName="telephone" class="form-control" placeholder="+216 XX XXX XXX">
+              </div>
+            }
+            
+            @if (selectedOffre) {
+              <div class="selected-offre">
+                <div class="offre-badge">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                  </svg>
+                  <span>Poste sélectionné</span>
+                </div>
+                <p class="offre-title">{{selectedOffre.titre}}</p>
+              </div>
+            }
+            
+            @if (!isLoginMode) {
+              <div class="form-field">
+                <label>CV (PDF, DOC, DOCX)</label>
+                <div class="file-upload-zone"
+                       [class.has-file]="cvFile"
+                       (click)="cvInput?.click()">
+                  <div class="upload-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      @if (cvFile) {
+                        <polyline points="20 6 9 17 4 12"/>
+                      } @else {
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      }
+                    </svg>
+                  </div>
+                  <p class="upload-text">{{ cvFile ? cvFile.name : 'Cliquez pour télécharger votre CV' }}</p>
+                  <p class="upload-hint">Taille maximale: 5 MB</p>
+                  <input #cvInput type="file" id="cv-input" accept=".pdf,.doc,.docx" (change)="onFileSelected($event)" class="hidden">
+                </div>
+              </div>
+            }
+            
+            <button type="submit" [disabled]="applyForm.invalid || isSubmitting" class="btn-submit">
+              @if (isSubmitting) {
+                <div class="btn-spinner"></div>
+                <span>Traitement en cours...</span>
+              } @else {
+                <span>{{ isLoginMode ? 'Se connecter' : "S'inscrire et postuler" }}</span>
+              }
+            </button>
+          </form>
+
+          <div class="card-footer">
+            <p>{{ isLoginMode ? 'Pas encore de compte ?' : 'Déjà inscrit ?' }}</p>
+            <button type="button" (click)="isLoginMode = !isLoginMode" class="link-btn">
+              {{ isLoginMode ? "Créer un compte" : 'Se connecter' }}
+            </button>
           </div>
         </div>
-
-        <form [formGroup]="applyForm" (ngSubmit)="submit()" class="postuler-form">
-          @if (!isLoginMode) {
-            <div class="form-group">
-              <label>Codename (Full Name)</label>
-              <input formControlName="nom" class="form-input" placeholder="e.g. John Doe">
-            </div>
-          }
-          
-          <div class="form-group">
-            <label>Signal Channel (Email)</label>
-            <input formControlName="email" type="email" class="form-input" placeholder="name@domain.com">
-          </div>
-
-          <div class="form-group">
-            <label>Access Keyphrase (Password)</label>
-            <input formControlName="password" type="password" class="form-input" placeholder="••••••••">
-          </div>
-          
-          @if (!isLoginMode) {
-            <div class="form-group">
-              <label>Comm Line (Phone)</label>
-              <input formControlName="telephone" class="form-input" placeholder="+216 ...">
-            </div>
-          }
-          
-          @if (selectedOffre) {
-            <div class="target-mission">
-               <div class="mission-icon">
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                   <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
-                   <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                 </svg>
-               </div>
-               <div>
-                 <p class="mission-label">Target Mission</p>
-                 <p class="mission-title">{{selectedOffre.titre}}</p>
-               </div>
-            </div>
-          }
-          
-          @if (!isLoginMode) {
-            <div class="form-group">
-              <label>Bio-Data Asset (CV PDF)</label>
-              <div class="file-upload"
-                     [class.has-file]="cvFile"
-                     (click)="cvInput?.click()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [ngClass]="cvFile ? 'text-emerald-500' : 'text-slate-400'">
-                  @if (cvFile) {
-                    <polyline points="20 6 9 17 4 12"/>
-                  } @else {
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
-                  }
-                </svg>
-                <span [ngClass]="cvFile ? 'text-emerald-600' : 'text-slate-500'">
-                  {{ cvFile ? cvFile.name : 'Upload encrypted CV asset' }}
-                </span>
-                <input #cvInput type="file" id="cv-input" accept=".pdf,.doc,.docx" (change)="onFileSelected($event)" class="hidden">
-              </div>
-            </div>
-          }
-          
-          <button type="submit" [disabled]="applyForm.invalid || isSubmitting" class="btn btn-primary btn-large">
-            @if (isSubmitting) {
-              <div class="spinner"></div>
-              <span>PROCESSING...</span>
-            } @else {
-              @if (isLoginMode) {
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                  <polyline points="10 17 15 12 10 7"/>
-                  <line x1="15" y1="12" x2="3" y2="12"/>
-                </svg>
-              } @else {
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <line x1="20" y1="8" x2="20" y2="14"/>
-                  <line x1="23" y1="11" x2="17" y2="11"/>
-                </svg>
-              }
-              <span>{{ isLoginMode ? 'CONNECT & DEPLOY' : 'REGISTER & APPLY' }}</span>
-            }
-          </button>
-        </form>
       </div>
     </div>
   `,
@@ -129,241 +122,231 @@ import { ApiService } from '@core/services/api.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: var(--space-lg);
-      background: var(--color-bg);
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .postuler-container {
+      width: 100%;
+      max-width: 480px;
     }
 
     .postuler-card {
-      width: 100%;
-      max-width: 500px;
       background: white;
-      border-radius: var(--radius-3xl);
-      box-shadow: var(--shadow-3xl);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       overflow: hidden;
-      border: 1px solid var(--color-border);
     }
 
-    .postuler-header {
-      padding: var(--space-3xl);
-      border-bottom: 1px solid var(--color-border);
-      background: var(--color-bg);
+    .card-header {
+      padding: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
     }
 
-    .header-icon-group {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      margin-bottom: var(--space-2xl);
-    }
-
-    .header-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: var(--radius-lg);
-      background: #4f46e5;
+    .header-logo {
+      width: 64px;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      margin: 0 auto 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .header-logo svg {
       color: white;
-      box-shadow: 0 0 20px rgba(79, 70, 229, 0.2);
     }
 
-    .header-title {
+    .header-text h1 {
       font-size: 24px;
-      font-weight: var(--font-weight-black);
-      color: var(--color-text);
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: white;
+    }
+
+    .header-text p {
+      font-size: 14px;
       margin: 0;
-      text-transform: uppercase;
-      font-style: italic;
-      letter-spacing: -0.5px;
+      opacity: 0.9;
+      color: white;
     }
 
-    .header-subtitle {
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin: var(--space-xs) 0 0;
-    }
-
-    .mode-toggle {
+    .mode-switch {
       display: flex;
-      background: white;
-      padding: 6px;
-      border-radius: var(--radius-lg);
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-      border: 1px solid var(--color-border);
+      background: #f3f4f6;
+      padding: 4px;
+      margin: 24px 32px 0;
+      border-radius: 12px;
     }
 
-    .mode-toggle button {
+    .mode-switch button {
       flex: 1;
-      padding: var(--space-sm);
-      border-radius: var(--radius-md);
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      text-transform: uppercase;
-      letter-spacing: 2px;
+      padding: 12px;
       border: none;
       background: transparent;
-      color: var(--color-text-muted);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6b7280;
       cursor: pointer;
-      transition: all var(--transition-base);
+      transition: all 0.2s;
     }
 
-    .mode-toggle button.active {
-      background: var(--color-slate-900);
-      color: white;
-      box-shadow: var(--shadow-lg);
+    .mode-switch button.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .postuler-form {
-      padding: var(--space-3xl);
+      padding: 32px;
       display: flex;
       flex-direction: column;
-      gap: var(--space-2xl);
+      gap: 20px;
     }
 
-    .form-group {
+    .form-field {
       display: flex;
       flex-direction: column;
-      gap: var(--space-sm);
+      gap: 8px;
     }
 
-    .form-group label {
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-
-    .form-input {
-      padding: var(--space-md) var(--space-lg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      font-size: var(--font-size-sm);
-      background: white;
-      transition: border-color var(--transition-base);
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: #4f46e5;
-    }
-
-    .target-mission {
-      padding: var(--space-lg);
-      background: rgba(79, 70, 229, 0.05);
-      border-radius: var(--radius-2xl);
-      border: 1px solid rgba(79, 70, 229, 0.1);
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-    }
-
-    .mission-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-lg);
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #4f46e5;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .mission-label {
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      color: #4f46e5;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin: 0 0 var(--space-xs);
-      font-style: italic;
-    }
-
-    .mission-title {
+    .form-field label {
       font-size: 14px;
-      font-weight: var(--font-weight-black);
-      color: var(--color-text);
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .form-control {
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-control::placeholder {
+      color: #9ca3af;
+    }
+
+    .selected-offre {
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border: 2px solid rgba(102, 126, 234, 0.2);
+      border-radius: 12px;
+    }
+
+    .offre-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #667eea;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .offre-badge svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .offre-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1f2937;
       margin: 0;
     }
 
-    .file-upload {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: var(--space-3xl);
-      border: 2px dashed var(--color-border);
-      border-radius: var(--radius-2xl);
+    .file-upload-zone {
+      padding: 32px;
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      text-align: center;
       cursor: pointer;
-      transition: all var(--transition-base);
-      gap: var(--space-md);
+      transition: all 0.2s;
+      background: #f9fafb;
     }
 
-    .file-upload:hover {
-      background: var(--color-bg);
+    .file-upload-zone:hover {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.05);
     }
 
-    .file-upload.has-file {
-      border-color: rgba(16, 185, 129, 0.5);
+    .file-upload-zone.has-file {
+      border-color: #10b981;
       background: rgba(16, 185, 129, 0.05);
     }
 
-    .file-upload span {
-      font-size: 12px;
-      font-weight: var(--font-weight-black);
-      text-transform: uppercase;
-      letter-spacing: 2px;
+    .upload-icon {
+      margin-bottom: 12px;
+      color: #9ca3af;
     }
 
-    .btn {
-      display: inline-flex;
+    .file-upload-zone.has-file .upload-icon {
+      color: #10b981;
+    }
+
+    .upload-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 4px;
+    }
+
+    .upload-hint {
+      font-size: 12px;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .btn-submit {
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: var(--space-md);
-      padding: var(--space-lg) var(--space-2xl);
-      border-radius: var(--radius-2xl);
-      font-weight: var(--font-weight-black);
-      font-size: var(--font-size-sm);
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      cursor: pointer;
-      transition: all var(--transition-base);
-      border: none;
+      gap: 8px;
     }
 
-    .btn-large {
-      padding: var(--space-xl) var(--space-3xl);
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
     }
 
-    .btn-primary {
-      background: var(--color-slate-900);
-      color: white;
-      box-shadow: var(--shadow-2xl);
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
     }
 
-    .btn-primary:hover {
-      transform: scale(1.02);
-    }
-
-    .btn-primary:active {
-      transform: scale(0.95);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
+    .btn-submit:disabled {
+      opacity: 0.6;
       cursor: not-allowed;
     }
 
-    .spinner {
+    .btn-spinner {
       width: 20px;
       height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
       border-top-color: white;
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
@@ -373,46 +356,51 @@ import { ApiService } from '@core/services/api.service';
       to { transform: rotate(360deg); }
     }
 
-    /* Dark mode */
-    :host-context(.dark) .postuler-card {
-      background: var(--color-slate-900);
-      border-color: var(--color-slate-800);
+    .card-footer {
+      padding: 24px 32px;
+      background: #f9fafb;
+      text-align: center;
+      border-top: 1px solid #e5e7eb;
     }
 
-    :host-context(.dark) .postuler-header {
-      background: rgba(255, 255, 255, 0.05);
+    .card-footer p {
+      font-size: 14px;
+      color: #6b7280;
+      margin: 0 0 8px;
     }
 
-    :host-context(.dark) .mode-toggle {
-      background: var(--color-slate-800);
+    .link-btn {
+      background: none;
+      border: none;
+      color: #667eea;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
     }
 
-    :host-context(.dark) .form-input {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-border);
-      color: var(--color-text);
+    .link-btn:hover {
+      color: #764ba2;
     }
 
-    :host-context(.dark) .target-mission {
-      background: rgba(79, 70, 229, 0.1);
+    .hidden {
+      display: none;
     }
 
-    :host-context(.dark) .mission-icon {
-      background: var(--color-slate-800);
-    }
-
-    :host-context(.dark) .mission-title {
-      color: white;
-    }
-
-    @media (max-width: 768px) {
+    @media (max-width: 640px) {
       .postuler-page {
-        padding: var(--space-md);
+        padding: 16px;
       }
 
-      .postuler-header,
-      .postuler-form {
-        padding: var(--space-2xl);
+      .card-header,
+      .postuler-form,
+      .card-footer {
+        padding: 24px;
+      }
+
+      .header-text h1 {
+        font-size: 20px;
       }
     }
   `]
@@ -420,6 +408,7 @@ import { ApiService } from '@core/services/api.service';
 export class ApplicantPostulerComponent { 
   private api = inject(ApiService);
   private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
   
   selectedOffre: any = null;
   cvFile: File | null = null;
@@ -441,7 +430,7 @@ export class ApplicantPostulerComponent {
     const file = event.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert('Le fichier est trop volumineux (max 5 MB)');
+        this.snackBar.open('Le fichier est trop volumineux (max 5 MB)', 'Fermer', { duration: 3000 });
         return;
       }
       this.cvFile = file;
@@ -472,19 +461,19 @@ export class ApplicantPostulerComponent {
 
         this.api.postulerForm(formData).subscribe({
           next: () => {
-            alert('Candidature soumise avec succès !');
+            this.snackBar.open('Candidature soumise avec succès !', 'Fermer', { duration: 3000 });
             this.isSubmitting = false;
             this.router.navigate(['/applicant/profil']);
           },
           error: (err: any) => {
             console.error('Upload error', err);
-            alert('Erreur lors de l\'envoi du dossier.');
+            this.snackBar.open('Erreur lors de l\'envoi du dossier.', 'Fermer', { duration: 3000 });
             this.isSubmitting = false;
           }
         });
       },
       error: (err: any) => {
-        alert(err.error?.message || 'Erreur d\'authentification');
+        this.snackBar.open(err.error?.message || 'Erreur d\'authentification', 'Fermer', { duration: 3000 });
         this.isSubmitting = false;
       }
     });

@@ -10,7 +10,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Repository
     public interface ITacheAssignationRepository
     {
         Task<OperationResult> AjouterOuModifierAsync(TacheAssignationCore entity);
-        Task<TacheAssignationCore> ObtenirAsync(string id);
+        Task<TacheAssignationCore?> ObtenirAsync(string id);
         Task<IEnumerable<TacheAssignationCore>> ListeAsync();
         Task<IEnumerable<TacheAssignationCore>> ListeParCritereAsync(ConditionRecherche critere);
         Task<OperationResult> SupprimerAsync(string id);

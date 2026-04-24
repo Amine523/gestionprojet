@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -20,6 +21,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
         private readonly ICodeGenerationService _codeGenerationService;
         private readonly ILogger<PointageRepository> _logger;
         private readonly IPointageApi _pointageApi;
+        private static readonly List<PointageCore> _inMemoryStore = new List<PointageCore>();
 
         public PointageRepository(
             ICodeGenerationService codeGenerationService,
@@ -43,14 +45,12 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
                 // ==========================
                 if (!string.IsNullOrWhiteSpace(entity.Id))
                 {
-                    var existant = await ObtenirAsync(entity.Id);
-                    if (existant == null)
-                        return OperationResult.Fail("Pointage introuvable");
-
-                    var updated = await _pointageApi.PointageModifierPutAsync(entity);
-                    return updated
-                        ? OperationResult.Ok("Pointage modifié avec succès")
-                        : OperationResult.Fail("Échec de la modification de un(e) Pointage");
+                    var response = await _pointageApi.PointageModifierPutAsync(entity);
+                    if (response)
+                    {
+                        return OperationResult.Ok("Pointage modifié avec succès");
+                    }
+                    return OperationResult.Fail("Échec de la modification du pointage");
                 }
 
                 // ==========================
@@ -59,16 +59,25 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
                 var lastSequence = await GetLastPointageSequenceAsync();
                 entity.Id = _codeGenerationService.GenerateCode("POI", lastSequence, 50, 3);
 
-                var added = await _pointageApi.PointageAjouterPostAsync(entity);
-                return added
-                    ? OperationResult.Ok("Pointage ajouté avec succès")
-                    : OperationResult.Fail("Échec de l'ajout de un(e) Pointage");
+                var addResponse = await _pointageApi.PointageAjouterPostAsync(entity);
+                if (addResponse)
+                {
+                    _logger.LogInformation($"Pointage ajouté dans Core: {entity.Id}");
+                    return OperationResult.Ok("Pointage ajouté avec succès");
+                }
+                return OperationResult.Fail("Échec de l'ajout du pointage");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de l'ajout ou modification de un(e) Pointage");
-                return OperationResult.Fail($"Erreur technique : {ex.Message}");
+                _logger.LogError(ex, "Erreur lors de l'ajout ou modification");
+                return OperationResult.Fail($"Erreur: {ex.Message}");
             }
+        }
+
+        private int GetLastSequenceFromMemory()
+        {
+            if (_inMemoryStore.Count == 0) return 0;
+            return _inMemoryStore.Select(x => ExtractSequence(x.Id)).DefaultIfEmpty(0).Max();
         }
 
         private async Task<int> GetLastPointageSequenceAsync()
@@ -78,6 +87,11 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
                 var list = await _pointageApi.PointageListeGetAsync();
                 if (list == null || list.Count == 0) return 0;
                 return list.Select(x => ExtractSequence(x.Id)).DefaultIfEmpty(0).Max();
+            }
+            catch (HttpRequestException)
+            {
+                _logger.LogWarning("API Core non disponible pour GetLastPointageSequenceAsync, retourne 0");
+                return 0;
             }
             catch (Exception ex)
             {
@@ -92,7 +106,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
             return m.Success ? int.Parse(m.Value) : 0;
         }
 
-        public async Task<PointageCore> ObtenirAsync(string id)
+        public async Task<PointageCore?> ObtenirAsync(string id)
         {
             try
             {
@@ -106,8 +120,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
         {
             try
             {
-                var result = await _pointageApi.PointageListeGetAsync();
-                return result?.AsEnumerable() ?? new List<PointageCore>();
+                return await _pointageApi.PointageListeGetAsync();
             }
             catch (Exception ex) { _logger.LogError(ex, "Erreur Liste"); return new List<PointageCore>(); }
         }
@@ -116,10 +129,9 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
         {
             try
             {
-                if (critere == null) return new List<PointageCore>();
-                var c = SoftProOutils.ToCritereSociete(critere);
-                var result = await _pointageApi.PointageListeParConditionPostAsync(c);
-                return result?.AsEnumerable() ?? new List<PointageCore>();
+                if (critere == null) return await ListeAsync();
+                var apiCritere = new CritereRecherche(critere.Criteres);
+                return await _pointageApi.PointageListeParConditionPostAsync(apiCritere);
             }
             catch (Exception ex) { _logger.LogError(ex, "Erreur ListeParCritere"); return new List<PointageCore>(); }
         }
@@ -129,9 +141,12 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
             try
             {
                 if (string.IsNullOrWhiteSpace(id)) return OperationResult.Fail("Id requis");
-                var result = await _pointageApi.PointageSupprimerIdIdDeleteAsync(id);
-                return result ? OperationResult.Ok("Pointage supprimé avec succès")
-                             : OperationResult.Fail("Échec de la suppression");
+                var response = await _pointageApi.PointageSupprimerIdIdDeleteAsync(id);
+                if (response)
+                {
+                    return OperationResult.Ok("Pointage supprimé avec succès");
+                }
+                return OperationResult.Fail("Échec de la suppression");
             }
             catch (Exception ex) { _logger.LogError(ex, "Erreur Supprimer"); return OperationResult.Fail(ex.Message); }
         }
@@ -141,10 +156,16 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
             try
             {
                 if (critere == null) return OperationResult.Fail("Critère manquant");
-                var c = SoftProOutils.ToCritereSociete(critere);
-                var result = await _pointageApi.PointageSupprimerParConditionPostAsync(c);
-                return result ? OperationResult.Ok("Suppression par condition réussie")
-                             : OperationResult.Fail("Échec de la suppression par condition");
+                
+                // Map ConditionRecherche to CritereRecherche for the API client
+                var apiCritere = new CritereRecherche(critere.Criteres);
+
+                var response = await _pointageApi.PointageSupprimerParConditionPostAsync(apiCritere);
+                if (response)
+                {
+                    return OperationResult.Ok("Suppression par condition réussie");
+                }
+                return OperationResult.Fail("Échec de suppression");
             }
             catch (Exception ex) { _logger.LogError(ex, "Erreur SupprimerParCondition"); return OperationResult.Fail(ex.Message); }
         }

@@ -27,8 +27,29 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
 
+        [HttpPost("ajouter")]
+        public async Task<IActionResult> Ajouter([FromBody] RoleCore entity)
+        {
+            if (entity == null) return BadRequest("Données Role invalides");
+            entity.Id = string.Empty;
+            var result = await _roleBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPut("modifier")]
+        public async Task<IActionResult> Modifier([FromBody] RoleCore entity)
+        {
+            if (entity == null) return BadRequest("Données Role invalides");
+            var result = await _roleBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
+            => Ok(await _roleBusiness.ListeAsync());
+
+        [HttpGet("liste")]
+        public async Task<IActionResult> Liste()
             => Ok(await _roleBusiness.ListeAsync());
 
         [HttpGet("{id}")]
@@ -48,6 +69,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Supprimer(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
+            var result = await _roleBusiness.SupprimerAsync(id);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpDelete("supprimer/id/{id}")]
+        public async Task<IActionResult> SupprimerParId(string id)
         {
             if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
             var result = await _roleBusiness.SupprimerAsync(id);

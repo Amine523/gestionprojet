@@ -10,7 +10,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Repository
     public interface IProjetUtilisateurRepository
     {
         Task<OperationResult> AjouterOuModifierAsync(ProjetUtilisateurCore entity);
-        Task<ProjetUtilisateurCore> ObtenirAsync(string id);
+        Task<ProjetUtilisateurCore?> ObtenirAsync(string id);
         Task<IEnumerable<ProjetUtilisateurCore>> ListeAsync();
         Task<IEnumerable<ProjetUtilisateurCore>> ListeParCritereAsync(ConditionRecherche critere);
         Task<OperationResult> SupprimerAsync(string id);

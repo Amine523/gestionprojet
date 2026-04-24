@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -47,7 +47,7 @@ import { ApiService } from '@core/services/api.service';
           </div>
           <div>
             <p class="stat-label">Offres Actives</p>
-            <p class="stat-value">{{offresActives}}</p>
+            <p class="stat-value">{{offresActives()}}</p>
           </div>
         </div>
         <div class="stat-card">
@@ -59,7 +59,7 @@ import { ApiService } from '@core/services/api.service';
           </div>
           <div>
             <p class="stat-label">Candidats</p>
-            <p class="stat-value">{{Candidats.length}}</p>
+            <p class="stat-value">{{candidatsSignal().length}}</p>
           </div>
         </div>
         <div class="stat-card">
@@ -73,7 +73,7 @@ import { ApiService } from '@core/services/api.service';
           </div>
           <div>
             <p class="stat-label">Entretiens</p>
-            <p class="stat-value">{{entretiensPrevus.length}}</p>
+            <p class="stat-value">{{entretiensSignal().length}}</p>
           </div>
         </div>
         <div class="stat-card">
@@ -85,7 +85,7 @@ import { ApiService } from '@core/services/api.service';
           </div>
           <div>
             <p class="stat-label">Embauches</p>
-            <p class="stat-value">{{embauches}}</p>
+            <p class="stat-value">{{embauchesCount()}}</p>
           </div>
         </div>
       </div>
@@ -104,7 +104,7 @@ import { ApiService } from '@core/services/api.service';
             <!-- Offres Tab -->
             @if (activeTab === 'offres') {
               <div class="offres-grid">
-                @for (offre of Offres; track offre.id) {
+                @for (offre of offresSignal(); track offre.id) {
                   <div class="offre-card">
                     <div class="offre-header">
                       <h3 class="offre-title">{{offre.titre}}</h3>
@@ -138,7 +138,7 @@ import { ApiService } from '@core/services/api.service';
                     </div>
                   </div>
                 }
-                @if (Offres.length === 0) {
+                @if (offresSignal().length === 0) {
                   <div class="empty-state">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="10"></circle>
@@ -155,8 +155,8 @@ import { ApiService } from '@core/services/api.service';
             @if (activeTab === 'candidats') {
               <div class="candidats-section">
                 <div class="filters-bar">
-                  <input type="text" [(ngModel)]="searchCandidat" placeholder="Rechercher un candidat..." class="search-input" (input)="onSearchChange()">
-                  <select [(ngModel)]="filterStatutCandidat" class="filter-select" (change)="onSearchChange()">
+                  <input type="text" [ngModel]="searchCandidat()" (ngModelChange)="searchCandidat.set($event)" placeholder="Rechercher un candidat..." class="search-input">
+                  <select [ngModel]="filterStatutCandidat()" (ngModelChange)="filterStatutCandidat.set($event)" class="filter-select">
                     <option value="">Tous les statuts</option>
                     <option value="EN_ATTENTE">En attente</option>
                     <option value="TEST_AUTORISE">Test autorisé</option>
@@ -165,15 +165,15 @@ import { ApiService } from '@core/services/api.service';
                     <option value="ACCEPTEE">Accepté</option>
                     <option value="REFUSEE">Refusé</option>
                   </select>
-                  <select [(ngModel)]="selectedOffre" class="filter-select" (change)="onSearchChange()">
+                  <select [ngModel]="selectedOffreTitle()" (ngModelChange)="selectedOffreTitle.set($event)" class="filter-select">
                     <option value="">Toutes les offres</option>
-                    @for (offre of Offres; track offre.id) {
+                    @for (offre of offresSignal(); track offre.id) {
                       <option [value]="offre.titre">{{offre.titre}}</option>
                     }
                   </select>
                 </div>
 
-                @if (filteredCandidats.length === 0) {
+                @if (filteredCandidats().length === 0) {
                   <div class="empty-state">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="10"></circle>
@@ -184,7 +184,7 @@ import { ApiService } from '@core/services/api.service';
                   </div>
                 } @else {
                   <div class="candidats-list">
-                    @for (candidat of filteredCandidats; track candidat.id) {
+                    @for (candidat of filteredCandidats(); track candidat.id) {
                       <div class="candidat-item" (click)="viewCandidat(candidat)">
                         <div class="candidat-avatar">
                           {{candidat.nom?.substring(0,2).toUpperCase()}}
@@ -204,7 +204,7 @@ import { ApiService } from '@core/services/api.service';
             <!-- Entretiens Tab -->
             @if (activeTab === 'entretiens') {
               <div class="entretiens-section">
-                @if (entretiensPrevus.length === 0) {
+                @if (entretiensSignal().length === 0) {
                   <div class="empty-state">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -216,7 +216,7 @@ import { ApiService } from '@core/services/api.service';
                   </div>
                 } @else {
                   <div class="entretiens-list">
-                    @for (entretien of entretiensPrevus; track entretien.id) {
+                    @for (entretien of entretiensSignal(); track entretien.id) {
                       <div class="entretien-item">
                         <div class="entretien-icon">
                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -345,8 +345,8 @@ import { ApiService } from '@core/services/api.service';
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="closeOffreForm()">Annuler</button>
-            <button class="btn btn-primary" (click)="saveOffre()">{{editingOffre ? 'Modifier' : 'Créer'}}</button>
+            <button type="button" class="btn btn-secondary" (click)="closeOffreForm()">Annuler</button>
+            <button type="button" class="btn btn-primary" (click)="saveOffre()">{{editingOffre ? 'Modifier' : 'Créer'}}</button>
           </div>
         </div>
       </div>
@@ -449,6 +449,7 @@ import { ApiService } from '@core/services/api.service';
       height: 600px;
       background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
       border-radius: 50%;
+      pointer-events: none;
     }
 
     .header-icon {
@@ -483,6 +484,8 @@ import { ApiService } from '@core/services/api.service';
     }
 
     .btn {
+      position: relative;
+      z-index: 10;
       display: inline-flex;
       align-items: center;
       gap: var(--space-sm);
@@ -597,6 +600,8 @@ import { ApiService } from '@core/services/api.service';
     }
 
     .tab-btn {
+      position: relative;
+      z-index: 10;
       padding: var(--space-md) var(--space-lg);
       background: transparent;
       border: none;
@@ -693,6 +698,8 @@ import { ApiService } from '@core/services/api.service';
     }
 
     .btn-icon {
+      position: relative;
+      z-index: 10;
       width: 36px;
       height: 36px;
       border-radius: var(--radius-md);
@@ -947,6 +954,8 @@ import { ApiService } from '@core/services/api.service';
     }
 
     .btn-close {
+      position: relative;
+      z-index: 10;
       width: 32px;
       height: 32px;
       border-radius: var(--radius-md);
@@ -1134,23 +1143,56 @@ import { ApiService } from '@core/services/api.service';
 export class RhRecrutementComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private api = inject(ApiService);
-  
+
   societeId: string = '';
   societeNom: string = '';
+
+  offresSignal = signal<any[]>([]);
+  candidatsSignal = signal<any[]>([]);
   
-  Offres: any[] = [];
-  Candidats: any[] = [];
-  filteredCandidats: any[] = [];
-  entretiensPrevus: any[] = [];
-  
-  searchCandidat = '';
-  filterStatutCandidat = '';
-  selectedOffre: string = '';
-  
+  searchCandidat = signal('');
+  filterStatutCandidat = signal('');
+  selectedOffreTitle = signal('');
+
+  filteredCandidats = computed(() => {
+    let list = this.candidatsSignal();
+    const search = this.searchCandidat().toLowerCase();
+    const statut = this.filterStatutCandidat();
+    const offre = this.selectedOffreTitle();
+
+    if (offre) {
+      list = list.filter(c => c.poste === offre);
+    }
+    
+    return list.filter(c => {
+      const matchesSearch = !search || 
+        c.nom?.toLowerCase().includes(search) || 
+        c.email?.toLowerCase().includes(search);
+      const matchesStatut = !statut || c.statut === statut;
+      return matchesSearch && matchesStatut;
+    });
+  });
+
+  entretiensSignal = computed(() => {
+    return this.candidatsSignal()
+      .filter(c => {
+        const s = (c.statut || '').toUpperCase();
+        return s === 'ENTRETIEN' || s === 'ENTRETIEN_PLANIFIE' || c.dateEntretien;
+      })
+      .sort((a, b) => {
+        const dateA = a.dateEntretien ? new Date(a.dateEntretien).getTime() : 0;
+        const dateB = b.dateEntretien ? new Date(b.dateEntretien).getTime() : 0;
+        return dateA - dateB;
+      });
+  });
+
+  offresActives = computed(() => this.offresSignal().filter(o => o.statut === 'OUVERTE').length);
+  embauchesCount = computed(() => this.candidatsSignal().filter(c => ['ACCEPTEE', 'ACCEPTE'].includes((c.statut || '').toUpperCase())).length);
+
   showOffreForm = false;
   editingOffre: any = null;
   offreForm: any = { titre: '', description: '', lieu: '', salaire: '', type: 'CDI', poste: '', quiz: '', societe: '', adresse: '' };
-  
+
   postes: string[] = [
     'Développeur Frontend',
     'Développeur Backend',
@@ -1173,7 +1215,7 @@ export class RhRecrutementComponent implements OnInit {
     'RH Développeur',
     'Recruteur IT'
   ];
-  
+
   candidatsEnAttente = 0;
   embauches = 0;
   candidatsRecuperes = 0;
@@ -1204,90 +1246,84 @@ export class RhRecrutementComponent implements OnInit {
     if (!stored.offresEmploi || stored.offresEmploi.length === 0) {
       this.api.initRecrutementData();
     }
-    this.api.loadEmailJsConfig(); 
+    this.api.loadEmailJsConfig();
     this.emailConfig = this.api.getEmailJsConfig();
     this.loadData();
   }
 
   loadData() {
-    this.api.getOffresEmploi().subscribe(offres => {
-      this.Offres = offres.filter((o: any) => o.societeId === this.societeId);
+    this.api.getOffresEmploi().subscribe({
+      next: (res: any) => {
+        let all = Array.isArray(res) ? res : (res?.items || []);
+        const filtered = all.filter((o: any) => (o.societeId || o.SocieteId || '').toString().toLowerCase() === this.societeId.toLowerCase());
+        this.offresSignal.set(filtered);
+      }
     });
 
-    this.api.getCandidatures().subscribe(candidatures => {
-      const societeApplications = candidatures.filter((c: any) => c.societeId === this.societeId);
-      this.Candidats = societeApplications.map((c: any) => ({
-        id: c.id,
-        nom: c.candidatNom || c.nom || 'Sans nom',
-        email: c.candidatEmail || c.email,
-        telephone: c.candidatTelephone || c.telephone,
-        poste: c.offreTitre || c.poste,
-        competences: c.cvPath ? 'CV joint' : '-',
-        statut: c.statut || 'EN_ATTENTE',
-        quiz: c.quiz,
-        quizScore: c.quizScore,
-        quizTotal: c.quizTotal,
-        dateCandidature: c.dateCandidature,
-        dateEntretien: c.dateEntretien || null,
-        observations: c.notes || c.observations || ''
-      }));
-      this.filteredCandidats = [...this.Candidats];
-      this.calculateStats();
+    // Load both Applications (candidatures) and Users (candidates registered via register-candidate)
+    this.api.getCandidatures().subscribe({
+      next: (res: any) => {
+        let all = Array.isArray(res) ? res : (res?.items || []);
+        // Don't filter by societeId for candidates - they may be from any company applying to your offers
+        const normalized = all.map((c: any) => ({
+          id: c.id || c.Id,
+          nom: c.candidatNom || c.nom || c.Nom || 'Sans nom',
+          email: c.candidatEmail || c.email || c.Email,
+          telephone: c.candidatTelephone || c.telephone || c.Telephone,
+          poste: c.offreTitre || c.poste || c.Poste,
+          competences: c.cvPath ? 'CV joint' : '-',
+          statut: c.statut || c.Statut || 'EN_ATTENTE',
+          quiz: c.quiz || c.Quiz,
+          quizScore: c.quizScore || c.QuizScore,
+          quizTotal: c.quizTotal || c.QuizTotal,
+          dateCandidature: c.dateCandidature || c.DateCandidature,
+          dateEntretien: c.dateEntretien || c.DateEntretien || null,
+          observations: c.notes || c.observations || c.Observations || ''
+        }));
+        this.candidatsSignal.set(normalized);
+      }
+    });
+
+    // Also load users with TypeUtilisateurId = 'T007' (candidates registered via register-candidate)
+    this.api.getUtilisateurs().subscribe({
+      next: (res: any) => {
+        let all = Array.isArray(res) ? res : (res?.items || []);
+        const candidateUsers = all.filter((u: any) => 
+          (u.typeUtilisateurId || u.TypeUtilisateurId) === 'T007'
+        );
+        
+        if (candidateUsers.length > 0) {
+          const normalizedUsers = candidateUsers.map((u: any) => ({
+            id: u.id || u.Id,
+            nom: u.nom || u.Nom || 'Sans nom',
+            email: u.email || u.Email,
+            telephone: u.telephone || u.Telephone || '',
+            poste: 'Candidat',
+            competences: u.cv ? 'CV joint' : '-',
+            statut: 'EN_ATTENTE',
+            quiz: '',
+            quizScore: undefined,
+            quizTotal: undefined,
+            dateCandidature: new Date().toISOString(),
+            dateEntretien: null,
+            observations: ''
+          }));
+          
+          // Merge with existing candidates, avoiding duplicates by email
+          this.candidatsSignal.update(existing => {
+            const existingEmails = new Set(existing.map((c: any) => c.email?.toLowerCase()));
+            const newCandidates = normalizedUsers.filter((c: any) => !existingEmails.has(c.email?.toLowerCase()));
+            return [...existing, ...newCandidates];
+          });
+        }
+      }
     });
   }
 
-  calculateStats() {
-    this.candidatsEnAttente = this.Candidats.filter(c => {
-      const s = (c.statut || '').toUpperCase();
-      return s === 'EN_ATTENTE' || s === 'TEST_AUTORISE' || s === 'TEST_TERMINE';
-    }).length;
-    this.embauches = this.Candidats.filter(c => (c.statut || '').toUpperCase() === 'ACCEPTEE' || (c.statut || '').toUpperCase() === 'ACCEPTE').length;
-    this.candidatsRecuperes = this.Candidats.filter(c => c.quizScore && c.quizScore >= (c.quizTotal * 0.6)).length;
-    this.updateEntretiensList();
-  }
-  
-  updateEntretiensList() {
-    this.entretiensPrevus = this.Candidats.filter(c => {
-      const s = (c.statut || '').toUpperCase();
-      return s === 'ENTRETIEN' || s === 'ENTRETIEN_PLANIFIE' || c.dateEntretien;
-    }).sort((a,b) => {
-      const dateA = a.dateEntretien ? new Date(a.dateEntretien).getTime() : 0;
-      const dateB = b.dateEntretien ? new Date(b.dateEntretien).getTime() : 0;
-      return dateA - dateB;
-    });
-  }
-  
-  onSearchChange() {
-    if (!this.selectedOffre && this.searchCandidat === '' && this.filterStatutCandidat === '') {
-      this.filteredCandidats = [...this.Candidats];
-    } else {
-      this.filterCandidats();
-    }
-  }
-  
-  clearOffreFilter() {
-    this.selectedOffre = '';
-    this.searchCandidat = '';
-    this.filterStatutCandidat = '';
-    this.filteredCandidats = [...this.Candidats];
-  }
 
-  filterCandidats() {
-    let candidatesToFilter = this.Candidats;
-    if (this.selectedOffre) {
-      candidatesToFilter = candidatesToFilter.filter(c => c.poste === this.selectedOffre);
-    }
-    this.filteredCandidats = candidatesToFilter.filter(c => {
-      const matchesSearch = !this.searchCandidat || 
-        c.nom.toLowerCase().includes(this.searchCandidat.toLowerCase()) ||
-        c.email.toLowerCase().includes(this.searchCandidat.toLowerCase()) ||
-        c.competences.toLowerCase().includes(this.searchCandidat.toLowerCase());
-      const matchesStatut = !this.filterStatutCandidat || c.statut === this.filterStatutCandidat;
-      return matchesSearch && matchesStatut;
-    });
-  }
 
   openOffreForm() {
+    console.log('RH Recrutement Debug: openOffreForm clicked');
     this.offreForm = { titre: '', description: '', lieu: '', salaire: '', type: 'CDI', poste: '', quiz: '', societe: this.societeNom, adresse: '' };
     this.editingOffre = null;
     this.showOffreForm = true;
@@ -1305,17 +1341,49 @@ export class RhRecrutementComponent implements OnInit {
     }
 
     const offreData = {
-      ...this.offreForm,
+      titre: this.offreForm.titre,
+      description: this.offreForm.description,
+      lieu: this.offreForm.lieu,
+      salaire: this.offreForm.salaire,
+      poste: this.offreForm.poste,
+      quiz: this.offreForm.quiz,
       societeId: this.societeId,
       statut: 'OUVERTE',
-      dateCreation: new Date().toISOString()
+      type: 'OffreEmploi',
+      actif: true
     };
 
-    this.api.saveOffreEmploi(offreData).subscribe(() => {
-      this.snackBar.open(this.editingOffre ? 'Offre modifiée avec succès' : 'Offre créée avec succès', 'Fermer', { duration: 3000 });
-      this.loadData();
-      this.closeOffreForm();
-    });
+    console.log('Sending offre data:', offreData);
+
+    if (this.editingOffre) {
+      this.api.saveOffreEmploi({ ...offreData, id: this.editingOffre.id }).subscribe({
+        next: (res: any) => {
+          console.log('Update response:', res);
+          this.offresSignal.update(list => list.map(o => o.id === this.editingOffre.id ? { ...o, ...offreData } : o));
+          this.snackBar.open('Offre modifiée avec succès', 'Fermer', { duration: 3000 });
+          this.closeOffreForm();
+        },
+        error: (err) => {
+          console.error('Error updating offre:', err);
+          this.snackBar.open(`Erreur: ${err.error?.message || err.message || 'Erreur inconnue'}`, 'Fermer', { duration: 5000 });
+        }
+      });
+    } else {
+      this.api.saveOffreEmploi(offreData).subscribe({
+        next: (res: any) => {
+          console.log('Create response:', res);
+          const newOffre = res || { ...offreData, id: 'OFFRE_' + Date.now() };
+          this.offresSignal.update(list => [newOffre, ...list]);
+          this.snackBar.open('Offre créée avec succès', 'Fermer', { duration: 3000 });
+          this.closeOffreForm();
+        },
+        error: (err) => {
+          console.error('Error creating offre:', err);
+          const errorMsg = err.error?.message || err.error?.Message || err.message || 'Erreur inconnue';
+          this.snackBar.open(`Erreur: ${errorMsg}`, 'Fermer', { duration: 5000 });
+        }
+      });
+    }
   }
 
   editOffre(offre: any) {
@@ -1326,21 +1394,22 @@ export class RhRecrutementComponent implements OnInit {
 
   deleteOffre(id: string) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette offre ?')) {
-      this.api.deleteOffreEmploi(id).subscribe(() => {
-        this.snackBar.open('Offre supprimée avec succès', 'Fermer', { duration: 3000 });
-        this.loadData();
+      this.api.deleteOffreEmploi(id).subscribe({
+        next: () => {
+          this.offresSignal.update(list => list.filter(o => o.id !== id));
+          this.snackBar.open('Offre supprimée avec succès', 'Fermer', { duration: 3000 });
+        }
       });
     }
   }
 
   getCandidatsCount(offreId: string): number {
-    return this.Candidats.filter(c => c.offreId === offreId).length;
+    return this.candidatsSignal().filter(c => c.offreId === offreId || c.poste === this.offresSignal().find(o => o.id === offreId)?.titre).length;
   }
 
   viewCandidats(offre: any) {
-    this.selectedOffre = offre.titre;
+    this.selectedOffreTitle.set(offre.titre);
     this.activeTab = 'candidats';
-    this.filterCandidats();
   }
 
   viewCandidat(candidat: any) {
@@ -1372,7 +1441,7 @@ export class RhRecrutementComponent implements OnInit {
     }
 
     const dateEntretien = new Date(`${this.entretienDate}T${this.entretienHeure}`);
-    
+
     this.api.updateCandidature({
       id: this.selectedCandidat.id,
       statut: 'ENTRETIEN',
@@ -1402,7 +1471,7 @@ export class RhRecrutementComponent implements OnInit {
     }).subscribe(() => {
       this.snackBar.open('Statut mis à jour avec succès', 'Fermer', { duration: 3000 });
       this.loadData();
-      
+
       // Auto-send email based on status
       if (candidat.statut === 'ACCEPTEE') {
         this.sendEmail(candidat, 'candidatureAccepted');
@@ -1417,7 +1486,7 @@ export class RhRecrutementComponent implements OnInit {
     if (!templateId) {
       return;
     }
-    
+
     // EmailJS integration would go here
     console.log('Email would be sent to:', candidat.email, 'with template:', templateId);
   }
@@ -1444,7 +1513,4 @@ export class RhRecrutementComponent implements OnInit {
     console.log('EmailJS Config:', this.emailConfig);
   }
 
-  get offresActives(): number {
-    return this.Offres.filter(o => o.statut === 'OUVERTE').length;
-  }
 }

@@ -23,14 +23,19 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
             {
                 using (var connection = _context.CreateConnection())
                 {
-                    var response = await connection.QueryFirstOrDefaultAsync<int>
-                        (Constants.Ps_Application_i, ApplicationCoreMapper.GetParameters(applicationCore), commandType: CommandType.StoredProcedure);
+                    var sql = @"
+                        INSERT INTO [dbo].[Application]
+                        ([Id], [UtilisateurId], [SocieteId], [OffreId], [Titre], [Description], [Lieu], [Salaire], [Poste], [Quiz], [AppelDate], [Statut], [Type], [Actif])
+                        VALUES
+                        (@Id, @UtilisateurId, @SocieteId, @OffreId, @Titre, @Description, @Lieu, @Salaire, @Poste, @Quiz, @AppelDate, @Statut, @Type, @Actif);
+                    ";
+                    var response = await connection.ExecuteAsync(sql, ApplicationCoreMapper.GetParameters(applicationCore));
                     return response > 0;
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Probl�me d'ajout : {ex.Message}");
+                throw new Exception($"Problème d'ajout : {ex.Message}");
             }
         }
 

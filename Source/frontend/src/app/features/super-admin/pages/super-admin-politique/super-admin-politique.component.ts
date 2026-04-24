@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface Politique {
   id: string;
@@ -14,7 +15,7 @@ interface Politique {
 @Component({
   selector: 'app-super-admin-politique',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -499,6 +500,8 @@ interface Politique {
   `]
 })
 export class SuperAdminPolitiqueComponent {
+  private snackBar = inject(MatSnackBar);
+  
   showEditDialog = false;
   editingPolitique: Politique | null = null;
   editForm = { titre: '', description: '', regles: '' };
@@ -561,13 +564,13 @@ export class SuperAdminPolitiqueComponent {
       this.editingPolitique.titre = this.editForm.titre;
       this.editingPolitique.description = this.editForm.description;
       this.editingPolitique.regles = this.editForm.regles.split('\n').filter(r => r.trim());
-      alert(`${this.editingPolitique.titre} modifiée avec succès`);
+      this.snackBar.open(`${this.editingPolitique.titre} modifiée avec succès`, 'Fermer', { duration: 3000 });
       this.showEditDialog = false;
     }
   }
 
   togglePolitique(politique: Politique) {
     politique.active = !politique.active;
-    alert(`${politique.titre} ${politique.active ? 'activée' : 'désactivée'}`);
+    this.snackBar.open(`${politique.titre} ${politique.active ? 'activée' : 'désactivée'}`, 'Fermer', { duration: 3000 });
   }
 }

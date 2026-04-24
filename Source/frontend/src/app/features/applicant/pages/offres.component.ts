@@ -413,11 +413,9 @@ export class ApplicantOffresComponent {
   private router = inject(Router);
   offres: any[] = [];
   constructor() {
-    const relevantTitles = ['Développeur', 'Developer', 'DevOps', 'QA', 'Testeur', 'Test', 'Chef de Projet', 'Product', 'Scrum', 'Tech Lead', 'RH', 'Recruteur'];
     this.api.getOffresEmploi().subscribe(allOffres => {
       this.offres = allOffres.filter((o: any) =>
-        (o.statut?.toUpperCase() === 'OUVERTE') &&
-        relevantTitles.some(title => o.titre?.toLowerCase().includes(title.toLowerCase()))
+        o.statut?.toUpperCase() === 'OUVERTE'
       );
     });
   }

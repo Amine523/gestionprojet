@@ -1016,7 +1016,7 @@ export class ChatComponent implements OnInit {
     this.societeNom = user?.societe?.nom || 'Votre société';
     this.loadContacts();
     if (this.conversations.length > 0) {
-      this.selectedConversation = this.conversations[0];
+      this.selectConversation(this.conversations[0]);
     }
     this.loadGroups();
   }
@@ -1063,6 +1063,10 @@ export class ChatComponent implements OnInit {
         about: c.role,
         membres: 1
       }));
+    }
+    
+    if (this.conversations.length > 0) {
+      this.selectConversation(this.conversations[0]);
     }
   }
   

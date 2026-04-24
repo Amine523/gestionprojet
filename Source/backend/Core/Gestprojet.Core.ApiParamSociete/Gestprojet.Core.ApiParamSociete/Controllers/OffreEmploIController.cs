@@ -22,7 +22,7 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
             {
                 Propriete = "Type",
                 Operateur = "=",
-                Valeur = "OffreEmploI"
+                Valeur = "OffreEmploi"
             };
             var result = await _applicationBusiness.ListeApplicationParConditionAsync(critere);
             return Ok(result);
@@ -32,9 +32,16 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         public async Task<IActionResult> Ajouter([FromBody] ApplicationCore entity)
         {
             if (entity == null) return BadRequest(new { success = false, message = "Données invalides" });
-            entity.Type = "OffreEmploI";
+            
+            // Ensure ID is generated if missing
+            if (string.IsNullOrEmpty(entity.Id))
+            {
+                entity.Id = "OFFRE_" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+            }
+            
+            entity.Type = "OffreEmploi";
             var result = await _applicationBusiness.AjouterApplicationAsync(entity);
-            return Ok(new { success = result, message = result ? "Offre ajoutée" : "Erreur" });
+            return result ? Ok(entity) : BadRequest(new { success = false, message = "Erreur lors de l'ajout" });
         }
 
         [HttpDelete("supprimer/id/{id}")]

@@ -33,7 +33,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
 
     public class GenerateRequest
     {
-        public string Prompt { get; set; }
+        public string Prompt { get; set; } = string.Empty;
         public string Model { get; set; } = "llama2";
     }
 }

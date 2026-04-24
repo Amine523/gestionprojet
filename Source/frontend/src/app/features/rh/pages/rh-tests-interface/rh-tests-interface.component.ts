@@ -14,86 +14,90 @@ interface TestInfo {
   imports: [CommonModule],
   template: `
 
-    <div class="container-fluid p-4" style="background: #f5f7fa; min-height: 100vh;">
-      <div class="mb-4">
-        <h1 class="fw-bold" style="font-size: 28px; color: #1e1e30;">Interface des Tests</h1>
-        <p class="text-muted mb-0">Tests unitaires disponibles pour RH</p>
+    <div class="tests-container">
+      <div class="page-header">
+        <h1 class="page-title">Interface des Tests</h1>
+        <p class="page-subtitle">Tests unitaires disponibles pour RH</p>
       </div>
 
-      <div class="d-flex gap-3 mb-4">
+      <div class="action-bar">
         <button class="btn btn-primary" (click)="runAllTests()">
-          <i class="bi bi-play-fill me-2"></i>Exécuter tous les tests
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Exécuter tous les tests
         </button>
-        <button class="btn btn-outline-secondary" (click)="refreshResults()">
-          <i class="bi bi-arrow-clockwise me-2"></i>Actualiser
+        <button class="btn btn-secondary" (click)="refreshResults()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Actualiser
         </button>
       </div>
 
-      <div class="row g-4 mb-4">
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-              <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(76, 175, 80, 0.15); color: #4caf50;">
-                <i class="bi bi-check-circle" style="font-size: 28px;"></i>
-              </div>
-              <div class="d-flex flex-column">
-                <span class="fw-bold" style="font-size: 28px; color: #1e1e30;">{{ passedTests }}</span>
-                <span class="text-muted" style="font-size: 14px;">Tests réussis</span>
-              </div>
-            </div>
+      <div class="stats-grid">
+        <div class="stat-card stat-success">
+          <div class="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ passedTests }}</span>
+            <span class="stat-label">Tests réussis</span>
           </div>
         </div>
 
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-              <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(244, 67, 54, 0.15); color: #f44336;">
-                <i class="bi bi-x-circle" style="font-size: 28px;"></i>
-              </div>
-              <div class="d-flex flex-column">
-                <span class="fw-bold" style="font-size: 28px; color: #1e1e30;">{{ failedTests }}</span>
-                <span class="text-muted" style="font-size: 14px;">Tests échoués</span>
-              </div>
-            </div>
+        <div class="stat-card stat-danger">
+          <div class="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ failedTests }}</span>
+            <span class="stat-label">Tests échoués</span>
           </div>
         </div>
 
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-              <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(33, 150, 243, 0.15); color: #2196f3;">
-                <i class="bi bi-clipboard-check" style="font-size: 28px;"></i>
-              </div>
-              <div class="d-flex flex-column">
-                <span class="fw-bold" style="font-size: 28px; color: #1e1e30;">{{ totalTests }}</span>
-                <span class="text-muted" style="font-size: 14px;">Total tests</span>
-              </div>
-            </div>
+        <div class="stat-card stat-primary">
+          <div class="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ totalTests }}</span>
+            <span class="stat-label">Total tests</span>
           </div>
         </div>
 
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-              <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(156, 39, 176, 0.15); color: #9c27b0;">
-                <i class="bi bi-percent" style="font-size: 28px;"></i>
-              </div>
-              <div class="d-flex flex-column">
-                <span class="fw-bold" style="font-size: 28px; color: #1e1e30;">{{ coverage }}%</span>
-                <span class="text-muted" style="font-size: 14px;">Couverture</span>
-              </div>
-            </div>
+        <div class="stat-card stat-purple">
+          <div class="stat-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+              <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ coverage }}%</span>
+            <span class="stat-label">Couverture</span>
           </div>
         </div>
       </div>
 
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white">
-          <h5 class="fw-bold mb-0">Tests Disponibles</h5>
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Tests Disponibles</h3>
         </div>
         <div class="card-body">
-          <table class="table table-bordered">
-            <thead class="table-light">
+          <table class="data-table">
+            <thead>
               <tr>
                 <th>Nom du Test</th>
                 <th>Rôle</th>
@@ -104,7 +108,7 @@ interface TestInfo {
               @for (test of availableTests; track test.name) {
                 <tr>
                   <td>{{ test.name }}</td>
-                  <td><span class="badge rounded-pill bg-warning text-white">{{ test.role }}</span></td>
+                  <td><span class="badge badge-warning">{{ test.role }}</span></td>
                   <td>{{ test.description }}</td>
                 </tr>
               }
@@ -114,13 +118,13 @@ interface TestInfo {
       </div>
 
       @if (testResults.length > 0) {
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-white">
-            <h5 class="fw-bold mb-0">Résultats d'Exécution</h5>
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Résultats d'Exécution</h3>
           </div>
           <div class="card-body">
-            <table class="table table-bordered">
-              <thead class="table-light">
+            <table class="data-table">
+              <thead>
                 <tr>
                   <th>Nom du Test</th>
                   <th>Statut</th>
@@ -132,7 +136,7 @@ interface TestInfo {
                 @for (r of testResults; track r.name) {
                   <tr>
                     <td>{{ r.name }}</td>
-                    <td><span class="badge rounded-pill" [class.bg-success]="r.status === 'pass'" [class.bg-danger]="r.status !== 'pass'">{{ r.status === 'pass' ? 'Réussi' : 'Échoué' }}</span></td>
+                    <td><span class="badge" [class.badge-success]="r.status === 'pass'" [class.badge-danger]="r.status !== 'pass'">{{ r.status === 'pass' ? 'Réussi' : 'Échoué' }}</span></td>
                     <td>{{ r.duration }}ms</td>
                     <td>{{ r.role }}</td>
                   </tr>
@@ -144,21 +148,295 @@ interface TestInfo {
       }
 
       @if (isRunning) {
-        <div class="card border-0 shadow-sm">
+        <div class="card">
           <div class="card-body">
-            <div class="d-flex justify-content-between mb-3">
-              <span class="text-muted">Exécution en cours...</span>
-              <span class="text-muted">{{ progress }}%</span>
+            <div class="progress-header">
+              <span class="progress-label">Exécution en cours...</span>
+              <span class="progress-value">{{ progress }}%</span>
             </div>
-            <div class="progress" style="height: 10px;">
-              <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" [style.width.%]="progress"></div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" [style.width.%]="progress"></div>
             </div>
           </div>
         </div>
       }
     </div>
   `,
-  styles: [``]
+  styles: [`
+    .tests-container {
+      padding: var(--space-xl);
+      background: var(--color-bg);
+      min-height: 100vh;
+    }
+
+    .page-header {
+      margin-bottom: var(--space-xl);
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin: 0 0 var(--space-xs);
+    }
+
+    .page-subtitle {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-base);
+      margin: 0;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-md);
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-sm);
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+
+    .btn-primary {
+      background: #6366f1;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #4f46e5;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-bg);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+    }
+
+    .stat-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .stat-card.stat-success .stat-icon {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+
+    .stat-card.stat-danger .stat-icon {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    .stat-card.stat-primary .stat-icon {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+
+    .stat-card.stat-purple .stat-icon {
+      background: rgba(139, 92, 246, 0.15);
+      color: #8b5cf6;
+    }
+
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--color-text-muted);
+      margin-top: var(--space-xs);
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      margin-bottom: var(--space-xl);
+    }
+
+    .card-header {
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg);
+    }
+
+    .card-title {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin: 0;
+    }
+
+    .card-body {
+      padding: var(--space-lg);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: var(--space-md);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg);
+    }
+
+    .data-table td {
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .data-table tr:hover {
+      background: var(--color-bg);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .badge-success {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .badge-danger {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--space-md);
+    }
+
+    .progress-label,
+    .progress-value {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .progress-bar-container {
+      height: 10px;
+      background: var(--color-bg);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      border-radius: var(--radius-full);
+      transition: width 0.3s ease;
+      animation: progress-shimmer 2s infinite;
+    }
+
+    @keyframes progress-shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Dark mode */
+    :host-context(.dark) .tests-container {
+      background: var(--color-surface);
+    }
+
+    :host-context(.dark) .page-title,
+    :host-context(.dark) .stat-value,
+    :host-context(.dark) .card-title {
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .stat-card,
+    :host-context(.dark) .card {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .card-header {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .data-table th {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    :host-context(.dark) .data-table tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    :host-context(.dark) .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .progress-bar-container {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  `]
 })
 export class RhTestsInterfaceComponent implements OnInit {
   private api = inject(ApiService);

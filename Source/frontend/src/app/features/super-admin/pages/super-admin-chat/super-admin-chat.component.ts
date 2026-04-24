@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface Message {
   id: string;
@@ -29,7 +30,7 @@ interface Conversation {
 @Component({
   selector: 'app-super-admin-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="chat-layout">
@@ -582,6 +583,7 @@ interface Conversation {
 export class SuperAdminChatComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
 
   searchQuery = '';
   currentUser: any = null;
@@ -739,7 +741,7 @@ export class SuperAdminChatComponent implements OnInit {
     }
     
     this.newMessage = '';
-    alert('Message envoyé');
+    this.snackBar.open('Message envoyé', 'Fermer', { duration: 3000 });
   }
 
   saveMessages(societeId: string, msgs: Message[]) {
@@ -756,16 +758,16 @@ export class SuperAdminChatComponent implements OnInit {
       this.conversations = this.conversations.map(c => 
         c.id === this.selectedConversation?.id ? { ...c, unread: 0 } : c
       );
-      alert('Marqué comme lu');
+      this.snackBar.open('Marqué comme lu', 'Fermer', { duration: 3000 });
     }
   }
 
   envoyerEmail() {
-    alert('Fonctionnalité Email bientôt disponible');
+    this.snackBar.open('Fonctionnalité Email bientôt disponible', 'Fermer', { duration: 3000 });
   }
 
   voirProfil() {
-    alert('Profil de la société');
+    this.snackBar.open('Profil de la société', 'Fermer', { duration: 3000 });
   }
 }
 

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -31,7 +31,7 @@ import { ExportService } from '@core/services/export.service';
             </p>
           </div>
         </div>
-        <button (click)="openForm()" class="btn btn-primary">
+        <button type="button" (click)="openForm()" class="btn btn-primary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -109,11 +109,11 @@ import { ExportService } from '@core/services/export.service';
                   <circle cx="11" cy="11" r="8"/>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="filterEmployes()"
+                <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
                   class="search-input"
                   placeholder="Rechercher un talent...">
               </div>
-              <select [(ngModel)]="filterDepartement" (change)="filterEmployes()"
+              <select [ngModel]="filterDepartement()" (ngModelChange)="filterDepartement.set($event)"
                 class="filter-select">
                 <option value="">Tous les départements</option>
                 <option value="informatique">Informatique</option>
@@ -165,7 +165,7 @@ import { ExportService } from '@core/services/export.service';
                 </tr>
               </thead>
               <tbody>
-                @for (e of filteredEmployes; track e.id || e.Id) {
+                @for (e of filteredEmployes(); track e.id || e.Id) {
                   <tr>
                     <td>
                       <div class="user-cell">
@@ -210,7 +210,7 @@ import { ExportService } from '@core/services/export.service';
               </tbody>
             </table>
 
-            @if (!isLoading && filteredEmployes.length === 0) {
+            @if (!isLoading && filteredEmployes().length === 0) {
               <div class="empty-state">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"/>
@@ -250,8 +250,98 @@ import { ExportService } from '@core/services/export.service';
         </div>
       </div>
     </div>
+
+    <!-- MODAL: Ajouter / Modifier un employé -->
+    @if (showForm) {
+      <div class="modal-backdrop" (click)="closeDialog()">
+        <div class="modal-box" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>{{ editingEmploye ? 'Modifier' : 'Ajouter un employé' }}</h2>
+            <button class="btn-close" (click)="closeDialog()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nom complet *</label>
+                <input type="text" [(ngModel)]="formData.nom" placeholder="Ex: Amine Ben Salah" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Email *</label>
+                <input type="email" [(ngModel)]="formData.email" placeholder="email@entreprise.com" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" [(ngModel)]="formData.motDePasse" placeholder="••••••••" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Téléphone</label>
+                <input type="text" [(ngModel)]="formData.telephone" placeholder="+216 XX XXX XXX" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Poste</label>
+                <select [(ngModel)]="formData.poste" class="form-input">
+                  <option>Développeur</option><option>Chef de projet</option>
+                  <option>Testeur QA</option><option>RH</option>
+                  <option>Administrateur</option><option>Commercial</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Département</label>
+                <select [(ngModel)]="formData.departement" class="form-input">
+                  <option>Informatique</option><option>RH</option>
+                  <option>Commercial</option><option>Finance</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Contrat</label>
+                <select [(ngModel)]="formData.contrat" class="form-input">
+                  <option>CDI</option><option>CDD</option><option>Stage</option><option>Freelance</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Rôle système</label>
+                <select [(ngModel)]="formData.typeUtilisateurId" class="form-input">
+                  <option value="T002">Admin</option>
+                  <option value="T003">RH</option>
+                  <option value="T004">Chef de projet</option>
+                  <option value="T005">Développeur</option>
+                  <option value="T006">Testeur QA</option>
+                </select>
+              </div>
+            </div>
+            <label class="checkbox-row" style="margin-top:16px;display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer">
+              <input type="checkbox" [(ngModel)]="formData.actif"> Compte actif
+            </label>
+          </div>
+          <div class="modal-footer">
+            <button (click)="closeDialog()" class="btn-cancel">Annuler</button>
+            <button type="button" (click)="saveEmploye()" class="btn-save">{{ editingEmploye ? 'Enregistrer' : 'Créer' }}</button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
+    /* ---- Modal ---- */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal-box{background:white;border-radius:20px;width:100%;max-width:620px;box-shadow:0 25px 60px rgba(0,0,0,.3);overflow:hidden;animation:slideIn .3s ease}
+    @keyframes slideIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+    .modal-header{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#f59e0b,#f97316)}
+    .modal-header h2{color:white;margin:0;font-size:18px;font-weight:700}
+    .btn-close{width:32px;height:32px;border-radius:8px;border:none;background:rgba(255,255,255,.2);color:white;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+    .btn-close:hover{background:rgba(255,255,255,.35)}
+    .modal-body{padding:24px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-group{display:flex;flex-direction:column;gap:6px}
+    .form-group label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted)}
+    .form-input{padding:10px 14px;border:2px solid var(--color-border);border-radius:10px;font-size:14px;color:var(--color-text);outline:none;transition:border-color .2s;width:100%;box-sizing:border-box}
+    .form-input:focus{border-color:#f97316}
+    .modal-footer{padding:16px 24px;display:flex;justify-content:flex-end;gap:12px;background:var(--color-bg);border-top:1px solid var(--color-border)}
+    .btn-cancel{padding:10px 22px;border-radius:10px;border:2px solid var(--color-border);background:transparent;color:var(--color-text);font-weight:600;cursor:pointer}
+    .btn-save{padding:10px 26px;border-radius:10px;border:none;background:linear-gradient(135deg,#f59e0b,#f97316);color:white;font-weight:700;cursor:pointer}
+    .btn-save:hover{opacity:.9}
+    /* --------------- */
+
     .dashboard-container {
       display: flex;
       flex-direction: column;
@@ -281,6 +371,8 @@ import { ExportService } from '@core/services/export.service';
       height: 600px;
       background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
       border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
     }
 
     .header-content {
@@ -339,6 +431,8 @@ import { ExportService } from '@core/services/export.service';
       border: none;
       cursor: pointer;
       transition: all var(--transition-base);
+      position: relative;
+      z-index: 2;
     }
 
     .btn-primary {
@@ -873,13 +967,28 @@ export class RhEmployesComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private exportService = inject(ExportService);
 
-  employes: any[] = [];
-  filteredEmployes: any[] = [];
-  displayedColumns = ['nom', 'email', 'poste', 'departement', 'contrat', 'statut', 'actions'];
+  employesSignal = signal<any[]>([]);
+  searchQuery = signal('');
+  filterDepartement = signal('');
+  filterStatut = signal('');
   
-  searchQuery = '';
-  filterDepartement = '';
-  filterStatut = '';
+  filteredEmployes = computed(() => {
+    const list = this.employesSignal();
+    const q = this.searchQuery().toLowerCase();
+    const dept = this.filterDepartement().toLowerCase();
+    const stat = this.filterStatut();
+    
+    return list.filter(e => {
+      const matchesSearch = !q || e.nom.toLowerCase().includes(q) || e.email.toLowerCase().includes(q);
+      const matchesDept = !dept || e.departement?.toLowerCase() === dept;
+      const matchesStatut = !stat || 
+        (stat === 'actif' && e.actif) || 
+        (stat === 'inactif' && !e.actif);
+      return matchesSearch && matchesDept && matchesStatut;
+    });
+  });
+
+  displayedColumns = ['nom', 'email', 'poste', 'departement', 'contrat', 'statut', 'actions'];
   
   page = 1;
   pageSize = 10;
@@ -890,7 +999,7 @@ export class RhEmployesComponent implements OnInit {
   showForm = false;
   editingEmploye: any = null;
   viewingEmploye: any = null;
-  formData: any = { nom: '', email: '', password: '', telephone: '', poste: 'Développeur', departement: 'Informatique', contrat: 'CDI', actif: true };
+  formData: any = { nom: '', email: '', motDePasse: '', telephone: '', poste: 'Développeur', departement: 'Informatique', contrat: 'CDI', actif: true };
   
   totalEmployes = 0;
   employesActifs = 0;
@@ -907,26 +1016,51 @@ export class RhEmployesComponent implements OnInit {
     this.loadEmployes(); 
   }
 
+  private normalizeEmploye(e: any): any {
+    if (!e) return null;
+    return {
+      id: e.id || e.Id || e.utilisateurId || e.UtilisateurId,
+      nom: e.nom || e.Nom || 'Sans nom',
+      email: e.email || e.Email || '',
+      telephone: e.telephone || e.Telephone || '',
+      poste: e.poste || e.Poste || 'Employé',
+      departement: e.departement || e.Departement || 'Général',
+      contrat: e.contrat || e.Contrat || 'CDI',
+      actif: e.actif !== undefined ? e.actif : (e.Actif !== undefined ? e.Actif : true),
+      societeId: e.societeId || e.SocieteId || this.societeId,
+      typeUtilisateurId: e.typeUtilisateurId || e.TypeUtilisateurId || 'T005'
+    };
+  }
+
   loadEmployes() {
     this.isLoading = true;
-    const condition = {
-      nom: this.searchQuery,
-      societeId: this.societeId,
-      criteres: {}
-    };
-    
-    this.api.getUtilisateursByConditionPage(this.page, this.pageSize, condition).subscribe({
-      next: (res: any) => { 
-        this.employes = res.items || [];
-        this.totalItems = res.totalCount || 0;
-        this.filterEmployesLocal();
+    this.api.getUtilisateurs().subscribe({
+      next: (res: any) => {
+        let all: any[] = [];
+        if (Array.isArray(res)) {
+          all = res;
+        } else if (res && Array.isArray(res.items)) {
+          all = res.items;
+        } else if (res && typeof res === 'object') {
+          all = [res];
+        }
+
+        let list = all.filter((u: any) => {
+          const sid = (u.societeId || u.SocieteId || '').toString().toLowerCase();
+          const targetSid = (this.societeId || '').toString().toLowerCase();
+          return !targetSid || sid === targetSid;
+        });
+
+        const normalized = list.map((e: any) => this.normalizeEmploye(e)).filter(e => e !== null);
+        this.employesSignal.set(normalized);
+        this.totalItems = normalized.length;
         this.calculateStats();
         this.isLoading = false;
       },
-      error: () => { 
-        this.employes = []; 
-        this.filterEmployesLocal(); 
-        this.isLoading = false;
+      error: (err) => { 
+        console.error('RH Error:', err);
+        this.employesSignal.set([]);
+        this.isLoading = false; 
       }
     });
   }
@@ -936,15 +1070,7 @@ export class RhEmployesComponent implements OnInit {
     this.loadEmployes();
   }
 
-  filterEmployesLocal() {
-    this.filteredEmployes = this.employes.filter(e => {
-      const matchesDept = !this.filterDepartement || e.departement?.toLowerCase() === this.filterDepartement.toLowerCase();
-      const matchesStatut = !this.filterStatut || 
-        (this.filterStatut === 'actif' && e.actif) || 
-        (this.filterStatut === 'inactif' && !e.actif);
-      return matchesDept && matchesStatut;
-    });
-  }
+
   
   setPage(p: number) {
     this.page = p;
@@ -957,30 +1083,33 @@ export class RhEmployesComponent implements OnInit {
   }
 
   exportExcel() {
-    this.exportService.exportToExcel(this.filteredEmployes, 'Talents_Ecosystem_' + this.societeNom);
+    this.exportService.exportToExcel(this.filteredEmployes(), 'Talents_Ecosystem_' + this.societeNom);
   }
 
   exportPdf() {
     const cols = ['Nom', 'Email', 'Poste', 'Contrat', 'Statut'];
-    const data = this.filteredEmployes.map(e => [
+    const data = this.filteredEmployes().map(e => [
       e.nom, e.email, e.poste, e.contrat || 'CDI', e.actif ? 'Actif' : 'Inactif'
     ]);
     this.exportService.exportToPdf(cols, data, 'Talents_Ecosystem', 'Audit Stratégique Talents - ' + this.societeNom);
   }
 
   calculateStats() {
-    this.totalEmployes = this.totalItems || this.employes.length;
-    this.employesActifs = this.employes.filter(e => e.actif).length || Math.floor(this.totalEmployes * 0.9);
+    const list = this.employesSignal();
+    this.totalEmployes = list.length;
+    this.employesActifs = list.filter(e => e.actif).length;
     this.employesInactifs = this.totalEmployes - this.employesActifs;
-    this.nouveauxEmployes = Math.floor(Math.random() * 3) + 1;
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    this.nouveauxEmployes = 0; // calculated from real data when available
     
     const depts = ['Informatique', 'RH', 'Commercial', 'Finance'];
     this.departementsStats = depts.map(d => ({
       nom: d,
-      nombre: this.employes.filter(e => e.departement === d).length || Math.floor(Math.random() * 8) + 2,
+      nombre: list.filter(e => e.departement === d).length,
       percentage: 0
     }));
-    const max = Math.max(...this.departementsStats.map(d => d.nombre));
+    const max = Math.max(...this.departementsStats.map(d => d.nombre), 1);
     this.departementsStats.forEach(d => d.percentage = (d.nombre / max) * 100);
   }
 
@@ -991,28 +1120,34 @@ export class RhEmployesComponent implements OnInit {
     const updatedUser = { ...e, actif: !e.actif };
     this.api.updateUtilisateur(e.id || e.Id, updatedUser).subscribe({
       next: () => {
-        e.actif = !e.actif;
+        // Immediate update
+        this.employesSignal.update(list => list.map(item => 
+          (item.id === e.id) ? { ...item, actif: !item.actif } : item
+        ));
         this.snackBar.open(e.actif ? 'Talent activé' : 'Talent désactivé', 'Fermer', { duration: 2000 });
-        this.filterEmployes();
         this.calculateStats();
       }
     });
   }
 
   deleteEmploye(e: any) {
-    if (confirm("Désinitialiser " + e.nom + " de l'écosystème ?")) {
+    if (confirm("Confirmer la suppression de " + e.nom + " ?")) {
       this.api.deleteUtilisateur(e.id || e.Id).subscribe({
         next: () => {
+          this.snackBar.open("Collaborateur supprimé", 'Fermer', { duration: 2000 });
           this.loadEmployes();
-          this.snackBar.open("Ressource supprimée de l'écosystème", 'Fermer', { duration: 2000 });
+        },
+        error: (err) => {
+          this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
         }
       });
     }
   }
 
   openForm() {
-    this.formData = { nom: '', email: '', password: '', telephone: '', poste: 'Développeur', departement: 'Informatique', contrat: 'CDI', actif: true };
+    this.formData = { nom: '', email: '', motDePasse: '', telephone: '', poste: 'Développeur', departement: 'Informatique', contrat: 'CDI', actif: true, typeUtilisateurId: 'T005' };
     this.showForm = true;
+    this.editingEmploye = null;
   }
 
   closeDialog() {
@@ -1022,28 +1157,44 @@ export class RhEmployesComponent implements OnInit {
   }
 
   saveEmploye() {
-    if (!this.formData.nom || !this.formData.email) {
-      this.snackBar.open("Veuillez remplir tous les champs d'identification requis", 'Fermer', { duration: 2000 });
+    if (!this.formData.nom || this.formData.nom.trim().length < 3) {
+      this.snackBar.open("Le nom doit contenir au moins 3 caractères", 'Fermer', { duration: 3000 });
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!this.formData.email || !emailRegex.test(this.formData.email)) {
+      this.snackBar.open("Format d'email invalide", 'Fermer', { duration: 3000 });
       return;
     }
 
-    const payload = { ...this.formData, societeId: this.societeId };
+    const payload = { 
+      id: this.editingEmploye ? (this.editingEmploye.id || this.editingEmploye.Id) : '',
+      nom: this.formData.nom,
+      email: this.formData.email,
+      motDePasse: this.formData.motDePasse || '123456',
+      typeUtilisateurId: this.formData.typeUtilisateurId || 'T005',
+      societeId: this.societeId,
+      actif: this.formData.actif !== undefined ? this.formData.actif : true,
+      roleId: 'R001'
+    };
     
     if (this.editingEmploye) {
       this.api.updateUtilisateur(this.editingEmploye.id || this.editingEmploye.Id, payload).subscribe({
         next: () => {
-          this.snackBar.open('Registre mis à jour', 'Fermer', { duration: 2000 });
           this.loadEmployes();
+          this.snackBar.open('Registre mis à jour', 'Fermer', { duration: 2000 });
           this.closeDialog();
-        }
+        },
+        error: (err) => this.snackBar.open('Erreur: ' + (err.message || 'Échec'), 'Fermer', { duration: 3000 })
       });
     } else {
       this.api.createUtilisateur(payload).subscribe({
         next: () => {
-          this.snackBar.open('Talent intégré', 'Fermer', { duration: 2000 });
           this.loadEmployes();
+          this.snackBar.open('Nouveau collaborateur ajouté', 'Fermer', { duration: 2000 });
           this.closeDialog();
-        }
+        },
+        error: (err) => this.snackBar.open('Erreur: ' + (err.message || 'Échec'), 'Fermer', { duration: 3000 })
       });
     }
   }

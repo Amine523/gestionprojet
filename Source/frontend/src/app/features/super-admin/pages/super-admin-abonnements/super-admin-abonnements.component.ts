@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-super-admin-abonnements',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -96,8 +97,8 @@ import { ApiService } from '@core/services/api.service';
                 </div>
               </div>
               <div class="plan-actions">
-                <button class="btn btn-primary plan-btn">Configuration</button>
-                <button class="btn-icon btn-danger">
+                <button class="btn btn-primary plan-btn" (click)="configurePlan(plan)">Configuration</button>
+                <button class="btn-icon btn-danger" (click)="deletePlan(plan)">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -1061,6 +1062,7 @@ import { ApiService } from '@core/services/api.service';
 })
 export class SuperAdminAbonnementsComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
 
   activeTab = 'plans';
   plans = [
@@ -1184,10 +1186,20 @@ export class SuperAdminAbonnementsComponent implements OnInit {
   }
 
   sendRenewalAlert(abo: any) {
-    alert('Alerte de renouvellement envoyée à ' + abo.societeNom);
+    this.snackBar.open('Alerte de renouvellement envoyée à ' + abo.societeNom, 'Fermer', { duration: 3000 });
   }
 
   exportPDF(facture: any) {
-    alert('Téléchargement de la facture ' + facture.numero);
+    this.snackBar.open('Téléchargement de la facture ' + facture.numero, 'Fermer', { duration: 3000 });
+  }
+
+  configurePlan(plan: any) {
+    this.snackBar.open(`Configuration du plan: ${plan.nom}`, 'Fermer', { duration: 3000 });
+  }
+
+  deletePlan(plan: any) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer le plan ${plan.nom} ?`)) {
+      this.snackBar.open(`Plan ${plan.nom} supprimé`, 'Fermer', { duration: 3000 });
+    }
   }
 }

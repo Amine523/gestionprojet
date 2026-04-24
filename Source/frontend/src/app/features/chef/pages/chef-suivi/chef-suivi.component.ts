@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-chef-suivi',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="suivi-container">
@@ -719,6 +720,7 @@ import { ApiService } from '@core/services/api.service';
 })
 export class ChefSuiviComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   
   societeId = '';
   societeNom = 'Votre société';
@@ -747,9 +749,12 @@ export class ChefSuiviComponent implements OnInit {
   }
   
   loadData() {
+    const user = this.api.getCurrentUser();
     this.api.getProjetsBySociete(this.societeId).subscribe({
       next: (projets) => {
-        this.projets = projets.map((p: any) => ({ id: p.id, nom: p.nom }));
+        this.projets = (projets || [])
+          .filter((p: any) => p.utilisateurId === user?.id)
+          .map((p: any) => ({ id: p.id, nom: p.nom }));
         if (this.projets.length > 0 && !this.selectedProjet) {
           this.selectedProjet = this.projets[0].nom;
         }
@@ -760,29 +765,46 @@ export class ChefSuiviComponent implements OnInit {
     
     this.api.getTaches().subscribe({
       next: (taches) => {
-        const societeTaches = (taches || []).filter((t: any) => t.societeId === this.societeId);
+        const societeTaches = (taches || []).filter((t: any) => (t.societeId || t.SocieteId) === this.societeId);
         this.taches = societeTaches.map((t: any, idx: number) => {
           // Utiliser les vrais assignés si disponibles
           let responsable = 'Non assigné';
-          if (t.assignees && t.assignees.length > 0) {
-            responsable = t.assignees[0].nom;
-          } else if (t.utilisateurNom) {
-            responsable = t.utilisateurNom;
+          const assignees = t.assignees || t.Assignees || [];
+          if (assignees.length > 0) {
+            responsable = assignees[0].nom || assignees[0].Nom;
+          } else {
+            responsable = t.utilisateurNom || t.UtilisateurNom || 'Non assigné';
           }
           
+          const status = (t.status || t.Status || t.statut || t.Statut || 'To Do').toLowerCase();
+          let progression = t.progression || t.Progression || 0;
+          if (progression === 0) {
+            if (status === 'done' || status === 'terminé' || status === 'terminée') progression = 100;
+            else if (status === 'in progress' || status === 'en cours') progression = 50;
+          }
+
           return {
-            id: t.id || idx + 1,
-            titre: t.nom || t.titre || 'Tâche sans nom',
+            id: t.id || t.Id || idx + 1,
+            titre: t.nom || t.Nom || t.titre || t.Titre || 'Tâche sans nom',
             responsable: responsable,
-            statut: t.status || 'To Do',
-            temps: t.tempsEstime || 0,
-            progression: t.progression || (t.status === 'Done' ? 100 : t.status === 'In Progress' ? 50 : 0),
-            retard: t.estEnRetard || false
+            statut: t.status || t.Status || t.statut || t.Statut || 'To Do',
+            temps: t.tempsEstime || t.TempsEstime || 0,
+            progression: progression,
+            retard: t.estEnRetard || t.EstEnRetard || false
           };
         });
-        this.stats.done = this.taches.filter(t => t.statut === 'Done' || t.statut === 'done').length;
-        this.stats.inProgress = this.taches.filter(t => t.statut === 'In Progress' || t.statut === 'inprogress').length;
-        this.stats.todo = this.taches.filter(t => t.statut === 'To Do' || t.statut === 'todo').length;
+        this.stats.done = this.taches.filter(t => {
+          const s = t.statut.toLowerCase();
+          return s === 'done' || s === 'terminé';
+        }).length;
+        this.stats.inProgress = this.taches.filter(t => {
+          const s = t.statut.toLowerCase();
+          return s === 'in progress' || s === 'en cours';
+        }).length;
+        this.stats.todo = this.taches.filter(t => {
+          const s = t.statut.toLowerCase();
+          return s === 'to do' || s === 'en attente';
+        }).length;
         if (this.taches.length > 0) {
           this.avancement = Math.round(this.stats.done / this.taches.length * 100);
         }
@@ -798,7 +820,7 @@ export class ChefSuiviComponent implements OnInit {
       this.tempsReel = Math.floor(this.tempsEstime * (1 + Math.random() * 0.3));
       this.tauxRetard = Math.round((this.tempsReel - this.tempsEstime) / this.tempsEstime * 100);
     }
-    alert('Données mises à jour pour: ' + this.selectedProjet);
+    this.snackBar.open('Données mises à jour pour: ' + this.selectedProjet, 'Fermer', { duration: 3000 });
   }
 }
 

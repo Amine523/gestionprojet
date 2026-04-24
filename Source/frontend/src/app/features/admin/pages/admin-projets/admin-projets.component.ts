@@ -1,9 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
 import { ExportService } from '@core/services/export.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface Projet {
   id: string;
@@ -20,7 +21,7 @@ interface Projet {
 @Component({
   selector: 'app-admin-projets',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -87,7 +88,7 @@ interface Projet {
 
       <!-- Projects Grid -->
       <div class="projects-grid">
-        @for (p of filteredProjets; track p.id) {
+        @for (p of projetsSignal(); track p.id) {
           <div class="card project-card">
             <div class="project-header">
               <div>
@@ -206,20 +207,20 @@ interface Projet {
                  </button>
               </div>
 
-              <form>
+              <form (ngSubmit)="saveProjet()">
                  <div class="form-field">
                     <label>Nom de la Mission</label>
-                    <input [(ngModel)]="formData.nom" class="form-input" placeholder="Entrez l'identifiant de la mission...">
+                    <input [(ngModel)]="formData.nom" name="nom" class="form-input" placeholder="Entrez l'identifiant de la mission...">
                  </div>
                  <div class="form-field">
                     <label>Directive de Mission</label>
-                    <textarea [(ngModel)]="formData.description" class="form-input" rows="4" placeholder="Résumé de l'objectif principal..."></textarea>
+                    <textarea [(ngModel)]="formData.description" name="description" class="form-input" rows="4" placeholder="Résumé de l'objectif principal..."></textarea>
                  </div>
 
                  <div class="form-grid">
                     <div class="form-field">
                        <label>État Opérationnel</label>
-                       <select [(ngModel)]="formData.status" class="form-input">
+                       <select [(ngModel)]="formData.status" name="status" class="form-input">
                           <option value="En attente">En attente</option>
                           <option value="En cours">En cours</option>
                           <option value="Terminé">Mission Accomplie</option>
@@ -227,9 +228,9 @@ interface Projet {
                     </div>
                     <div class="form-field">
                        <label>Commandant</label>
-                       <select [(ngModel)]="formData.chef" class="form-input">
+                       <select [(ngModel)]="formData.chef" name="chef" class="form-input">
                           <option value="">Sélectionner un officier lead</option>
-                          @for (user of chefs; track user.id) {
+                          @for (user of chefsSignal(); track user.id) {
                             <option [value]="user.id">{{user.nom}}</option>
                           }
                        </select>
@@ -239,18 +240,18 @@ interface Projet {
                  <div class="form-grid">
                     <div class="form-field">
                        <label>Séquence de Lancement</label>
-                       <input type="date" [(ngModel)]="formData.dateDebut" class="form-input">
+                       <input type="date" [(ngModel)]="formData.dateDebut" name="dateDebut" class="form-input">
                     </div>
                     <div class="form-field">
                        <label>Heure Zéro</label>
-                       <input type="date" [(ngModel)]="formData.dateFin" class="form-input">
+                       <input type="date" [(ngModel)]="formData.dateFin" name="dateFin" class="form-input">
                     </div>
                  </div>
               </form>
 
               <div class="modal-actions">
-                 <button (click)="closeDialog()" class="btn btn-ghost">ANNULER</button>
-                 <button (click)="saveProjet()" class="btn btn-primary">
+                 <button type="button" (click)="closeDialog()" class="btn btn-ghost">ANNULER</button>
+                 <button type="button" (click)="saveProjet()" class="btn btn-primary">
                     {{editingProjet ? 'VALIDER MODIFICATIONS' : 'EXÉCUTER LANCEMENT'}}
                  </button>
               </div>
@@ -846,12 +847,13 @@ export class AdminProjetsComponent implements OnInit {
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
   private exportService = inject(ExportService);
+  private snackBar = inject(MatSnackBar);
   
   societeId: string = '';
   societeNom: string = '';
-  projets: Projet[] = [];
-  filteredProjets: Projet[] = [];
-  chefs: any[] = [];
+  projetsSignal = signal<Projet[]>([]);
+  chefsSignal = signal<any[]>([]);
+
   searchQuery = '';
   filterStatut = '';
   page = 1;
@@ -866,27 +868,46 @@ export class AdminProjetsComponent implements OnInit {
     const user = this.api.getCurrentUser();
     this.societeId = user?.societeId || '';
     this.loadChefs();
-    this.loadProjets();
   }
 
   loadChefs() {
-    this.api.getUtilisateurs().subscribe(users => {
-      this.chefs = users.filter(u => u.societeId === this.societeId && (u.typeUtilisateurId === 'T004' || u.typeUtilisateurId === 'T002'));
-      if (this.chefs.length === 0) this.chefs = users;
+    this.api.getEmployesBySociete(this.societeId).subscribe({
+      next: (users) => {
+        const filtered = (users || []).filter(u => u.typeUtilisateurId === 'T004' || u.typeUtilisateurId === 'T002');
+        this.chefsSignal.set(filtered);
+        this.loadProjets();
+      },
+      error: () => {
+        this.loadProjets();
+      }
     });
   }
 
   loadProjets() {
     const condition: any = { criteres: {} };
-    if (this.searchQuery) condition.nom = this.searchQuery;
-    if (this.filterStatut) condition.status = this.filterStatut;
-    if (this.societeId) condition.societeId = this.societeId;
+    if (this.searchQuery) condition.criteres.Nom = this.searchQuery;
+    if (this.filterStatut) condition.criteres.Status = this.filterStatut;
+    if (this.societeId) condition.criteres.SocieteId = this.societeId;
 
     this.api.getProjetsByConditionPage(this.page, this.pageSize, condition).subscribe(res => {
-      this.filteredProjets = (res.items || []).map((p: any) => ({
-        id: p.id, nom: p.nom, nomClient: p.nomClient, chef: p.utilisateurNom || 'Non assigné', status: p.status || 'En attente',
-        startDate: p.startDate, endDate: p.endDate, avancee: p.avancee || 0, membres: p.membres || 0
-      }));
+      const mapped = (res.items || []).map((p: any) => {
+        const chefId = p.utilisateurId || p.UtilisateurId;
+        const chef = this.chefsSignal().find(c => c.id === chefId);
+        const chefName = p.utilisateurNom || (chef ? `${chef.prenom || ''} ${chef.nom || ''}` : 'Non assigné');
+        return {
+          id: p.id || p.Id, 
+          nom: p.nom || p.Nom, 
+          nomClient: p.nomClient || p.NomClient, 
+          chef: chefName, 
+          status: p.status || p.Status || 'En attente',
+          startDate: p.startDate || p.StartDate, 
+          endDate: p.endDate || p.EndDate, 
+          avancee: p.avancee || p.Avancee || 0, 
+          membres: p.membresCount || p.membres || 1,
+          utilisateurId: chefId
+        };
+      });
+      this.projetsSignal.set(mapped);
       this.totalItems = res.totalCount || 0;
       if (this.societeId) {
         const s = this.api.getRawStorage().societes?.find((x: any) => x.id === this.societeId);
@@ -904,22 +925,58 @@ export class AdminProjetsComponent implements OnInit {
   setPage(p: number) { this.page = p; this.loadProjets(); }
   onPageSizeChange() { this.page = 1; this.loadProjets(); }
   applyFilter() { this.page = 1; this.loadProjets(); }
-  exportExcel() { this.exportService.exportToExcel(this.filteredProjets, 'Registre_Missions'); }
-  exportPdf() { this.exportService.exportToPdf(['Nom', 'Statut', 'Chef'], this.filteredProjets.map(p => [p.nom, p.status, p.chef]), 'Rapport_Controle_Missions', 'Données Intelligence Mission'); }
+  exportExcel() { this.exportService.exportToExcel(this.projetsSignal(), 'Registre_Missions'); }
+  exportPdf() { this.exportService.exportToPdf(['Nom', 'Statut', 'Chef'], this.projetsSignal().map(p => [p.nom, p.status, p.chef]), 'Rapport_Controle_Missions', 'Données Intelligence Mission'); }
   
   openAddDialog() { this.editingProjet = null; this.formData = { nom: '', description: '', chef: '', dateDebut: new Date().toISOString().split('T')[0], dateFin: '', status: 'En attente' }; this.showDialog = true; }
   editProjet(p: any) { this.editingProjet = p; this.formData = { ...p, dateDebut: p.startDate?.split('T')[0], dateFin: p.endDate?.split('T')[0] }; this.showDialog = true; }
   closeDialog() { this.showDialog = false; }
 
   saveProjet() {
-    if (!this.formData.nom) return;
-    const data = { ...this.formData, utilisateurId: this.formData.chef, startDate: this.formData.dateDebut, endDate: this.formData.dateFin };
+    console.log('saveProjet called', this.formData);
+    if (!this.formData.nom) {
+      console.log('Nom is required');
+      return;
+    }
+    const data = { 
+      ...this.formData, 
+      societeId: this.societeId,
+      utilisateurId: this.formData.chef, 
+      startDate: this.formData.dateDebut, 
+      endDate: this.formData.dateFin 
+    };
+    
+    const chefName = this.chefsSignal().find(c => c.id === data.utilisateurId)?.nom || 'Non assigné';
+    console.log('Creating project with data:', data, 'chefName:', chefName);
+
     if (this.editingProjet) {
-      this.api.updateProjet({ ...data, id: this.editingProjet.id }).subscribe(() => { this.loadProjets(); this.closeDialog(); });
+      this.api.updateProjet({ ...data, id: this.editingProjet.id }).subscribe(() => { 
+        this.loadProjets();
+        this.closeDialog(); 
+      });
     } else {
-      this.api.createProjet(data).subscribe(() => { this.loadProjets(); this.closeDialog(); });
+      this.api.createProjet(data).subscribe((res: any) => { 
+        console.log('Create response:', res);
+        this.closeDialog();
+        // Reload projects to ensure we have the correct data from backend
+        this.loadProjets();
+      }, (err) => {
+        console.error('Error creating project:', err);
+      });
     }
   }
 
-  deleteProjet(p: any) { if (confirm('Décommissionner la mission ?')) this.api.deleteProjet(p.id).subscribe(() => this.loadProjets()); }
+  deleteProjet(p: any) {
+    if (confirm('Décommissionner la mission ?')) {
+      this.api.deleteProjet(p.id).subscribe({
+        next: () => {
+          this.snackBar.open('Mission décommissionnée', 'Fermer', { duration: 3000 });
+          this.loadProjets();
+        },
+        error: (err) => {
+          this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
+        }
+      });
+    }
+  }
 }

@@ -9,6 +9,7 @@ import { AdminParametresComponent } from './pages/admin-parametres/admin-paramet
 import { CalendarViewComponent } from '@shared/components/calendar-view/calendar-view.component';
 
 export const ADMIN_ROUTES: Routes = [
+  { path: '', component: AdminDashboardComponent, pathMatch: 'full' },
   { path: 'dashboard', component: AdminDashboardComponent },
   { path: 'employes', component: AdminEmployesComponent },
   { path: 'projets', component: AdminProjetsComponent },
@@ -16,6 +17,5 @@ export const ADMIN_ROUTES: Routes = [
   { path: 'calendar', component: CalendarViewComponent },
   { path: 'paiements', component: AdminPaiementsComponent },
   { path: 'chat', component: AdminChatComponent },
-  { path: 'parametres', component: AdminParametresComponent },
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+  { path: 'parametres', component: AdminParametresComponent }
 ];

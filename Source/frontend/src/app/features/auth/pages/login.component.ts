@@ -1,4 +1,4 @@
-﻿import { Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -9,43 +9,62 @@ import { ApiService } from '@core/services/api.service';
   standalone: true,
   imports: [CommonModule, RouterModule, ReactiveFormsModule],
   template: `
-
     <div class="login-container">
-      <div class="background-pattern"></div>
       <div class="login-card">
         <div class="login-header">
-          <div class="logo-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div class="logo-section">
+            <svg class="logo-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
               <polyline points="10 17 15 12 10 7"/>
               <line x1="15" y1="12" x2="3" y2="12"/>
             </svg>
+            <span class="logo-text">GestProjet</span>
           </div>
-          <h1 class="login-title">Connexion</h1>
-          <p class="login-subtitle">Accédez à votre espace de travail</p>
+          <h1 class="login-title">Bienvenue</h1>
+          <p class="login-subtitle">Connectez-vous à votre espace de travail</p>
         </div>
         
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
           <div class="form-group">
-            <label class="form-label">Email</label>
+            <label for="email" class="form-label">Adresse email</label>
             <div class="input-wrapper">
               <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
-              <input type="email" formControlName="email" class="form-input" placeholder="votre@email.com">
+              <input 
+                id="email"
+                type="email" 
+                formControlName="email" 
+                class="form-input" 
+                placeholder="nom@entreprise.com"
+                autocomplete="email"
+              >
             </div>
+            @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
+              <span class="error-message">Veuillez entrer une adresse email valide</span>
+            }
           </div>
           
           <div class="form-group">
-            <label class="form-label">Mot de passe</label>
+            <label for="password" class="form-label">Mot de passe</label>
             <div class="input-wrapper">
               <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
-              <input type="password" formControlName="password" class="form-input" placeholder="">
+              <input 
+                id="password"
+                type="password" 
+                formControlName="password" 
+                class="form-input" 
+                placeholder="••••••••"
+                autocomplete="current-password"
+              >
             </div>
+            @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+              <span class="error-message">Veuillez entrer votre mot de passe</span>
+            }
           </div>
           
           <div class="form-options">
@@ -61,56 +80,26 @@ import { ApiService } from '@core/services/api.service';
               <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
               </svg>
+              Connexion en cours...
             } @else {
               Se connecter
             }
           </button>
+          
+          @if (errorMessage) {
+            <div class="error-alert">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>{{ errorMessage }}</span>
+            </div>
+          }
         </form>
         
-        <div class="demo-logins">
-          <p class="demo-title">Comptes de démonstration</p>
-          <div class="demo-buttons">
-            <button type="button" class="btn btn-demo" (click)="demoLogin('superadmin@demo.com', 'demo123')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              Super Admin
-            </button>
-            <button type="button" class="btn btn-demo" (click)="demoLogin('admin@demo.com', 'demo123')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              Admin
-            </button>
-            <button type="button" class="btn btn-demo" (click)="demoLogin('rh@demo.com', 'demo123')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              RH
-            </button>
-            <button type="button" class="btn btn-demo" (click)="demoLogin('dev@demo.com', 'demo123')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              Développeur
-            </button>
-            <button type="button" class="btn btn-demo" (click)="demoLogin('qa@demo.com', 'demo123')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              QA
-            </button>
-            <button type="button" class="btn btn-demo" (click)="demoLogin('chef@demo.com', 'demo123')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              Chef de projet
-            </button>
-          </div>
-        </div>
-        
         <div class="login-footer">
-          <p class="footer-text">Vous êtes candidat ? <a routerLink="/applicant/home" class="footer-link">Postulez ici</a></p>
+          <p class="footer-text">Vous êtes candidat ? <a routerLink="/applicant" class="footer-link">Postulez ici</a></p>
         </div>
       </div>
     </div>
@@ -121,43 +110,25 @@ import { ApiService } from '@core/services/api.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3d7ab5 100%);
       padding: 20px;
       position: relative;
-      overflow: hidden;
-    }
-
-    .background-pattern {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: 
-        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
-      pointer-events: none;
     }
 
     .login-card {
-      background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(10px);
-      border-radius: 24px;
-      box-shadow: 
-        0 25px 50px -12px rgba(0, 0, 0, 0.25),
-        0 0 0 1px rgba(255, 255, 255, 0.2);
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       padding: 48px 40px;
       width: 100%;
-      max-width: 460px;
-      position: relative;
-      animation: slideUp 0.6s ease-out;
+      max-width: 440px;
+      animation: fadeIn 0.5s ease-out;
     }
 
-    @keyframes slideUp {
+    @keyframes fadeIn {
       from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(20px);
       }
       to {
         opacity: 1;
@@ -170,51 +141,58 @@ import { ApiService } from '@core/services/api.service';
       margin-bottom: 40px;
     }
 
-    .logo-icon {
-      display: inline-flex;
+    .logo-section {
+      display: flex;
       align-items: center;
       justify-content: center;
-      width: 72px;
-      height: 72px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 20px;
+      gap: 12px;
       margin-bottom: 24px;
-      color: white;
-      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
     }
 
-    .login-title {
-      font-size: 32px;
+    .logo-icon {
+      color: #2d5a87;
+    }
+
+    .logo-text {
+      font-size: 28px;
       font-weight: 700;
-      color: #1a1a2e;
-      margin: 0 0 12px;
+      color: #1e3a5f;
       letter-spacing: -0.5px;
     }
 
+    .login-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 8px;
+      letter-spacing: -0.3px;
+    }
+
     .login-subtitle {
-      color: #6b7280;
+      color: #64748b;
       margin: 0;
-      font-size: 16px;
+      font-size: 15px;
+      font-weight: 400;
     }
 
     .login-form {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
       margin-bottom: 32px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .form-label {
       font-size: 14px;
       font-weight: 600;
-      color: #374151;
-      letter-spacing: 0.3px;
+      color: #334155;
+      letter-spacing: 0.2px;
     }
 
     .input-wrapper {
@@ -225,38 +203,45 @@ import { ApiService } from '@core/services/api.service';
 
     .input-icon {
       position: absolute;
-      left: 16px;
-      color: #9ca3af;
+      left: 14px;
+      color: #94a3b8;
       pointer-events: none;
       transition: color 0.2s ease;
     }
 
     .form-input {
       width: 100%;
-      padding: 16px 16px 16px 48px;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
+      padding: 14px 14px 14px 44px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
       font-size: 15px;
       transition: all 0.2s ease;
-      background: #f9fafb;
+      background: #f8fafc;
+      color: #1e293b;
     }
 
     .form-input:focus {
       outline: none;
-      border-color: #667eea;
+      border-color: #2d5a87;
       background: white;
-      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+      box-shadow: 0 0 0 3px rgba(45, 90, 135, 0.1);
     }
 
-    .form-input:focus + .input-icon {
-      color: #667eea;
+    .form-input:focus ~ .input-icon {
+      color: #2d5a87;
+    }
+
+    .error-message {
+      font-size: 13px;
+      color: #dc2626;
+      margin-top: 4px;
     }
 
     .form-options {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: -8px;
+      margin-top: -4px;
     }
 
     .checkbox-label {
@@ -264,28 +249,28 @@ import { ApiService } from '@core/services/api.service';
       align-items: center;
       gap: 8px;
       font-size: 14px;
-      color: #4b5563;
+      color: #475569;
       cursor: pointer;
       user-select: none;
     }
 
     .checkbox-label input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: #667eea;
+      width: 16px;
+      height: 16px;
+      accent-color: #2d5a87;
       cursor: pointer;
     }
 
     .forgot-link {
       font-size: 14px;
-      color: #667eea;
+      color: #2d5a87;
       text-decoration: none;
       font-weight: 500;
       transition: color 0.2s ease;
     }
 
     .forgot-link:hover {
-      color: #764ba2;
+      color: #1e3a5f;
       text-decoration: underline;
     }
 
@@ -294,24 +279,24 @@ import { ApiService } from '@core/services/api.service';
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 16px 24px;
-      border-radius: 12px;
+      padding: 14px 24px;
+      border-radius: 10px;
       font-weight: 600;
-      font-size: 16px;
+      font-size: 15px;
       border: none;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #2d5a87 0%, #3d7ab5 100%);
       color: white;
-      box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 4px 12px rgba(45, 90, 135, 0.3);
     }
 
     .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(45, 90, 135, 0.4);
     }
 
     .btn-primary:active:not(:disabled) {
@@ -319,7 +304,7 @@ import { ApiService } from '@core/services/api.service';
     }
 
     .btn-primary:disabled {
-      opacity: 0.6;
+      opacity: 0.7;
       cursor: not-allowed;
       transform: none;
     }
@@ -337,76 +322,42 @@ import { ApiService } from '@core/services/api.service';
       to { transform: rotate(360deg); }
     }
 
-    .demo-logins {
-      background: #f3f4f6;
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 32px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .demo-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #374151;
-      margin: 0 0 16px;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .demo-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    .btn-demo {
-      background: white;
-      border: 2px solid #e5e7eb;
-      color: #4b5563;
-      padding: 10px 16px;
-      font-size: 13px;
-      border-radius: 10px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-
-    .btn-demo:hover {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-color: transparent;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .btn-demo svg {
-      transition: stroke 0.2s ease;
-    }
-
     .login-footer {
       text-align: center;
       padding-top: 24px;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #e2e8f0;
     }
 
     .footer-text {
-      color: #6b7280;
+      color: #64748b;
       font-size: 14px;
       margin: 0;
     }
 
     .footer-link {
-      color: #667eea;
+      color: #2d5a87;
       text-decoration: none;
       font-weight: 600;
       transition: color 0.2s ease;
     }
 
     .footer-link:hover {
-      color: #764ba2;
+      color: #1e3a5f;
       text-decoration: underline;
+    }
+
+    .error-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      color: #dc2626;
+      font-size: 14px;
+      font-weight: 500;
+      animation: fadeIn 0.3s ease-out;
     }
   `]
 })
@@ -433,35 +384,68 @@ export class LoginComponent {
     this.isLoading = true;
     this.errorMessage = '';
 
+    // Nettoyer le localStorage avant le login
+    localStorage.removeItem('app_token');
+    localStorage.removeItem('utilisateur');
+    localStorage.removeItem('app_permissions');
+    console.log('Login - LocalStorage nettoyé');
+
     this.api.login(this.loginForm.value.email, this.loginForm.value.password).subscribe({
       next: (response) => {
         this.isLoading = false;
-        const role = response.role || 'USER';
+        this.errorMessage = '';
+        
+        console.log('Login - Réponse complète du backend:', response);
+        
+        const token = response.token || response.Token;
+        const utilisateur = response.utilisateur || response.Utilisateur;
+        
+        if (token) this.api.setToken(token);
+        if (utilisateur) localStorage.setItem('utilisateur', JSON.stringify(utilisateur));
+
+        const role = (utilisateur?.typeUtilisateurId || utilisateur?.TypeUtilisateurId || 'USER').toUpperCase();
+        console.log('Login - Role détecté:', role);
+        console.log('Login - Utilisateur complet:', utilisateur);
         this.redirectBasedOnRole(role);
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = 'Email ou mot de passe incorrect';
+        this.errorMessage = error?.error?.message || error?.error?.Message || 'Email ou mot de passe incorrect. Vérifiez vos identifiants.';
       }
     });
   }
 
-  demoLogin(email: string, password: string) {
-    this.loginForm.patchValue({ email, password });
-    this.onSubmit();
-  }
-
   private redirectBasedOnRole(role: string) {
     const routes: Record<string, string> = {
-      'SUPER_ADMIN': '/super-admin/dashboard',
-      'ADMIN': '/admin/dashboard',
-      'RH': '/rh/dashboard',
-      'DEVELOPPEUR': '/developpeur/dashboard',
-      'QA': '/qa/dashboard',
-      'CHEF_PROJET': '/chef/dashboard'
+      'T001': '/superadmin',
+      'T002': '/admin',
+      'T003': '/rh',
+      'T004': '/chef',
+      'T005': '/dev',
+      'T006': '/qa',
+      'T007': '/applicant',
+      'SUPER_ADMIN': '/superadmin',
+      'ADMIN': '/admin',
+      'ADMIN_SOCIETE': '/admin',
+      'ADMIN SOCIETE': '/admin',
+      'ADMIN SOCIÉTÉ': '/admin',
+      'ADMINSOCIETE': '/admin',
+      'RH': '/rh',
+      'DEVELOPPEUR': '/dev',
+      'QA': '/qa',
+      'CHEF_PROJET': '/chef',
+      'CHEF PROJET': '/chef',
+      'CANDIDAT': '/applicant'
     };
 
-    const route = routes[role] || '/applicant/home';
+    let route = routes[role] || '/admin';
+    
+    // Fallback pour les admins qui auraient été assignés au rôle chef_projet par erreur
+    if (role === 'CHEF_PROJET' && this.loginForm.value.email.toLowerCase().includes('admin')) {
+      route = '/admin';
+    }
+
+    console.log('Login - Route choisie:', route, 'pour le rôle:', role);
     this.router.navigate([route]);
   }
 }

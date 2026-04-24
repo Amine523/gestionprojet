@@ -1,14 +1,15 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
 import { ExportService } from '@core/services/export.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-super-admin-utilisateurs',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -54,7 +55,7 @@ import { ExportService } from '@core/services/export.service';
           </div>
           <select [(ngModel)]="selectedSociete" (ngModelChange)="filterBySociete()" class="filter-select">
             <option value="">Toutes les sociétés</option>
-            @for (s of societes; track s.id) {
+            @for (s of societesSignal(); track s.id) {
               <option [value]="s.id">{{s.nom}}</option>
             }
           </select>
@@ -106,7 +107,7 @@ import { ExportService } from '@core/services/export.service';
               </tr>
             </thead>
             <tbody>
-              @for (u of dataSource; track u.id) {
+              @for (u of usersSignal(); track u.id) {
                 <tr>
                   <td>
                     <div class="user-info">
@@ -215,24 +216,24 @@ import { ExportService } from '@core/services/export.service';
                <div class="form-grid">
                   <div class="form-field">
                      <label>Nom Complet</label>
-                     <input [(ngModel)]="formData.nom" class="form-input" placeholder="Entrez le nom...">
+                     <input [(ngModel)]="formData.nom" name="nom" class="form-input" placeholder="Entrez le nom...">
                   </div>
                   <div class="form-field">
                      <label>Email Principal</label>
-                     <input [(ngModel)]="formData.email" class="form-input" placeholder="nom@exemple.com">
+                     <input [(ngModel)]="formData.email" name="email" class="form-input" placeholder="nom@exemple.com">
                   </div>
                   <div class="form-field">
                      <label>Société Affiliée</label>
-                     <select [(ngModel)]="formData.societeId" class="form-input">
+                     <select [(ngModel)]="formData.societeId" name="societeId" class="form-input">
                         <option value="">Aucune</option>
-                        @for (s of societes; track s.id) {
+                        @for (s of societesSignal(); track s.id) {
                           <option [value]="s.id">{{s.nom}}</option>
                         }
                      </select>
                   </div>
                   <div class="form-field">
                      <label>Rôle Système</label>
-                     <select [(ngModel)]="formData.typeUtilisateurId" class="form-input">
+                     <select [(ngModel)]="formData.typeUtilisateurId" name="role" class="form-input">
                         <option value="T002">Admin Société</option>
                         <option value="T003">RH</option>
                         <option value="T004">Chef de Projet</option>
@@ -243,11 +244,11 @@ import { ExportService } from '@core/services/export.service';
                   </div>
                   <div class="form-field">
                      <label>Téléphone</label>
-                     <input [(ngModel)]="formData.telephone" class="form-input" placeholder="+216 ...">
+                     <input [(ngModel)]="formData.telephone" name="telephone" class="form-input" placeholder="+216 ...">
                   </div>
                   <div class="form-field">
                      <label>Mot de Passe</label>
-                     <input type="password" [(ngModel)]="formData.password" class="form-input" placeholder="••••••••">
+                     <input type="password" [(ngModel)]="formData.password" name="password" class="form-input" placeholder="••••••••">
                   </div>
                </div>
                <div class="toggle-field">
@@ -261,8 +262,8 @@ import { ExportService } from '@core/services/export.service';
                </div>
             </div>
             <div class="modal-footer">
-               <button (click)="showDialog = false" class="btn btn-ghost">ANNULER</button>
-               <button (click)="saveUser()" class="btn btn-primary">{{editingUser ? 'CONFIRMER MISE À JOUR' : 'CRÉER UTILISATEUR'}}</button>
+               <button type="button" (click)="showDialog = false" class="btn btn-ghost">ANNULER</button>
+               <button type="button" (click)="saveUser()" class="btn btn-primary">{{editingUser ? 'CONFIRMER MISE À JOUR' : 'CRÉER UTILISATEUR'}}</button>
             </div>
          </div>
       </div>
@@ -925,12 +926,12 @@ import { ExportService } from '@core/services/export.service';
 export class SuperAdminUtilisateursComponent implements OnInit {
   private api = inject(ApiService);
   private exportService = inject(ExportService);
+  private snackBar = inject(MatSnackBar);
 
   displayedColumns = ['id', 'nom', 'email', 'societeId', 'typeUtilisateurId', 'actif', 'actions'];
-  dataSource: any[] = [];
+  usersSignal = signal<any[]>([]);
+  societesSignal = signal<any[]>([]);
 
-  societes: any[] = [];
-  allUsers: any[] = [];
   searchQuery = '';
   selectedSociete = '';
   showDialog = false;
@@ -953,7 +954,7 @@ export class SuperAdminUtilisateursComponent implements OnInit {
     this.api.getSocietes().subscribe({
       next: (data) => { 
         const validSocietes = (data || []).filter((s: any) => s.id && s.id.trim());
-        this.societes = validSocietes;
+        this.societesSignal.set(validSocietes);
       }
     });
   }
@@ -972,12 +973,12 @@ export class SuperAdminUtilisateursComponent implements OnInit {
 
     obs.subscribe({
       next: (res: any) => {
-        this.dataSource = res.items || [];
+        this.usersSignal.set(res.items || []);
         this.totalItems = res.totalCount || 0;
         this.isLoading = false;
       },
       error: () => {
-        this.dataSource = [];
+        this.usersSignal.set([]);
         this.totalItems = 0;
         this.isLoading = false;
       }
@@ -1012,19 +1013,19 @@ export class SuperAdminUtilisateursComponent implements OnInit {
   }
 
   exportExcel() {
-    this.exportService.exportToExcel(this.dataSource, 'Utilisateurs_Nadhemni');
+    this.exportService.exportToExcel(this.usersSignal(), 'Utilisateurs_Nadhemni');
   }
 
   exportPdf() {
     const cols = ['Nom', 'Email', 'Société', 'Statut'];
-    const data = this.dataSource.map(u => [
+    const data = this.usersSignal().map(u => [
       u.nom, u.email, this.getSocieteName(u.societeId), u.actif ? 'Actif' : 'Inactif'
     ]);
     this.exportService.exportToPdf(cols, data, 'Utilisateurs_Nadhemni', 'Liste des Utilisateurs');
   }
 
   getSocieteName(societeId: string): string {
-    const societe = this.societes.find(s => s.id === societeId);
+    const societe = this.societesSignal().find(s => s.id === societeId);
     return societe ? societe.nom : '-';
   }
 
@@ -1051,19 +1052,53 @@ export class SuperAdminUtilisateursComponent implements OnInit {
   }
 
   saveUser() {
-    if (!this.formData.nom || !this.formData.email) return;
+    if (!this.formData.nom || this.formData.nom.trim().length < 3) {
+      this.snackBar.open("Le nom doit contenir au moins 3 caractères", 'Fermer', { duration: 3000 });
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!this.formData.email || !emailRegex.test(this.formData.email)) {
+      this.snackBar.open("Format d'email invalide", 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    // Vérifier si l'email existe déjà (uniquement pour la création)
+    if (!this.editingUser) {
+      const emailExists = this.usersSignal().some(u => u.email === this.formData.email);
+      if (emailExists) {
+        this.snackBar.open("Cet email est déjà utilisé par un autre utilisateur", 'Fermer', { duration: 3000 });
+        return;
+      }
+    }
+
+    const payload = {
+      ...this.formData,
+      motDePasse: this.formData.password || this.formData.motDePasse || '123456'
+    };
+
     if (this.editingUser) {
-      this.api.updateUtilisateur(this.editingUser.id, this.formData).subscribe({
+      this.api.updateUtilisateur(this.editingUser.id, payload).subscribe({
         next: () => {
+          this.usersSignal.update(list => list.map(u => u.id === this.editingUser.id ? { ...u, ...payload } : u));
+          this.snackBar.open('Utilisateur mis à jour', 'Fermer', { duration: 3000 });
           this.showDialog = false;
-          this.loadUsers();
-        }
+        },
+        error: (err) => this.snackBar.open('Erreur: ' + (err.error || 'Échec'), 'Fermer', { duration: 3000 })
       });
     } else {
-      this.api.createUtilisateur(this.formData).subscribe({
+      this.api.createUtilisateur(payload).subscribe({
         next: () => {
+          this.snackBar.open('Nouvel utilisateur créé', 'Fermer', { duration: 3000 });
           this.showDialog = false;
           this.loadUsers();
+        },
+        error: (err) => {
+          const errorText = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
+          if (errorText.includes('UNIQUE KEY') && errorText.includes('email')) {
+            this.snackBar.open("Cet email existe déjà dans la base de données", 'Fermer', { duration: 5000 });
+          } else {
+            this.snackBar.open('Erreur: ' + (err.error?.message || errorText || 'Échec'), 'Fermer', { duration: 5000 });
+          }
         }
       });
     }
@@ -1073,7 +1108,11 @@ export class SuperAdminUtilisateursComponent implements OnInit {
     if (confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) {
       this.api.deleteUtilisateur(user.id).subscribe({
         next: () => {
+          this.snackBar.open('Utilisateur supprimé', 'Fermer', { duration: 3000 });
           this.loadUsers();
+        },
+        error: (err) => {
+          this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
         }
       });
     }
@@ -1083,7 +1122,7 @@ export class SuperAdminUtilisateursComponent implements OnInit {
     const updated = { ...user, actif: !user.actif };
     this.api.updateUtilisateur(user.id, updated).subscribe({
       next: () => {
-        this.loadUsers();
+        this.usersSignal.update(list => list.map(u => u.id === user.id ? { ...u, actif: !user.actif } : u));
       }
     });
   }

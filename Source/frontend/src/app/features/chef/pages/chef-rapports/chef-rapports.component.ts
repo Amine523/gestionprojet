@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-chef-rapports',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="rapports-container">
@@ -651,6 +652,7 @@ import { ApiService } from '@core/services/api.service';
 })
 export class ChefRapportsComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   
   societeId = '';
   societeNom = 'Votre société';
@@ -713,7 +715,7 @@ export class ChefRapportsComponent implements OnInit {
   }
 
   updateRapport() {
-    alert('Rapport mis à jour: ' + this.periode);
+    this.snackBar.open('Rapport mis à jour: ' + this.periode, 'Fermer', { duration: 3000 });
   }
 }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
@@ -36,11 +36,11 @@ interface Conge {
           </p>
         </div>
         <div class="header-actions">
-           <div class="header-badge" [class.urgent]="getEnAttenteCount() > 0">
-              @if (getEnAttenteCount() > 0) {
+           <div class="header-badge" [class.urgent]="enAttenteCount() > 0">
+              @if (enAttenteCount() > 0) {
                 <span class="pulse-dot"></span>
               }
-              {{getEnAttenteCount()}} requêtes à traiter
+              {{enAttenteCount()}} requêtes à traiter
            </div>
            <button class="btn btn-secondary" (click)="loadData()">
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -66,7 +66,7 @@ interface Conge {
             </svg>
           </div>
           <div class="stat-info">
-             <div class="stat-value">{{stats.totalEmployes}}</div>
+             <div class="stat-value">{{statsSignal().totalEmployes}}</div>
              <div class="stat-label">Collaborateurs</div>
           </div>
         </div>
@@ -80,11 +80,11 @@ interface Conge {
             </svg>
           </div>
           <div class="stat-info">
-             <div class="stat-value">{{stats.congesValidesCeMois}}</div>
+             <div class="stat-value">{{statsSignal().congesValidesCeMois}}</div>
              <div class="stat-label">Approuvés ce mois</div>
           </div>
         </div>
-        @if (stats.demandesCongesEnAttente > 0) {
+        @if (enAttenteCount() > 0) {
           <div class="card stat-card pulse-card">
             <div class="stat-icon amber">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -93,7 +93,7 @@ interface Conge {
               </svg>
             </div>
             <div class="stat-info">
-               <div class="stat-value">{{stats.demandesCongesEnAttente}}</div>
+               <div class="stat-value">{{enAttenteCount()}}</div>
                <div class="stat-label">En attente</div>
             </div>
           </div>
@@ -134,7 +134,7 @@ interface Conge {
               </tr>
             </thead>
             <tbody>
-              @for (c of conges; track c.id) {
+              @for (c of congesSignal(); track c.id) {
                 <tr>
                   <td class="ref-cell">#{{c.id.substring(0,6)}}</td>
                   <td>
@@ -193,7 +193,7 @@ interface Conge {
             </tbody>
           </table>
 
-          @if (conges.length === 0) {
+          @if (congesSignal().length === 0) {
             <div class="empty-state">
                <div class="empty-icon">
                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -758,14 +758,10 @@ export class RhCongesComponent implements OnInit {
   societeNom: string = '';
   currentUserId: string = '';
   
-  conges: Conge[] = [];
-  displayedColumns = ['id', 'employe', 'type', 'periode', 'motif', 'status', 'actions'];
+  congesSignal = signal<Conge[]>([]);
+  statsSignal = signal({ totalEmployes: 0, congesValidesCeMois: 0, demandesCongesEnAttente: 0 });
 
-  stats = { 
-    totalEmployes: 0, 
-    congesValidesCeMois: 0, 
-    demandesCongesEnAttente: 0 
-  };
+  enAttenteCount = computed(() => this.congesSignal().filter(c => c.status === 'En attente').length);
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
@@ -782,14 +778,25 @@ export class RhCongesComponent implements OnInit {
 
   loadStats() {
     this.api.getRHStats(this.societeId).subscribe(res => {
-      this.stats = res;
+      this.statsSignal.set(res);
     });
   }
 
   loadConges() {
     this.api.getDemandesEnAttenteReal(this.societeId).subscribe({
       next: (data) => {
-        this.conges = data;
+        const list = data.map((d: any) => ({
+          id: d.id || d.Id,
+          utilisateurId: d.utilisateurId || d.UtilisateurId,
+          utilisateurNom: d.utilisateurNom || 'Utilisateur ' + (d.utilisateurId || d.UtilisateurId),
+          typeNom: d.typeNom || d.TypeNom || 'Congé',
+          dateDebut: d.dateDebut || d.DateDebut,
+          dateFin: d.dateFin || d.DateFin,
+          nombreJours: d.jours || d.Jours || 0,
+          motif: d.motif || d.Motif || '',
+          status: this.normalizeStatus(d.status || d.Status || 'En attente')
+        }));
+        this.congesSignal.set(list);
       },
       error: () => {
         this.snackBar.open('Erreur de chargement des demandes', 'Fermer', { duration: 3000 });
@@ -797,15 +804,19 @@ export class RhCongesComponent implements OnInit {
     });
   }
 
-  getEnAttenteCount() {
-    return this.conges.filter(c => c.status === 'En attente').length;
+  private normalizeStatus(status: string): string {
+    if (!status) return 'En attente';
+    // Convert underscore to space for consistency
+    return status.replace('_', ' ');
   }
 
-  validerConge(c: Conge, approuve: boolean) {
-    this.api.validerDemandeCongeReal(c.id, this.currentUserId, approuve).subscribe({
+  validerConge(conge: Conge, approuve: boolean) {
+    const status = approuve ? 'Validée' : 'Refusée';
+    this.api.validerDemandeCongeReal(conge.id, this.currentUserId, approuve).subscribe({
       next: (res) => {
+        this.congesSignal.update(list => list.map(c => c.id === conge.id ? { ...c, status } : c));
         this.snackBar.open(res.message, 'Fermer', { duration: 3000 });
-        this.loadData();
+        this.loadStats();
       },
       error: () => {
         this.snackBar.open('Erreur lors de la validation', 'Fermer', { duration: 3000 });
@@ -813,8 +824,7 @@ export class RhCongesComponent implements OnInit {
     });
   }
 
-  voirDetail(c: Conge) {
-    this.snackBar.open(`Détails: ${c.utilisateurNom} - ${c.typeNom} (${c.nombreJours} jours)`, 'Fermer', { duration: 3000 });
+  voirDetail(conge: Conge) {
+    this.snackBar.open(`Détails de la demande #${conge.id} - ${conge.utilisateurNom}`, 'Fermer', { duration: 5000 });
   }
 }
-

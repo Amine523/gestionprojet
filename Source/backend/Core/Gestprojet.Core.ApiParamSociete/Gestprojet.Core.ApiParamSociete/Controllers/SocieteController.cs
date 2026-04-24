@@ -165,7 +165,7 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         /// <summary>
         /// POST /api/Societe/ListeParCritere - Rechercher par critères
         /// </summary>
-        [HttpPost("ListeParCritere")]
+        [HttpPost("liste-par-condition")]
         public async Task<ActionResult> ListeParCritere([FromBody] CritereRecherche critere)
         {
             try
@@ -207,7 +207,7 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         /// <summary>
         /// DELETE /api/Societe/SupprimerParCondition - Supprimer par condition
         /// </summary>
-        [HttpDelete("SupprimerParCondition")]
+        [HttpPost("supprimer-par-condition")]
         public async Task<ActionResult> SupprimerParCondition([FromBody] CritereRecherche critere)
         {
             try
@@ -228,8 +228,8 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         /// <summary>
         /// GET /api/Societe/ListeParPage?pageNumero=1&pageTaille=20 - Pagination
         /// </summary>
-        [HttpGet("ListeParPage")]
-        public async Task<ActionResult> ListeParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 20)
+        [HttpGet("liste-par-page/{pageNumero}/{pageTaille}")]
+        public async Task<ActionResult> ListeParPage(int pageNumero = 1, int pageTaille = 20)
         {
             try
             {
@@ -250,8 +250,8 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         /// <summary>
         /// POST /api/Societe/ListeParConditionParPage - Pagination avec critères
         /// </summary>
-        [HttpPost("ListeParConditionParPage")]
-        public async Task<ActionResult> ListeParConditionParPage([FromBody] CritereRecherche critere, [FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 20)
+        [HttpPost("liste-par-condition-par-page/{pageNumero}/{pageTaille}")]
+        public async Task<ActionResult> ListeParConditionParPage([FromBody] CritereRecherche critere, int pageNumero = 1, int pageTaille = 20)
         {
             try
             {

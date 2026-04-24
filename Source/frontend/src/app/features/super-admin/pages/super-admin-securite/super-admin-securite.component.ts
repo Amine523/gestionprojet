@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface SecurityAlert {
   id: number;
@@ -41,7 +42,7 @@ interface EmailNotificationSettings {
 @Component({
   selector: 'app-super-admin-securite',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -236,7 +237,7 @@ interface EmailNotificationSettings {
                   <strong>Longueur minimale</strong>
                   <span>Nombre minimum de caractères: {{passwordPolicy.minLength}} caractères</span>
                 </div>
-                <input type="number" class="form-input" [(ngModel)]="passwordPolicy.minLength" min="4" max="32">
+                <input type="number" class="form-input" [(ngModel)]="passwordPolicy.minLength" name="minLength" min="4" max="32">
               </div>
             </div>
 
@@ -266,7 +267,7 @@ interface EmailNotificationSettings {
                   <span>Minutes avant déconnexion automatique: {{passwordPolicy.sessionTimeout}} min</span>
                 </div>
                 <div class="timeout-input">
-                  <input type="number" class="form-input" [(ngModel)]="passwordPolicy.sessionTimeout" min="5" max="120">
+                  <input type="number" class="form-input" [(ngModel)]="passwordPolicy.sessionTimeout" name="sessionTimeout" min="5" max="120">
                   <span>minutes</span>
                 </div>
               </div>
@@ -354,7 +355,7 @@ interface EmailNotificationSettings {
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
-                <input type="email" class="form-input" [(ngModel)]="emailSettings.recipientEmail" placeholder="admin@exemple.com">
+                <input type="email" class="form-input" [(ngModel)]="emailSettings.recipientEmail" name="recipientEmail" placeholder="admin@exemple.com">
               </div>
             </div>
 
@@ -1264,6 +1265,7 @@ interface EmailNotificationSettings {
 })
 export class SuperAdminSecuriteComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
 
   activeTab = 'alertes';
   showBlockDialog = false;
@@ -1351,7 +1353,7 @@ export class SuperAdminSecuriteComponent implements OnInit {
     const storage = data ? JSON.parse(data) : {};
     storage.passwordPolicy = this.passwordPolicy;
     localStorage.setItem('app_data', JSON.stringify(storage));
-    alert('Politique de sécurité enregistrée');
+    this.snackBar.open('Politique de sécurité enregistrée', 'Fermer', { duration: 3000 });
   }
 
   loadEmailSettings() {
@@ -1369,7 +1371,7 @@ export class SuperAdminSecuriteComponent implements OnInit {
     const storage = data ? JSON.parse(data) : {};
     storage.emailSettings = this.emailSettings;
     localStorage.setItem('app_data', JSON.stringify(storage));
-    alert('Paramètres d\'email enregistrés');
+    this.snackBar.open('Paramètres d\'email enregistrés', 'Fermer', { duration: 3000 });
   }
 
   saveBlockedIps() {
@@ -1389,7 +1391,7 @@ export class SuperAdminSecuriteComponent implements OnInit {
     };
     this.blockedIps.push(newBlock);
     this.saveBlockedIps();
-    alert('IP ' + ip + ' bloquée');
+    this.snackBar.open('IP ' + ip + ' bloquée', 'Fermer', { duration: 3000 });
   }
 
   createAlert(type: string, description: string, niveau: 'critical' | 'high' | 'medium' | 'low') {
@@ -1426,19 +1428,19 @@ export class SuperAdminSecuriteComponent implements OnInit {
 
   testEmail() {
     if (!this.emailSettings.recipientEmail) {
-      alert('Veuillez entrer une adresse email');
+      this.snackBar.open('Veuillez entrer une adresse email', 'Fermer', { duration: 3000 });
       return;
     }
     this.api.sendTestEmail(this.emailSettings.recipientEmail).subscribe({
       next: (res: any) => {
         if (res.success) {
-          alert('Email de test envoyé à ' + this.emailSettings.recipientEmail);
+          this.snackBar.open('Email de test envoyé à ' + this.emailSettings.recipientEmail, 'Fermer', { duration: 3000 });
         } else {
-          alert('Échec de l\'envoi de l\'email');
+          this.snackBar.open('Échec de l\'envoi de l\'email', 'Fermer', { duration: 3000 });
         }
       },
       error: () => {
-        alert('Erreur lors de l\'envoi de l\'email (API non disponible)');
+        this.snackBar.open('Erreur lors de l\'envoi de l\'email (API non disponible)', 'Fermer', { duration: 3000 });
       }
     });
   }
@@ -1459,7 +1461,7 @@ export class SuperAdminSecuriteComponent implements OnInit {
       niveau: niveau,
       timestamp: new Date().toISOString()
     });
-    window.alert('Alerte de sécurité: ' + type);
+    this.snackBar.open('Alerte de sécurité: ' + type, 'Fermer', { duration: 3000 });
   }
 
   getEmailSettings(): EmailNotificationSettings {
@@ -1478,7 +1480,7 @@ export class SuperAdminSecuriteComponent implements OnInit {
 
   refreshAlerts() {
     this.loadAllData();
-    alert('Alertes actualisées');
+    this.snackBar.open('Alertes actualisées', 'Fermer', { duration: 3000 });
   }
 
   saveAlerts() {
@@ -1486,19 +1488,19 @@ export class SuperAdminSecuriteComponent implements OnInit {
     const storage = data ? JSON.parse(data) : {};
     storage.securityAlerts = this.alerts;
     localStorage.setItem('app_data', JSON.stringify(storage));
-    alert('Alertes enregistrées');
+    this.snackBar.open('Alertes enregistrées', 'Fermer', { duration: 3000 });
   }
 
   deblockIp(ip: IpBlock) {
     ip.statut = 'debloque';
     this.saveBlockedIps();
-    alert('IP ' + ip.ip + ' débloquée');
+    this.snackBar.open('IP ' + ip.ip + ' débloquée', 'Fermer', { duration: 3000 });
   }
 
   toggleIpBlock(ip: IpBlock) {
     ip.statut = ip.statut === 'bloque' ? 'debloque' : 'bloque';
     this.saveBlockedIps();
-    alert('IP ' + ip.ip + (ip.statut === 'bloque' ? ' bloquée' : ' débloquée'));
+    this.snackBar.open('IP ' + ip.ip + (ip.statut === 'bloque' ? ' bloquée' : ' débloquée'), 'Fermer', { duration: 3000 });
   }
 
   openBlockDialog() {
@@ -1534,7 +1536,7 @@ export class SuperAdminSecuriteComponent implements OnInit {
       this.blockedIps = [];
       this.alerts = [];
       this.saveAllData();
-      alert('Données de sécurité effacées');
+      this.snackBar.open('Données de sécurité effacées', 'Fermer', { duration: 3000 });
     }
   }
 }

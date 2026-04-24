@@ -8,15 +8,15 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
         {
             return new
             {
-                pointageCore.Id,
-                pointageCore.UtilisateurId,
-                pointageCore.TypeId,
-                pointageCore.Date,
-                pointageCore.HeureEntree,
-                pointageCore.HeureSortie,
-                pointageCore.Duree,
-                pointageCore.Note,
-                pointageCore.Actif,
+                Id = pointageCore.Id,
+                UtilisateurId = pointageCore.UtilisateurId,
+                TypeId = pointageCore.TypeId,
+                Date = pointageCore.Date,
+                HeureEntree = pointageCore.HeureEntree.HasValue ? pointageCore.HeureEntree.Value.ToTimeSpan() : (TimeSpan?)null,
+                HeureSortie = pointageCore.HeureSortie.HasValue ? pointageCore.HeureSortie.Value.ToTimeSpan() : (TimeSpan?)null,
+                Duree = pointageCore.Duree,
+                Note = pointageCore.Note,
+                Actif = pointageCore.Actif
             };
         }
     }

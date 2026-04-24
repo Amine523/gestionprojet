@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-chef-equipe',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="equipe-container">
@@ -917,6 +918,7 @@ import { ApiService } from '@core/services/api.service';
 })
 export class ChefEquipeComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   
   societeId = '';
   societeNom = 'Votre société';
@@ -965,9 +967,12 @@ export class ChefEquipeComponent implements OnInit {
       error: () => {}
     });
     
+    const user = this.api.getCurrentUser();
     this.api.getProjetsBySociete(this.societeId).subscribe({
       next: (projets) => {
-        this.projets = projets.map((p: any) => ({ id: p.id, nom: p.nom }));
+        this.projets = (projets || [])
+          .filter((p: any) => p.utilisateurId === user?.id)
+          .map((p: any) => ({ id: p.id, nom: p.nom }));
       },
       error: () => {}
     });
@@ -979,15 +984,15 @@ export class ChefEquipeComponent implements OnInit {
     this.productiviteMoyenne = Math.round(this.membres.reduce((sum, m) => sum + m.productivite, 0) / this.membres.length);
   }
 
-  viewDetails(m: any) { alert('Voir détails: ' + m.nom); }
+  viewDetails(m: any) { this.snackBar.open('Voir détails: ' + m.nom, 'Fermer', { duration: 3000 }); }
   editMembre(m: any) { this.editingMembre = m; this.formData = { ...m }; }
-  affecterProjet(m: any) { alert('Affecter projet: ' + m.nom); }
+  affecterProjet(m: any) { this.snackBar.open('Affecter projet: ' + m.nom, 'Fermer', { duration: 3000 }); }
   retirerMembre(m: any) {
     if (confirm('Retirer ' + m.nom + ' de l\'équipe?')) {
       this.membres = this.membres.filter(x => x.id !== m.id);
       this.filteredMembres = [...this.membres];
       this.calculateStats();
-      alert('Membre retiré');
+      this.snackBar.open('Membre retiré', 'Fermer', { duration: 3000 });
     }
   }
 
@@ -1003,7 +1008,7 @@ export class ChefEquipeComponent implements OnInit {
 
   saveMembre() {
     if (!this.formData.nom) {
-      alert('Veuillez entrer un nom');
+      this.snackBar.open('Veuillez entrer un nom', 'Fermer', { duration: 3000 });
       return;
     }
     const initials = this.formData.nom.split(' ').map((n: string) => n[0]).join('').toUpperCase();
@@ -1015,7 +1020,7 @@ export class ChefEquipeComponent implements OnInit {
     }
     this.filteredMembres = [...this.membres];
     this.calculateStats();
-    alert('Membre enregistré');
+    this.snackBar.open('Membre enregistré', 'Fermer', { duration: 3000 });
     this.closeForm();
   }
 }

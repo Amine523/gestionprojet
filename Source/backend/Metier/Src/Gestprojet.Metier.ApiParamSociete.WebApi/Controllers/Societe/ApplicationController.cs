@@ -10,8 +10,9 @@ using System.Threading.Tasks;
 namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/application")]
     [AllowAnonymous]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
     public class ApplicationController : ControllerBase
     {
         private readonly IApplicationBusiness _applicationBusiness;
@@ -21,6 +22,23 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
         [HttpPost("AjouterOuModifier")]
         public async Task<IActionResult> AjouterOuModifier([FromBody] ApplicationCore entity)
+        {
+            if (entity == null) return BadRequest("Données Application invalides");
+            var result = await _applicationBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPost("ajouter")]
+        public async Task<IActionResult> Ajouter([FromBody] ApplicationCore entity)
+        {
+            if (entity == null) return BadRequest("Données Application invalides");
+            entity.Id = string.Empty;
+            var result = await _applicationBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPut("modifier")]
+        public async Task<IActionResult> Modifier([FromBody] ApplicationCore entity)
         {
             if (entity == null) return BadRequest("Données Application invalides");
             var result = await _applicationBusiness.AjouterOuModifierAsync(entity);
@@ -50,6 +68,13 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             return Ok(await _applicationBusiness.ListeParCritereAsync(critere));
         }
 
+        [HttpPost("liste-par-condition")]
+        public async Task<IActionResult> ListeParCondition([FromBody] ConditionRecherche critere)
+        {
+            if (critere == null) return BadRequest("Critère manquant");
+            return Ok(await _applicationBusiness.ListeParCritereAsync(critere));
+        }
+
         [HttpPost("ListeDetailleParCondition")]
         public async Task<IActionResult> ListeDetailleParCondition([FromBody] ConditionRecherche critere)
         {
@@ -59,6 +84,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Supprimer(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
+            var result = await _applicationBusiness.SupprimerAsync(id);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpDelete("supprimer/id/{id}")]
+        public async Task<IActionResult> SupprimerParId(string id)
         {
             if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
             var result = await _applicationBusiness.SupprimerAsync(id);
@@ -90,7 +123,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             => Ok(await _applicationBusiness.ListeDetailleParPageAsync(pageNumero, pageTaille));
 
         [HttpPost("ListeDetailleParConditionParPage")]
-        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche critere = null)
+        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche? critere = null)
         {
             var result = await _applicationBusiness.ListeDetailleParConditionParPageAsync(critere ?? new ConditionRecherche(), pageNumero, pageTaille);
             return Ok(result);

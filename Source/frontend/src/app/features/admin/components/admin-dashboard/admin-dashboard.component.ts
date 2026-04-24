@@ -207,7 +207,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
   private api = inject(ApiService);
   private aiService = inject(AiService);
   public t = inject(TranslationService);
-  
+
   societeId = '';
   societeNom = '';
 
@@ -244,90 +244,90 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     });
 
     this.api.getAttendanceTrends(this.societeId).subscribe({
-        next: (data: any[]) => {
-            this.updateActivityChart(data);
-        }
+      next: (data: any[]) => {
+        this.updateActivityChart(data);
+      }
     });
   }
 
   updateActivityChart(trends: any[]) {
-      if (!this.activityChartRef?.nativeElement) return;
-      if (this.activitiesChart) this.activitiesChart.destroy();
-      
-      const isDark = document.body.classList.contains('dark');
-      const textColor = isDark ? '#94a3b8' : '#64748b';
-      const gridColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
+    if (!this.activityChartRef?.nativeElement) return;
+    if (this.activitiesChart) this.activitiesChart.destroy();
 
-      this.activitiesChart = new Chart(this.activityChartRef.nativeElement, {
-        type: 'line',
-        data: {
-          labels: trends.map((t: any) => t.date),
-          datasets: [{
-            label: 'Productivity Rate (%)',
-            data: trends.map((t: any) => t.rate),
-            borderColor: '#0ea5e9',
-            borderWidth: 4,
-            pointBackgroundColor: '#0ea5e9',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointRadius: 6,
-            pointHoverRadius: 8,
-            backgroundColor: (context: any) => {
-              const chart = context.chart;
-              const {ctx, chartArea} = chart;
-              if (!chartArea) return null;
-              const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-              gradient.addColorStop(0, 'rgba(14, 165, 233, 0.2)');
-              gradient.addColorStop(1, 'rgba(14, 165, 233, 0)');
-              return gradient;
-            },
-            fill: true,
-            tension: 0.4
-          }]
+    const isDark = document.body.classList.contains('dark');
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const gridColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
+
+    this.activitiesChart = new Chart(this.activityChartRef.nativeElement, {
+      type: 'line',
+      data: {
+        labels: trends.map((t: any) => t.date),
+        datasets: [{
+          label: 'Productivity Rate (%)',
+          data: trends.map((t: any) => t.rate),
+          borderColor: '#0ea5e9',
+          borderWidth: 4,
+          pointBackgroundColor: '#0ea5e9',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          backgroundColor: (context: any) => {
+            const chart = context.chart;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return null;
+            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradient.addColorStop(0, 'rgba(14, 165, 233, 0.2)');
+            gradient.addColorStop(1, 'rgba(14, 165, 233, 0)');
+            return gradient;
+          },
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: isDark ? '#1e293b' : '#fff',
+            titleColor: isDark ? '#fff' : '#0f172a',
+            bodyColor: isDark ? '#94a3b8' : '#64748b',
+            padding: 12,
+            // borderRadius: 12,
+            borderWidth: 1,
+            borderColor: isDark ? '#334155' : '#e2e8f0',
+            displayColors: false
+          }
         },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false,
-            interaction: { intersect: false, mode: 'index' },
-            plugins: { 
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: isDark ? '#1e293b' : '#fff',
-                titleColor: isDark ? '#fff' : '#0f172a',
-                bodyColor: isDark ? '#94a3b8' : '#64748b',
-                padding: 12,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: isDark ? '#334155' : '#e2e8f0',
-                displayColors: false
-              }
-            },
-            scales: { 
-              y: { 
-                min: 0, 
-                max: 100,
-                grid: { color: gridColor },
-                ticks: { color: textColor, font: { weight: 'bold', size: 10 } }
-              },
-              x: {
-                grid: { display: false },
-                ticks: { color: textColor, font: { weight: 'bold', size: 10 } }
-              }
-            }
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            grid: { color: gridColor },
+            ticks: { color: textColor, font: { weight: 'bold', size: 10 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: textColor, font: { weight: 'bold', size: 10 } }
+          }
         }
-      });
+      }
+    });
   }
 
   private exportService = inject(ExportService);
 
   exportRapport() {
-      const columns = ['Indicator', 'Value'];
-      const data = [
-          ['Collaborateurs', this.stats.employes.toString()],
-          ['Projets Actifs', this.stats.projetsActifs.toString()],
-          ['Productivité', this.stats.productivite + '%']
-      ];
-      this.exportService.exportToPdf(columns, data, 'ecosystem_report', 'Strategic Ecosystem Report - ' + this.societeNom);
+    const columns = ['Indicator', 'Value'];
+    const data = [
+      ['Collaborateurs', this.stats.employes.toString()],
+      ['Projets Actifs', this.stats.projetsActifs.toString()],
+      ['Productivité', this.stats.productivite + '%']
+    ];
+    this.exportService.exportToPdf(columns, data, 'ecosystem_report', 'Strategic Ecosystem Report - ' + this.societeNom);
   }
 
   ngAfterViewInit() {
@@ -337,7 +337,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
   async analyserDashboard() {
     this.aiLoading = true;
     this.aiInsights = null;
-    
+
     const payload = {
       stats: this.stats,
       projets: this.projets,

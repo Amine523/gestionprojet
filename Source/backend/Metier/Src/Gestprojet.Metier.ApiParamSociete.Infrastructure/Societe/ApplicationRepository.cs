@@ -54,10 +54,9 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
                 }
 
                 // ==========================
-                // ADD (Generate Code)
+                // ADD (Generate GUID-based Id)
                 // ==========================
-                var lastSequence = await GetLastApplicationSequenceAsync();
-                entity.Id = _codeGenerationService.GenerateCode("APP", lastSequence, 50, 3);
+                entity.Id = "APP_" + Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper();
 
                 var added = await _applicationApi.ApplicationAjouterPostAsync(entity);
                 return added
@@ -92,7 +91,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
             return m.Success ? int.Parse(m.Value) : 0;
         }
 
-        public async Task<ApplicationCore> ObtenirAsync(string id)
+        public async Task<ApplicationCore?> ObtenirAsync(string id)
         {
             try
             {

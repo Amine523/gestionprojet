@@ -1,26 +1,14 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
-
-interface PointageDisplay {
-  id?: string;
-  utilisateurId: string;
-  nomComplet: string;
-  date: string;
-  heureDebut: string;
-  heureFin: string;
-  heuresTravaillees: number;
-  status: 'Présent' | 'En cours' | 'Absent';
-}
 
 @Component({
   selector: 'app-rh-pointage',
   standalone: true,
   imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
-
     <div class="dashboard-container">
       <header class="dashboard-header">
         <div class="header-content">
@@ -54,7 +42,7 @@ interface PointageDisplay {
                 <circle cx="11" cy="11" r="8"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
-              <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="filterData()" placeholder="Rechercher un collaborateur..." class="search-input">
+              <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Rechercher un collaborateur..." class="search-input">
             </div>
 
             <div class="filter-group">
@@ -64,7 +52,7 @@ interface PointageDisplay {
                 <line x1="8" y1="2" x2="8" y2="6"/>
                 <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
-              <input type="date" [(ngModel)]="filterDate" (ngModelChange)="loadData()" class="date-input">
+              <input type="date" [ngModel]="filterDate()" (ngModelChange)="filterDate.set($event); loadData()" class="date-input">
             </div>
 
             <div class="filter-spacer"></div>
@@ -125,18 +113,18 @@ interface PointageDisplay {
                 <th>Départ</th>
                 <th>Activité</th>
                 <th>Statut</th>
-                <th></th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              @for (p of filteredPointages; track p.id) {
+              @for (p of filteredPointages(); track p.id) {
                 <tr>
                   <td>
                      <div class="emp-cell">
-                        <div class="user-avatar" [style.background]="'hsl('+(p.nomComplet.length * 45)+', 60%, 55%)'">{{p.nomComplet.charAt(0)}}</div>
+                        <div class="user-avatar" [style.background]="'hsl('+(p.utilisateurNom?.length * 45 || 0)+', 60%, 55%)'">{{(p.utilisateurNom || '?').charAt(0)}}</div>
                         <div class="emp-info">
-                           <span class="emp-name">{{p.nomComplet}}</span>
-                           <span class="emp-id">#{{p.utilisateurId.substring(0,6)}}</span>
+                           <span class="emp-name">{{p.utilisateurNom}}</span>
+                           <span class="emp-id">#{{p.utilisateurId?.substring(0,6)}}</span>
                         </div>
                      </div>
                   </td>
@@ -168,24 +156,17 @@ interface PointageDisplay {
                      }
                   </td>
                   <td>
-                    <span class="status-chip" [class]="'status-'+(p.status ? p.status.toLowerCase().replace(' ', '-') : 'pending')">
+                    <span class="status-chip" [class]="'status-'+(p.heureFin ? 'présent' : (p.heureDebut ? 'en-cours' : 'absent'))">
                       <span class="dot"></span>
-                      {{p.status}}
+                      {{p.heureFin ? 'Présent' : (p.heureDebut ? 'En cours' : 'Absent')}}
                     </span>
                   </td>
                   <td>
                     <div class="action-row">
                        <button class="btn-icon" title="Ajuster" (click)="editPointage(p)">
                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                           <circle cx="12" cy="12" r="3"/>
-                           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0-9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                         </svg>
-                       </button>
-                       <button class="btn-icon" title="Historique">
-                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                           <line x1="18" y1="20" x2="18" y2="10"/>
-                           <line x1="12" y1="20" x2="12" y2="4"/>
-                           <line x1="6" y1="20" x2="6" y2="14"/>
+                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                          </svg>
                        </button>
                     </div>
@@ -195,7 +176,7 @@ interface PointageDisplay {
             </tbody>
           </table>
 
-          @if (filteredPointages.length === 0) {
+          @if (filteredPointages().length === 0 && !isLoading) {
             <div class="empty-state">
                <div class="empty-icon">
                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -215,19 +196,14 @@ interface PointageDisplay {
     @if (showEditDialog) {
       <div class="modal-overlay" (click)="closeEditDialog()">
         <div class="modal-content" (click)="$event.stopPropagation()">
-          <div class="modal-header">
+          <div class="modal-header-form">
              <h2>Ajustement du Temps</h2>
-             <button class="btn-close" (click)="closeEditDialog()">
-               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                 <line x1="18" y1="6" x2="6" y2="18"/>
-                 <line x1="6" y1="6" x2="18" y2="18"/>
-               </svg>
-             </button>
+             <button class="btn-close" (click)="closeEditDialog()">✕</button>
           </div>
           <div class="modal-body">
              <div class="form-group">
                 <label>Collaborateur</label>
-                <div class="readonly-field">{{editingPointage?.nomComplet}}</div>
+                <div class="readonly-field">{{editingPointage?.utilisateurNom}}</div>
              </div>
              <div class="form-grid">
                 <div class="form-group">
@@ -241,7 +217,7 @@ interface PointageDisplay {
              </div>
           </div>
           <div class="modal-footer">
-             <button class="btn btn-text" (click)="closeEditDialog()">Annuler</button>
+             <button class="btn btn-secondary" (click)="closeEditDialog()">Annuler</button>
              <button class="btn btn-primary" (click)="savePointageEdit()">Appliquer</button>
           </div>
         </div>
@@ -249,666 +225,71 @@ interface PointageDisplay {
     }
   `,
   styles: [`
-    .dashboard-container {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xl);
-      padding-bottom: var(--space-2xl);
-    }
-
-    .dashboard-header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-radius: var(--radius-xl);
-      padding: var(--space-2xl);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: var(--space-lg);
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow-xl);
-    }
-
-    .dashboard-header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
-      border-radius: 50%;
-    }
-
-    .header-content {
-      position: relative;
-      z-index: 1;
-    }
-
-    .header-title {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      color: white;
-      margin: 0 0 var(--space-sm);
-      letter-spacing: -0.02em;
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, #818cf8, #6366f1, #4f46e5);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .header-subtitle {
-      color: #94a3b8;
-      font-size: var(--font-size-base);
-      line-height: var(--line-height-relaxed);
-      margin: 0;
-    }
-
-    .header-stats {
-      display: flex;
-      background: white;
-      padding: var(--space-md);
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--color-border);
-      position: relative;
-      z-index: 1;
-    }
-
-    .stat-tile {
-      padding: var(--space-md) var(--space-xl);
-      border-right: 1px solid var(--color-border);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .stat-tile:last-child {
-      border-right: none;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: var(--font-weight-bold);
-      line-height: 1;
-    }
-
-    .stat-value.emerald {
-      color: #10b981;
-    }
-
-    .stat-value.amber {
-      color: #f59e0b;
-    }
-
-    .stat-value.indigo {
-      color: #6366f1;
-    }
-
-    .stat-label {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      margin-top: var(--space-xs);
-      letter-spacing: 0.05em;
-    }
-
-    .toolbar-widget {
-      padding: var(--space-lg);
-      margin-bottom: var(--space-lg);
-      border-radius: var(--radius-xl);
-      background: white;
-      border: 1px solid var(--color-border);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .filters-row {
-      display: flex;
-      gap: var(--space-lg);
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .search-group {
-      flex: 1;
-      max-width: 400px;
-      padding: var(--space-sm) var(--space-md);
-      background: var(--color-bg);
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-    }
-
-    .search-group svg {
-      color: var(--color-text-muted);
-    }
-
-    .search-input {
-      border: none;
-      background: transparent;
-      width: 100%;
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-      outline: none;
-    }
-
-    .filter-group {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      color: var(--color-text-muted);
-    }
-
-    .date-input {
-      border: none;
-      background: var(--color-bg);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-      cursor: pointer;
-    }
-
-    .filter-spacer {
-      flex: 1;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: var(--radius-md);
-      font-weight: var(--font-weight-semibold);
-      font-size: var(--font-size-sm);
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-base);
-    }
-
-    .btn-secondary {
-      background: var(--color-bg);
-      color: var(--color-text);
-      border: 1px solid var(--color-border);
-    }
-
-    .btn-secondary:hover {
-      background: var(--color-surface);
-    }
-
-    .btn-primary {
-      background: var(--color-primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      opacity: 0.9;
-    }
-
-    .btn-outline {
-      background: transparent;
-      color: var(--color-text);
-      border: 1px solid var(--color-border);
-    }
-
-    .btn-outline:hover {
-      background: var(--color-bg);
-    }
-
-    .btn-text {
-      background: transparent;
-      color: var(--color-text-muted);
-      border: none;
-    }
-
-    .btn-text:hover {
-      color: var(--color-text);
-    }
-
-    .rapport-controls {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      padding: var(--space-md) var(--space-lg);
-      background: var(--color-bg);
-      border-top: 1px solid var(--color-border);
-      flex-wrap: wrap;
-    }
-
-    .rc-label {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-muted);
-    }
-
-    .date-select {
-      border: none;
-      background: white;
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-      cursor: pointer;
-    }
-
-    .main-content {
-      padding: 0 !important;
-      overflow: hidden;
-      border-radius: var(--radius-xl);
-      border: none;
-    }
-
-    .table-container {
-      overflow-x: auto;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .data-table thead {
-      background: var(--color-bg);
-    }
-
-    .data-table th {
-      padding: var(--space-lg);
-      text-align: left;
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .data-table td {
-      padding: var(--space-lg);
-      border-bottom: 1px solid var(--color-border);
-      background: white;
-    }
-
-    .emp-cell {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-    }
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-md);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-bold);
-    }
-
-    .emp-name {
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      display: block;
-      line-height: 1.2;
-    }
-
-    .emp-id {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      font-weight: var(--font-weight-semibold);
-      font-family: monospace;
-    }
-
-    .time-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-md);
-      background: var(--color-bg);
-      border-radius: var(--radius-md);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-      border: 1px solid var(--color-border);
-    }
-
-    .time-pill svg {
-      color: #3b82f6;
-    }
-
-    .time-pill.empty {
-      opacity: 0.4;
-      font-weight: var(--font-weight-normal);
-      font-style: italic;
-    }
-
-    .activity-tag {
-      background: #eff6ff;
-      color: #2563eb;
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-sm);
-      font-weight: var(--font-weight-bold);
-      font-size: var(--font-size-sm);
-    }
-
-    .no-activity {
-      color: var(--color-text-muted);
-      font-weight: var(--font-weight-bold);
-    }
-
-    .status-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-xs) var(--space-md);
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-bold);
-    }
-
-    .status-chip .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .status-présent {
-      background: #ecfdf5;
-      color: #059669;
-    }
-
-    .status-présent .dot {
-      background: #10b981;
-      box-shadow: 0 0 10px #10b981;
-    }
-
-    .status-en-cours {
-      background: #eff6ff;
-      color: #2563eb;
-    }
-
-    .status-en-cours .dot {
-      background: #3b82f6;
-      animation: blink 1.5s infinite;
-    }
-
-    .status-absent {
-      background: #fef2f2;
-      color: #dc2626;
-    }
-
-    .status-absent .dot {
-      background: #dc2626;
-    }
-
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0.3; }
-      100% { opacity: 1; }
-    }
-
-    .action-row {
-      display: flex;
-      gap: var(--space-xs);
-    }
-
-    .btn-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
-      background: var(--color-bg);
-      color: var(--color-text-muted);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all var(--transition-base);
-    }
-
-    .btn-icon:hover {
-      background: var(--color-surface);
-      color: var(--color-primary);
-      border-color: var(--color-primary);
-    }
-
-    .empty-state {
-      padding: var(--space-3xl);
-      text-align: center;
-      color: var(--color-text-muted);
-      background: white;
-    }
-
-    .empty-icon {
-      width: 80px;
-      height: 80px;
-      background: var(--color-bg);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto var(--space-lg);
-      color: var(--color-text-muted);
-    }
-
-    .empty-state h3 {
-      color: var(--color-text);
-      font-weight: var(--font-weight-bold);
-      margin-bottom: var(--space-xs);
-    }
-
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      backdrop-filter: blur(4px);
-    }
-
-    .modal-content {
-      width: 480px;
-      background: white;
-      border-radius: var(--radius-xl);
-      overflow: hidden;
-      border: 1px solid var(--color-border);
-    }
-
-    .modal-header {
-      padding: var(--space-xl);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: white;
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-    }
-
-    .btn-close {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-md);
-      border: none;
-      background: transparent;
-      color: var(--color-text-muted);
-      cursor: pointer;
-      transition: all var(--transition-base);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .btn-close:hover {
-      background: var(--color-bg);
-      color: var(--color-text);
-    }
-
-    .modal-body {
-      padding: var(--space-xl);
-      background: white;
-    }
-
-    .modal-footer {
-      padding: var(--space-lg) var(--space-xl);
-      display: flex;
-      justify-content: flex-end;
-      gap: var(--space-md);
-      background: var(--color-bg);
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-sm);
-    }
-
-    .form-group label {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .readonly-field {
-      padding: var(--space-sm) var(--space-md);
-      background: var(--color-bg);
-      border-radius: var(--radius-md);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-lg);
-      margin-top: var(--space-lg);
-    }
-
-    .time-input {
-      width: 100%;
-      padding: var(--space-sm) var(--space-md);
-      border: 2px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-      outline: none;
-      transition: all var(--transition-base);
-    }
-
-    .time-input:focus {
-      border-color: #3b82f6;
-      background: white;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
-
-    .card {
-      background: white;
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--color-border);
-      box-shadow: var(--shadow-sm);
-    }
-
-    /* Dark mode */
-    :host-context(.dark) .card,
-    :host-context(.dark) .toolbar-widget,
-    :host-context(.dark) .header-stats {
-      background: var(--color-surface);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .data-table td {
-      background: var(--color-surface);
-    }
-
-    :host-context(.dark) .data-table thead {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    :host-context(.dark) .search-group,
-    :host-context(.dark) .date-input,
-    :host-context(.dark) .time-input {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .time-pill {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .activity-tag {
-      background: rgba(59, 130, 246, 0.1);
-    }
-
-    :host-context(.dark) .rapport-controls {
-      background: rgba(255, 255, 255, 0.02);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .date-select {
-      background: var(--color-surface);
-    }
-
-    :host-context(.dark) .modal-content,
-    :host-context(.dark) .modal-header,
-    :host-context(.dark) .modal-body {
-      background: var(--color-surface);
-    }
-
-    :host-context(.dark) .modal-footer {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    :host-context(.dark) .readonly-field {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    @media (max-width: 768px) {
-      .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .header-stats {
-        width: 100%;
-        flex-wrap: wrap;
-      }
-
-      .stat-tile {
-        flex: 1;
-        border-right: none;
-        border-bottom: 1px solid var(--color-border);
-      }
-
-      .filters-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .search-group {
-        max-width: 100%;
-      }
-
-      .filter-spacer {
-        display: none;
-      }
-    }
+    .dashboard-container { display: flex; flex-direction: column; gap: 24px; padding: 24px; }
+    .dashboard-header { 
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); 
+      border-radius: 24px; padding: 32px; display: flex; justify-content: space-between; align-items: center; 
+      color: white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .header-title { font-size: 32px; font-weight: 800; margin: 0; }
+    .gradient-text { color: #c7d2fe; }
+    .header-subtitle { opacity: 0.8; margin: 8px 0 0; font-weight: 600; }
+    .header-stats { display: flex; gap: 16px; background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 20px; backdrop-filter: blur(10px); }
+    .stat-tile { display: flex; flex-direction: column; align-items: center; padding: 0 16px; border-right: 1px solid rgba(255, 255, 255, 0.2); }
+    .stat-tile:last-child { border-right: none; }
+    .stat-value { font-size: 24px; font-weight: 800; }
+    .stat-label { font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-top: 4px; }
+    
+    .card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; }
+    .toolbar-widget { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    .filters-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .search-group { flex: 1; min-width: 300px; display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .search-input { border: none; background: transparent; outline: none; flex: 1; font-weight: 600; color: #1e293b; }
+    .date-input { padding: 10px 16px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600; cursor: pointer; }
+    .filter-spacer { flex: 1; }
+    
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-primary { background: #4f46e5; color: white; }
+    .btn-secondary { background: #f1f5f9; color: #475569; }
+    .btn-outline { background: transparent; border: 1px solid #e2e8f0; color: #475569; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+    
+    .table-container { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { padding: 16px; text-align: left; background: #f8fafc; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+    .data-table td { padding: 16px; border-bottom: 1px solid #f1f5f9; }
+    
+    .emp-cell { display: flex; align-items: center; gap: 12px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 12px; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+    .emp-name { font-weight: 700; color: #1e293b; display: block; }
+    .emp-id { font-size: 11px; color: #94a3b8; font-family: monospace; }
+    
+    .time-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f1f5f9; border-radius: 10px; font-weight: 600; color: #1e293b; border: 1px solid #e2e8f0; }
+    .time-pill.empty { opacity: 0.5; font-style: italic; }
+    .activity-tag { background: #e0e7ff; color: #4338ca; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 12px; }
+    
+    .status-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .status-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-présent { background: #dcfce7; color: #15803d; }
+    .status-présent .dot { background: #22c55e; }
+    .status-en-cours { background: #dbeafe; color: #1d4ed8; }
+    .status-en-cours .dot { background: #3b82f6; animation: pulse 2s infinite; }
+    .status-absent { background: #fee2e2; color: #b91c1c; }
+    .status-absent .dot { background: #ef4444; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: white; border-radius: 24px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+    .modal-header-form { padding: 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
+    .modal-header-form h2 { margin: 0; font-size: 20px; font-weight: 800; color: #1e293b; }
+    .btn-close { border: none; background: transparent; font-size: 20px; cursor: pointer; color: #94a3b8; }
+    .modal-body { padding: 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
+    .readonly-field { padding: 12px; background: #f8fafc; border-radius: 12px; font-weight: 700; color: #1e293b; }
+    .time-input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; font-weight: 600; }
+    .time-input:focus { border-color: #4338ca; }
+    .modal-footer { padding: 16px 24px; display: flex; justify-content: flex-end; gap: 12px; background: #f8fafc; border-radius: 0 0 24px 24px; }
   `]
 })
 export class RhPointageComponent implements OnInit {
@@ -918,89 +299,79 @@ export class RhPointageComponent implements OnInit {
   societeId = '';
   societeNom = '';
   currentDateDisplay = '';
-  filterDate = '';
-  searchQuery = '';
   rapportMois = new Date().getMonth() + 1;
   rapportAnnee = new Date().getFullYear();
   
-  pointages: PointageDisplay[] = [];
-  filteredPointages: PointageDisplay[] = [];
-  displayedColumns = ['employe', 'entre', 'sortie', 'total', 'statut', 'actions'];
+  pointagesSignal = signal<any[]>([]);
+  searchQuery = signal('');
+  filterUtilisateur = signal('');
+  filterDate = signal(new Date().toISOString().split('T')[0]);
   
+  filteredPointages = computed(() => {
+    const list = this.pointagesSignal();
+    const q = this.searchQuery().toLowerCase();
+    const date = this.filterDate();
+    
+    return list.filter(p => {
+      const matchesSearch = !q || p.utilisateurNom?.toLowerCase().includes(q);
+      const matchesDate = !date || p.date?.split('T')[0] === date;
+      return matchesSearch && matchesDate;
+    });
+  });
+
+  isLoading = false;
   stats = { totalEmployes: 0, employesActifs: 0, employesAbsents: 0, tauxPresence: 0 };
   
   showEditDialog = false;
-  editingPointage: PointageDisplay | null = null;
-  editForm: any = {};
+  editingPointage: any = null;
+  editForm: any = { entre: '', sortie: '' };
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
     this.societeId = user?.societeId || '';
     this.societeNom = user?.societe?.nom || 'Votre société';
     this.currentDateDisplay = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    this.filterDate = new Date().toISOString().split('T')[0];
     this.loadData();
   }
 
   loadData() {
+    this.isLoading = true;
     this.loadStats();
-    
-    this.api.getEmployesBySociete(this.societeId).subscribe(employes => {
-       this.api.getPointages().subscribe(allPointages => {
-          const targetDate = this.filterDate;
-          const todayPointages = allPointages.filter((p: any) => p.date?.split('T')[0] === targetDate);
-          
-          this.pointages = employes.map((emp: any) => {
-             const p = todayPointages.find((ptg: any) => ptg.utilisateurId === emp.id);
-             let status: 'Présent' | 'En cours' | 'Absent' = 'Absent';
-             
-             if (p) {
-                status = p.heureFin ? 'Présent' : 'En cours';
-             }
-             
-             return {
-                id: p?.id,
-                utilisateurId: emp.id,
-                nomComplet: emp.nom + ' ' + (emp.prenom || ''),
-                date: targetDate,
-                heureDebut: p?.heureDebut ? p.heureDebut.substring(0, 5) : '',
-                heureFin: p?.heureFin ? p.heureFin.substring(0, 5) : '',
-                heuresTravaillees: 0, // Will be fetched or calculated
-                status: status
-             };
-          });
 
-          // Fetch worked hours for each
-          this.pointages.forEach(ptg => {
-             if (ptg.heureDebut && ptg.heureFin) {
-                this.api.getWorkedHoursReal(ptg.utilisateurId, ptg.date).subscribe(res => {
-                   ptg.heuresTravaillees = res.heuresTravaillees;
-                });
-             }
-          });
-
-          this.filterData();
-       });
+    this.api.getPointages().subscribe({
+      next: (allPointages) => {
+        const list = allPointages.map((p: any) => ({
+          id: p.id || p.Id,
+          utilisateurId: p.utilisateurId || p.UtilisateurId,
+          utilisateurNom: p.utilisateurNom || 'Utilisateur ' + (p.utilisateurId || p.UtilisateurId),
+          date: p.date || p.Date,
+          heureDebut: p.heureEntree || p.HeureEntree,
+          heureFin: p.heureSortie || p.HeureSortie,
+          heuresTravaillees: p.duree || p.Duree || 0,
+          note: p.note || p.Note,
+          typeId: p.typeId || p.TypeId
+        }));
+        this.pointagesSignal.set(list);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.pointagesSignal.set([]);
+        this.isLoading = false;
+      }
     });
   }
 
   loadStats() {
-    this.api.getRHStats(this.societeId, this.filterDate).subscribe(res => {
+    this.api.getRHStats(this.societeId, this.filterDate()).subscribe(res => {
        this.stats = res;
     });
   }
 
-  filterData() {
-    this.filteredPointages = this.pointages.filter(p => 
-       p.nomComplet.toLowerCase().includes(this.searchQuery.toLowerCase())
-    );
-  }
-
-  editPointage(p: PointageDisplay) {
+  editPointage(p: any) {
      this.editingPointage = p;
      this.editForm = {
-        entre: p.heureDebut,
-        sortie: p.heureFin
+        entre: p.heureDebut ? p.heureDebut.substring(0, 5) : '',
+        sortie: p.heureFin ? p.heureFin.substring(0, 5) : ''
      };
      this.showEditDialog = true;
   }
@@ -1011,41 +382,34 @@ export class RhPointageComponent implements OnInit {
   }
 
   savePointageEdit() {
-     if (!this.editingPointage) return;
-     
-     const data = {
-        id: this.editingPointage.id,
-        utilisateurId: this.editingPointage.utilisateurId,
-        societeId: this.societeId,
-        date: this.editingPointage.date,
-        heureDebut: this.editForm.entre,
-        heureFin: this.editForm.sortie,
-        actif: true
-     };
-
-     const action = data.id ? this.api.updatePointage(data) : this.api.createPointage(data);
-     
-     action.subscribe({
-        next: () => {
-           this.snackBar.open('Pointage mis à jour avec succès', 'Fermer', { duration: 3000 });
-           this.closeEditDialog();
-           this.loadData();
-        },
-        error: () => {
-           this.snackBar.open('Erreur lors de la mise à jour', 'Fermer', { duration: 3000 });
-        }
-     });
+    if (!this.editingPointage) return;
+    const data = { 
+      ...this.editingPointage, 
+      heureDebut: this.editForm.entre, 
+      heureFin: this.editForm.sortie,
+      societeId: this.societeId 
+    };
+    
+    this.api.updatePointage(data).subscribe({
+      next: () => {
+        this.pointagesSignal.update(list => list.map(p => 
+          (p.id === data.id) ? { ...p, heureDebut: data.heureDebut, heureFin: data.heureFin } : p
+        ));
+        this.snackBar.open('Pointage mis à jour avec succès', 'Fermer', { duration: 2000 });
+        this.showEditDialog = false;
+        this.loadStats(); // Update stats since status might change
+      },
+      error: (err) => this.snackBar.open('Erreur: ' + (err.message || 'Échec'), 'Fermer', { duration: 3000 })
+    });
   }
 
-  /** Open the HTML report in a new tab so the user can Print → Save as PDF */
   exportRapportHTML() {
     const url = this.api.getRapportPresenceUrl(this.societeId, this.rapportMois, this.rapportAnnee, 'html');
     window.open(url, '_blank');
   }
 
-  /** Download a CSV attendance report */
   exportRapportCSV() {
-    this.api.getRapportPresence(this.societeId, this.rapportMois, this.rapportAnnee).subscribe(blob => {
+    this.api.getRapportPresence(this.societeId, this.rapportMois, this.rapportAnnee).subscribe((blob: Blob) => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1056,4 +420,3 @@ export class RhPointageComponent implements OnInit {
     });
   }
 }
-

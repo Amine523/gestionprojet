@@ -7,10 +7,13 @@ import { ChefEquipeComponent } from './pages/chef-equipe/chef-equipe.component';
 import { ChefSuiviComponent } from './pages/chef-suivi/chef-suivi.component';
 import { ChefRapportsComponent } from './pages/chef-rapports/chef-rapports.component';
 import { ChefParametresComponent } from './pages/chef-parametres/chef-parametres.component';
+import { ChefCongesComponent } from './pages/chef-conges/chef-conges.component';
+import { ChefPointageComponent } from './pages/chef-pointage/chef-pointage.component';
 import { CalendarViewComponent } from '@shared/components/calendar-view/calendar-view.component';
 import { DevTimeTrackingComponent } from '../dev/pages/dev-time-tracking/dev-time-tracking.component';
 import { DevDocsComponent } from '../dev/pages/dev-docs/dev-docs.component';
 import { DevDiagramsComponent } from '../dev/pages/dev-diagrams/dev-diagrams.component';
+import { DevCongesComponent } from '../dev/pages/dev-conges/dev-conges.component';
 import { AdminChatComponent } from '../admin/pages/admin-chat/admin-chat.component';
 import { DevParametresComponent } from '../dev/pages/dev-parametres/dev-parametres.component';
 
@@ -26,6 +29,8 @@ export const CHEF_ROUTES: Routes = [
   { path: 'time', component: DevTimeTrackingComponent },
   { path: 'docs', component: DevDocsComponent },
   { path: 'diagrams', component: DevDiagramsComponent },
+  { path: 'conges', component: ChefCongesComponent },
+  { path: 'pointage', component: ChefPointageComponent },
   { path: 'chat', component: AdminChatComponent },
   { path: 'parametres', component: DevParametresComponent },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }

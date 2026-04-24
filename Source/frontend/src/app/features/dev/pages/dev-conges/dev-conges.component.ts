@@ -92,7 +92,7 @@ import { ApiService } from '@core/services/api.service';
               Nouvelle Demande
             </h3>
           </div>
-          <form (submit)="soumettreDemande()">
+          <form (ngSubmit)="soumettreDemande()">
             <div class="form-group">
               <label class="form-label">Type de congé</label>
               <select [(ngModel)]="nouvelleDemande.typePointageId" name="type" class="form-select" required>
@@ -746,14 +746,34 @@ export class DevCongesComponent implements OnInit {
 
   loadData() {
     const user = this.api.getCurrentUser();
-    this.api.getSoldeConge(user.id).subscribe(res => {
+    const uid = user.id || user.utilisateurId;
+    this.api.getSoldeConge(uid).subscribe(res => {
       this.solde = res;
     });
     
     // Get all requests for history
     this.api.getDemandesConge().subscribe(data => {
-      this.conges = data.filter((d: any) => d.utilisateurId === user.id)
-        .sort((a: any, b: any) => new Date(b.dateDebut).getTime() - new Date(a.dateDebut).getTime());
+      if (data) {
+        this.conges = data.filter((d: any) => d.utilisateurId === uid)
+          .map((d: any) => {
+            const dDebut = new Date(d.dateDebut || d.DateDebut);
+            const dFin = new Date(d.dateFin || d.DateFin);
+            let nj = d.jours || d.Jours || 0;
+            if (!nj && !isNaN(dDebut.getTime()) && !isNaN(dFin.getTime())) {
+              const diffTime = Math.abs(dFin.getTime() - dDebut.getTime());
+              nj = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            }
+            return {
+              ...d,
+              nombreJours: nj,
+              typeNom: d.typeNom || d.TypeNom || 'Congé',
+              status: d.status || d.Status || 'En attente'
+            };
+          })
+          .sort((a: any, b: any) => new Date(b.dateDebut).getTime() - new Date(a.dateDebut).getTime());
+      } else {
+        this.conges = [];
+      }
     });
   }
 
@@ -773,6 +793,7 @@ export class DevCongesComponent implements OnInit {
 
     this.loading = true;
     const user = this.api.getCurrentUser();
+    const uid = user.id || user.utilisateurId;
     
     let finalMotif = this.nouvelleDemande.motif;
     if (this.nouvelleDemande.typePointageId === 'HALFDAY') {
@@ -782,7 +803,7 @@ export class DevCongesComponent implements OnInit {
     }
     
     const dto = {
-      utilisateurId: user.id,
+      utilisateurId: uid,
       typePointageId: this.nouvelleDemande.typePointageId,
       dateDebut: this.nouvelleDemande.dateDebut,
       dateFin: this.nouvelleDemande.dateFin,

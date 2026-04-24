@@ -129,11 +129,25 @@ type NavItem = {
       @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
         <div class="sidebar-footer">
           <div class="footer-user">
-            <div class="footer-avatar">{{ userInitials }}</div>
+            <div class="footer-avatar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
             <div class="footer-info">
               <p class="footer-name">{{ userName }}</p>
               <p class="footer-role">{{ userRole }}</p>
             </div>
+          </div>
+        </div>
+      } @else {
+        <div class="sidebar-footer footer-centered">
+          <div class="footer-avatar-small">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
           </div>
         </div>
       }
@@ -151,11 +165,13 @@ type NavItem = {
       color: var(--color-text);
       height: 100vh;
       transition: all var(--transition-slow);
-      z-index: 50;
+      z-index: 1000;
       border-right: 1px solid var(--color-border);
       box-shadow: var(--shadow-sm);
       width: 72px;
       transform: translateX(-100%);
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     :host-context(.dark) .sidebar {
@@ -439,6 +455,30 @@ type NavItem = {
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
+    .footer-centered {
+      display: flex;
+      justify-content: center;
+      padding: var(--space-md) 0;
+    }
+
+    .footer-avatar-small {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--color-brand-500), var(--color-brand-600));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-base);
+    }
+
+    .footer-avatar-small:hover {
+      box-shadow: var(--shadow-md);
+      transform: scale(1.05);
+    }
   `]
 })
 export class SidebarComponent {
@@ -557,6 +597,7 @@ export class SidebarComponent {
         { name: 'Congés', icon: s('calendarCheck'), path: '/rh/conges' },
         { name: 'Employés', icon: s('users'), path: '/rh/employes' },
         { name: 'Recrutement', icon: s('userPlus'), path: '/rh/recrutement' },
+        { name: 'Candidats', icon: s('briefcase'), path: '/applicant' },
         { name: 'Tests', icon: s('clipboard'), path: '/rh/tests' },
         { name: 'Interface de Test', icon: s('clipboard'), path: '/rh/tests-interface' },
         { name: 'Rapports', icon: s('report'), path: '/rh/rapports' }
@@ -569,6 +610,8 @@ export class SidebarComponent {
         { name: 'Suivi', icon: s('activity'), path: '/chef/suivi' },
         { name: 'Bugs', icon: s('bug'), path: '/chef/bugs' },
         { name: 'Rapports', icon: s('report'), path: '/chef/rapports' },
+        { name: 'Time Tracking', icon: s('clock'), path: '/chef/time' },
+        { name: 'Congés', icon: s('calendarCheck'), path: '/chef/conges' },
         { name: 'Paramètres', icon: s('settings'), path: '/chef/parametres' }
       ],
       'developpeur': [
@@ -590,6 +633,8 @@ export class SidebarComponent {
         { name: 'Bugs', icon: s('bug'), path: '/qa/bugs' },
         { name: 'Rapports', icon: s('report'), path: '/qa/rapports' },
         { name: 'Projets', icon: s('folder'), path: '/qa/projets' },
+        { name: 'Time Tracking', icon: s('clock'), path: '/qa/time' },
+        { name: 'Congés', icon: s('calendarCheck'), path: '/qa/conges' },
         { name: 'Notifications', icon: s('bell'), path: '/qa/notifications' },
         { name: 'Paramètres', icon: s('settings'), path: '/qa/parametres' }
       ],
@@ -603,10 +648,12 @@ export class SidebarComponent {
 
     const roleMapping: { [key: string]: string } = {
       't001': 'superadmin', 't002': 'admin_societe', 't003': 'rh',
-      't004': 'chef_projet', 't005': 'developpeur', 't006': 'testeur', 't007': 'candidat'
+      't004': 'chef_projet', 't005': 'developpeur', 't006': 'testeur', 't007': 'candidat',
+      'admin_societe': 'admin_societe', 'admin': 'admin_societe'
     };
 
     const normalizedRole = roleMapping[role] || role;
+    console.log('Sidebar - Rôle détecté:', role, 'Rôle normalisé:', normalizedRole);
     this.navItems = menuConfigs[normalizedRole] || menuConfigs['candidat'];
     this.userRole = this.getRoleLabel(normalizedRole);
   }

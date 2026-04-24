@@ -10,7 +10,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Repository
     public interface ITypeRepository
     {
         Task<OperationResult> AjouterOuModifierAsync(TypeCore entity);
-        Task<TypeCore> ObtenirAsync(string id);
+        Task<TypeCore?> ObtenirAsync(string id);
         Task<IEnumerable<TypeCore>> ListeAsync();
         Task<IEnumerable<TypeCore>> ListeParCritereAsync(ConditionRecherche critere);
         Task<OperationResult> SupprimerAsync(string id);

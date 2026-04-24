@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Gestprojet.Core.ApiParamSociete.Application;
+using Gestprojet.Core.ApiParamSociete.Domain.Interfaces.Business;
 using Gestprojet.Core.ApiParamSociete.Domain.Models;
+using Gestprojet.Core.ApiParamSociete.Domain.Models.Commun;
 using System.Diagnostics;
 
 namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
@@ -9,9 +11,9 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
     [Route("api/[controller]")]
     public class DemandesCongeController : ControllerBase
     {
-        private readonly DemandeCongeCoreBusiness _business;
+        private readonly IDemandeCongeCoreBusiness _business;
 
-        public DemandesCongeController(DemandeCongeCoreBusiness business)
+        public DemandesCongeController(IDemandeCongeCoreBusiness business)
         {
             _business = business;
         }
@@ -128,9 +130,9 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
     [Route("api/[controller]")]
     public class JoursFeriesController : ControllerBase
     {
-        private readonly JourFerieCoreBusiness _business;
+        private readonly IJourFerieCoreBusiness _business;
 
-        public JoursFeriesController(JourFerieCoreBusiness business)
+        public JoursFeriesController(IJourFerieCoreBusiness business)
         {
             _business = business;
         }

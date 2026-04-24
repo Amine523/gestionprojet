@@ -31,7 +31,7 @@ export class ExportService {
       body: data,
       startY: 35,
       theme: 'grid',
-      headStyles: { fillBlue: [2, 132, 199] },
+      headStyles: { fillColor: [2, 132, 199] },
       styles: { fontSize: 9 }
     });
 

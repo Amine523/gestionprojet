@@ -66,7 +66,6 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         {
             if (candidature == null) return BadRequest("Données invalides");
             candidature.Type = "Candidature";
-            if (string.IsNullOrEmpty(candidature.Id)) candidature.Id = "CAND_" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
             var result = await _applicationBusiness.AjouterOuModifierAsync(candidature);
             return result.Success ? Ok(result) : BadRequest(result);
         }
@@ -93,5 +92,33 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             var result = await _applicationBusiness.ObtenirAsync(id);
             return result == null ? NotFound() : Ok(result);
         }
+
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(string id, [FromBody] UpdateCandidatureStatusRequest request)
+        {
+            var candidature = await _applicationBusiness.ObtenirAsync(id);
+            if (candidature == null) return NotFound("Candidature introuvable");
+            candidature.Statut = request.Status;
+            if (request.Score.HasValue) candidature.AppelDate = DateTime.Now;
+            var result = await _applicationBusiness.AjouterOuModifierAsync(candidature);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost("{id}/convert")]
+        public async Task<IActionResult> ConvertToEmploye(string id)
+        {
+            var candidature = await _applicationBusiness.ObtenirAsync(id);
+            if (candidature == null) return NotFound("Candidature introuvable");
+            candidature.Statut = "ACCEPTE";
+            var result = await _applicationBusiness.AjouterOuModifierAsync(candidature);
+            return result.Success ? Ok(new { success = true, message = "Candidat converti en employé" }) : BadRequest(result);
+        }
+    }
+
+    public class UpdateCandidatureStatusRequest
+    {
+        public string Status { get; set; } = string.Empty;
+        public int? Score { get; set; }
+        public int? Total { get; set; }
     }
 }

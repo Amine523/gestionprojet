@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-chef-parametres',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="parametres-container">
@@ -807,6 +808,7 @@ import { ApiService } from '@core/services/api.service';
 })
 export class ChefParametresComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   
   societeId = '';
   societeNom = '';
@@ -875,7 +877,7 @@ export class ChefParametresComponent implements OnInit {
       data.utilisateurs = users;
       localStorage.setItem('app_data', JSON.stringify(data));
     }
-    alert('Profil enregistré');
+    this.snackBar.open('Profil enregistré', 'Fermer', { duration: 3000 });
   }
 
   savePreferences() {
@@ -884,7 +886,7 @@ export class ChefParametresComponent implements OnInit {
     prefs[key] = { preferences: this.preferences, notifications: this.notifications };
     localStorage.setItem('userPreferences', JSON.stringify(prefs));
     this.applyNotifications();
-    alert('Préférences enregistrées');
+    this.snackBar.open('Préférences enregistrées', 'Fermer', { duration: 3000 });
   }
   
   applyNotifications() {
@@ -912,21 +914,21 @@ export class ChefParametresComponent implements OnInit {
   
   changePassword() {
     if (!this.passwordData.actuel || !this.passwordData.nouveau || !this.passwordData.confirmer) {
-      alert('Veuillez remplir tous les champs');
+      this.snackBar.open('Veuillez remplir tous les champs', 'Fermer', { duration: 3000 });
       return;
     }
     if (this.passwordData.nouveau !== this.passwordData.confirmer) {
-      alert('Les mots de passe ne correspondent pas');
+      this.snackBar.open('Les mots de passe ne correspondent pas', 'Fermer', { duration: 3000 });
       return;
     }
     const userId = this.api.getCurrentUser()?.id;
     if (userId) {
       this.api.updateUtilisateur(userId, { motDePasse: this.passwordData.nouveau }).subscribe({
         next: () => {
-          alert('Mot de passe changé');
+          this.snackBar.open('Mot de passe changé', 'Fermer', { duration: 3000 });
         },
         error: () => {
-          alert('Mot de passe changé (local)');
+          this.snackBar.open('Mot de passe changé (local)', 'Fermer', { duration: 3000 });
         }
       });
     }
@@ -944,7 +946,7 @@ export class ChefParametresComponent implements OnInit {
     const securityData = JSON.parse(localStorage.getItem('security_settings') || '{}');
     securityData[`chef_${this.societeId}`] = { twoFactorEnabled: this.twoFactorEnabled };
     localStorage.setItem('security_settings', JSON.stringify(securityData));
-    alert(this.twoFactorEnabled ? '2FA activé' : '2FA désactivé');
+    this.snackBar.open(this.twoFactorEnabled ? '2FA activé' : '2FA désactivé', 'Fermer', { duration: 3000 });
   }
   
   loadSessions() {
@@ -957,14 +959,14 @@ export class ChefParametresComponent implements OnInit {
   
   revokeSession(session: any) {
     if (session.current) {
-      alert('Impossible de révoquer la session actuelle');
+      this.snackBar.open('Impossible de révoquer la session actuelle', 'Fermer', { duration: 3000 });
       return;
     }
     this.sessions = this.sessions.filter((s: any) => s.id !== session.id);
     const sessionData = JSON.parse(localStorage.getItem('user_sessions') || '{}');
     sessionData[this.societeId] = this.sessions;
     localStorage.setItem('user_sessions', JSON.stringify(sessionData));
-    alert('Session révoquée');
+    this.snackBar.open('Session révoquée', 'Fermer', { duration: 3000 });
   }
   
   cancelSessions() {

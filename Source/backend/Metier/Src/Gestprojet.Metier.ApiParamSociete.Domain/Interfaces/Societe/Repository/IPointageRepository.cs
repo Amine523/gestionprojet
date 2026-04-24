@@ -10,7 +10,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Repository
     public interface IPointageRepository
     {
         Task<OperationResult> AjouterOuModifierAsync(PointageCore entity);
-        Task<PointageCore> ObtenirAsync(string id);
+        Task<PointageCore?> ObtenirAsync(string id);
         Task<IEnumerable<PointageCore>> ListeAsync();
         Task<IEnumerable<PointageCore>> ListeParCritereAsync(ConditionRecherche critere);
         Task<OperationResult> SupprimerAsync(string id);

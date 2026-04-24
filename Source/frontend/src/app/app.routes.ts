@@ -8,10 +8,9 @@ import { DeveloppeurLayoutComponent } from '@layout/layouts/developpeur.layout';
 import { ApplicantLayoutComponent } from '@layout/layouts/applicant.layout';
 
 export const routes: Routes = [
-  { 
-
-    path: '', 
-    loadChildren: () => import('@features/auth/auth.routes').then(m => m.AUTH_ROUTES) 
+  {
+    path: '',
+    loadChildren: () => import('@features/auth/auth.routes').then(m => m.AUTH_ROUTES)
   },
   {
     path: 'applicant',

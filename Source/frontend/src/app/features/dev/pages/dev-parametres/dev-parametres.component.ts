@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-dev-parametres',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="parametres-container">
@@ -47,7 +48,7 @@ import { ApiService } from '@core/services/api.service';
             <label class="form-label">Société</label>
             <input type="text" [value]="societeNom" class="form-input" disabled>
           </div>
-          <button class="btn btn-success" (click)="save()">Enregistrer</button>
+          <button class="btn btn-success" (click)="saveProfil()">Enregistrer</button>
         </div>
       </div>
 
@@ -363,6 +364,7 @@ import { ApiService } from '@core/services/api.service';
 })
 export class DevParametresComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
 
   societeNom = '';
   profil = { nom: '', email: '', role: '', initials: '' };
@@ -412,23 +414,21 @@ export class DevParametresComponent implements OnInit {
     if (prefs.dev) this.preferences = prefs.dev;
   }
 
-  save() {
-    alert('Paramètres enregistrés');
+  saveProfil() {
+    this.snackBar.open('Profil enregistré', 'Fermer', { duration: 3000 });
   }
 
   saveNotifications() {
     const notifData = JSON.parse(localStorage.getItem('user_notifications') || '{}');
     notifData.dev = this.notifications;
     localStorage.setItem('user_notifications', JSON.stringify(notifData));
-    alert('Notifications mises à jour');
+    this.snackBar.open('Notifications mises à jour', 'Fermer', { duration: 3000 });
   }
 
   savePreferences() {
     const prefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
     prefs.dev = this.preferences;
     localStorage.setItem('userPreferences', JSON.stringify(prefs));
-    this.applyDarkMode();
-    alert('Préférences mises à jour');
+    this.snackBar.open('Préférences mises à jour', 'Fermer', { duration: 3000 });
   }
 }
-

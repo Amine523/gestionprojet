@@ -40,6 +40,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             return r == null ? NotFound("Societe introuvable") : Ok(r);
         }
 
+        [HttpGet("obtenir/id/{id}")]
+        public async Task<IActionResult> ObtenirParId(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
+            var r = await _societeBusiness.ObtenirAsync(id);
+            return r == null ? NotFound("Societe introuvable") : Ok(r);
+        }
+
         [HttpPost("AjouterOuModifier")]
         public async Task<IActionResult> AjouterOuModifier([FromBody] SocieteCore entity)
         {
@@ -109,6 +117,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
 
+        [HttpDelete("supprimer/id/{id}")]
+        public async Task<IActionResult> SupprimerParId(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
+            var result = await _societeBusiness.SupprimerAsync(id);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
         [HttpDelete("SupprimerParCondition")]
         public async Task<IActionResult> SupprimerParCondition([FromBody] ConditionRecherche critere)
         {
@@ -120,6 +136,10 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
         [HttpGet("ListeParPage")]
         public async Task<IActionResult> ListeParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 20)
+            => Ok(await _societeBusiness.ListeParPageAsync(pageNumero, pageTaille));
+
+        [HttpGet("liste-par-page/{pageNumero}/{pageTaille}")]
+        public async Task<IActionResult> ListeParPageRoute(int pageNumero, int pageTaille)
             => Ok(await _societeBusiness.ListeParPageAsync(pageNumero, pageTaille));
 
         [HttpPost("Inscription")]

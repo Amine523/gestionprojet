@@ -105,7 +105,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             => Ok(await _tacheAssignationBusiness.ListeDetailleParPageAsync(pageNumero, pageTaille));
 
         [HttpPost("ListeDetailleParConditionParPage")]
-        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche critere = null)
+        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche? critere = null)
         {
             var result = await _tacheAssignationBusiness.ListeDetailleParConditionParPageAsync(critere ?? new ConditionRecherche(), pageNumero, pageTaille);
             return Ok(result);

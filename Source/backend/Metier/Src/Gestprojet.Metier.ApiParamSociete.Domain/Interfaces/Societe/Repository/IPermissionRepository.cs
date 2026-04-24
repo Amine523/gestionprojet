@@ -10,7 +10,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Repository
     public interface IPermissionRepository
     {
         Task<OperationResult> AjouterOuModifierAsync(PermissionCore entity);
-        Task<PermissionCore> ObtenirAsync(string id);
+        Task<PermissionCore?> ObtenirAsync(string id);
         Task<IEnumerable<PermissionCore>> ListeAsync();
         Task<IEnumerable<PermissionCore>> ListeParCritereAsync(ConditionRecherche critere);
         Task<OperationResult> SupprimerAsync(string id);

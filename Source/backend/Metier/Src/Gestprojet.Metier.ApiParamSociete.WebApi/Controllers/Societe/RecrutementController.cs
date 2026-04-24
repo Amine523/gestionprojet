@@ -37,10 +37,28 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Postuler([FromForm] CandidatureSubmission submission)
         {
-            if (submission == null) return BadRequest("Données invalides");
+            System.Console.WriteLine($"[RECRUTEMENT] Postuler called: CandidatId={submission?.CandidatId}, OffreId={submission?.OffreId}, CV={submission?.CV?.FileName}");
+
+            if (submission == null)
+            {
+                System.Console.WriteLine("[RECRUTEMENT] Submission is null");
+                return BadRequest("Données invalides");
+            }
+
+            if (string.IsNullOrWhiteSpace(submission.CandidatId))
+            {
+                System.Console.WriteLine("[RECRUTEMENT] CandidatId is required");
+                return BadRequest("CandidatId requis");
+            }
+
+            if (string.IsNullOrWhiteSpace(submission.OffreId))
+            {
+                System.Console.WriteLine("[RECRUTEMENT] OffreId is required");
+                return BadRequest("OffreId requis");
+            }
 
             // 1. Gérer le CV si présent
-            string cvPath = null;
+            string? cvPath = null;
             if (submission.CV != null && submission.CV.Length > 0)
             {
                 var uploads = Path.Combine(_env.ContentRootPath, "wwwroot", "uploads", "cvs");
@@ -54,30 +72,36 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
                 {
                     await submission.CV.CopyToAsync(stream);
                 }
+                System.Console.WriteLine($"[RECRUTEMENT] CV saved to: {cvPath}");
             }
 
             // 2. Créer ou récupérer l'utilisateur (Candidat)
             // Note: En entreprise, on vérifierait si l'email existe déjà
-            
+
             // 3. Créer la candidature
             var application = new ApplicationCore
             {
-                Id = "CAND_" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper(),
+                Id = "", // Let repository generate ID
                 UtilisateurId = submission.CandidatId,
+                OffreId = submission.OffreId,
                 Statut = "EN_ATTENTE",
                 Type = "Candidature",
                 AppelDate = DateTime.Now,
                 Actif = true
             };
 
+            System.Console.WriteLine($"[RECRUTEMENT] Creating application: UtilisateurId={application.UtilisateurId}, OffreId={application.OffreId}");
+
             var result = await _applicationBusiness.AjouterOuModifierAsync(application);
+
+            System.Console.WriteLine($"[RECRUTEMENT] Application result: Success={result.Success}, Message={result.Message}");
 
             if (result.Success && !string.IsNullOrEmpty(cvPath))
             {
                 // Enregistrer l'attachement
                 var attachement = new AttachementCore
                 {
-                    Id = "ATT_" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper(),
+                    Id = "", // Let repository generate ID
                     CheminFichier = cvPath,
                     TypeFichier = "CV",
                     Actif = true
@@ -115,7 +139,6 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         public async Task<IActionResult> ValiderQuiz([FromBody] QuizValidationRequest request)
         {
             // Logique de validation du score côté serveur (Sécurisé)
-            int score = 0;
             // Vérification des réponses...
             
             // Mise à jour du statut de la candidature
@@ -132,15 +155,15 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
     public class CandidatureSubmission
     {
-        public string CandidatId { get; set; }
-        public string OffreId { get; set; }
-        public IFormFile CV { get; set; }
+        public string CandidatId { get; set; } = string.Empty;
+        public string OffreId { get; set; } = string.Empty;
+        public IFormFile CV { get; set; } = null!;
     }
 
     public class QuizValidationRequest
     {
-        public string ApplicationId { get; set; }
-        public string QuizName { get; set; }
-        public List<int> Reponses { get; set; }
+        public string ApplicationId { get; set; } = string.Empty;
+        public string QuizName { get; set; } = string.Empty;
+        public List<int> Reponses { get; set; } = new List<int>();
     }
 }

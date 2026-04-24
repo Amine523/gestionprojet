@@ -92,7 +92,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
             return m.Success ? int.Parse(m.Value) : 0;
         }
 
-        public async Task<PermissionCore> ObtenirAsync(string id)
+        public async Task<PermissionCore?> ObtenirAsync(string id)
         {
             try
             {

@@ -10,7 +10,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Repository
     public interface IAttachementRepository
     {
         Task<OperationResult> AjouterOuModifierAsync(AttachementCore entity);
-        Task<AttachementCore> ObtenirAsync(string id);
+        Task<AttachementCore?> ObtenirAsync(string id);
         Task<IEnumerable<AttachementCore>> ListeAsync();
         Task<IEnumerable<AttachementCore>> ListeParCritereAsync(ConditionRecherche critere);
         Task<OperationResult> SupprimerAsync(string id);

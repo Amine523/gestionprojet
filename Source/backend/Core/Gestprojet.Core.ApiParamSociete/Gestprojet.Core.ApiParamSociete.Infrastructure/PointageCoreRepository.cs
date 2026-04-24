@@ -23,14 +23,26 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
             {
                 using (var connection = _context.CreateConnection())
                 {
-                    var response = await connection.QueryFirstOrDefaultAsync<int>
-                        (Constants.Ps_Pointage_i, PointageCoreMapper.GetParameters(PointageCore), commandType: CommandType.StoredProcedure);
+                    // Don't generate ID - Metier API handles ID generation
+                    var parameters = PointageCoreMapper.GetParameters(PointageCore);
+                    
+                    Console.WriteLine($"DEBUG Pointage Insert: Id={PointageCore.Id}, UtilisateurId={PointageCore.UtilisateurId}, TypeId={PointageCore.TypeId}, Date={PointageCore.Date}");
+                    
+                    var sql = @"
+                        INSERT INTO [dbo].[Pointage]
+                        ([Id], [UtilisateurId], [TypeId], [Date], [HeureEntree], [HeureSortie], [Duree], [Note], [Actif])
+                        VALUES
+                        (@Id, @UtilisateurId, @TypeId, @Date, @HeureEntree, @HeureSortie, @Duree, @Note, @Actif);
+                    ";
+                    var response = await connection.ExecuteAsync(sql, parameters);
+                    Console.WriteLine($"DEBUG Pointage Insert Result: {response}");
                     return response > 0;
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Probl�me d'ajout : {ex.Message}");
+                Console.WriteLine($"DEBUG Pointage Insert Error: {ex.Message}");
+                throw new Exception($"Problème d'ajout : {ex.Message}");
             }
         }
 

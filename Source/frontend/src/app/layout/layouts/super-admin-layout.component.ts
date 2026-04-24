@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SidebarComponent } from '../components/sidebar/sidebar.component';
 import { HeaderComponent } from '../components/header/header.component';
+import { AIAssistantComponent } from '../components/ai-assistant.component';
 import { SidebarService } from '@core/services/sidebar.service';
 
 @Component({
   selector: 'app-super-admin-layout-alt',
   standalone: true,
-  imports: [CommonModule, RouterModule, SidebarComponent, HeaderComponent],
+  imports: [CommonModule, RouterModule, SidebarComponent, HeaderComponent, AIAssistantComponent],
   template: `
 
     <div class="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
@@ -30,6 +31,8 @@ import { SidebarService } from '@core/services/sidebar.service';
           <router-outlet></router-outlet>
         </main>
       </div>
+
+      <app-ai-assistant></app-ai-assistant>
     </div>
   `
 })

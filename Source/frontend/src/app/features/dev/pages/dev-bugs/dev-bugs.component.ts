@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-dev-bugs',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="bugs-container">
@@ -764,6 +765,7 @@ import { ApiService } from '@core/services/api.service';
 })
 export class DevBugsComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
 
   filterProjet = '';
   filterPriorite = '';
@@ -841,7 +843,7 @@ stats = { ouverts: 0, enCours: 0, corriges: 0, total: 0 };
     bug.statut = 'Corrigé';
     this.stats.corriges++;
     this.stats.ouverts--;
-    alert('Bug marqué comme corrigé');
+    this.snackBar.open('Bug marqué comme corrigé', 'Fermer', { duration: 3000 });
   }
 }
 

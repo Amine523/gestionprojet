@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-chef-taches',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [CommonModule, FormsModule, DragDropModule, MatSnackBarModule],
   template: `
 
     <div class="taches-container">
@@ -40,30 +41,30 @@ import { ApiService } from '@core/services/api.service';
                 <div class="task-card" cdkDrag>
                   <div class="task-priority" [ngClass]="'prio-' + (tache.priorite || 'Medium').toLowerCase()"></div>
                   <div class="task-content">
-                    <div class="task-header">
-                      <span class="task-title">{{tache.nom}}</span>
-                    </div>
-                    <p class="task-description">{{tache.description}}</p>
-                    
-                    <div class="task-footer">
-                      <div class="task-assignee">
-                        <div class="avatar">
-                          {{ (tache.assignees && tache.assignees.length > 0) ? tache.assignees[0].nom.charAt(0) : '?' }}
+                      <div class="task-header">
+                        <span class="task-title">{{tache.titre || tache.nom}}</span>
+                      </div>
+                      <p class="task-description">{{tache.description}}</p>
+                      
+                      <div class="task-footer">
+                        <div class="task-assignee">
+                          <div class="avatar">
+                            {{ (tache.assignees && tache.assignees.length > 0) ? tache.assignees[0].nom.charAt(0) : '?' }}
+                          </div>
+                          <span class="assignee-name">
+                            {{ (tache.assignees && tache.assignees.length > 0) ? tache.assignees[0].nom + (tache.assignees.length > 1 ? ' +' + (tache.assignees.length - 1) : '') : 'Non assigné' }}
+                          </span>
                         </div>
-                        <span class="assignee-name">
-                          {{ (tache.assignees && tache.assignees.length > 0) ? tache.assignees[0].nom + (tache.assignees.length > 1 ? ' +' + (tache.assignees.length - 1) : '') : 'Non assigné' }}
-                        </span>
+                        <div class="task-date">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                          </svg>
+                          <span>{{(tache.dateLimite || tache.dateEcheance) | date:'dd/MM/yyyy'}}</span>
+                        </div>
                       </div>
-                      <div class="task-date">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                          <line x1="16" y1="2" x2="16" y2="6"/>
-                          <line x1="8" y1="2" x2="8" y2="6"/>
-                          <line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
-                        <span>{{tache.dateEcheance | date:'dd/MM/yyyy'}}</span>
-                      </div>
-                    </div>
 
                     <div class="task-actions">
                       <button class="btn-icon" (click)="viewTache(tache)">
@@ -643,10 +644,12 @@ import { ApiService } from '@core/services/api.service';
 })
 export class ChefTachesComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   
   societeId = '';
   societeNom = 'Votre société';
-  
+  selectedProjet: number | null = null;
+
   columns = [
     { id: 'todo', title: 'To Do' },
     { id: 'inprogress', title: 'In Progress' },
@@ -656,12 +659,12 @@ export class ChefTachesComponent implements OnInit {
   connectedLists = ['todo', 'inprogress', 'done'];
 
   taches: any[] = [
-    { id: 1, titre: 'Créer la page d\'accueil', description: 'Design et implémentation de la page d\'accueil', priorite: 'High', status: 'todo', assignee: 'Ahmed Ben Ali', deadline: '10/04/2026', projet: 'Application Mobile', commentaires: [{id: 1, auteur: 'Chef', texte: 'Priorité absolue'}] },
-    { id: 2, titre: 'Intégrer API REST', description: 'Connexion avec le backend', priorite: 'High', status: 'inprogress', assignee: 'Mohamed Salah', deadline: '15/04/2026', projet: 'API REST', commentaires: [] },
-    { id: 3, titre: 'Tests unitaires', description: 'Écrire les tests pour le module auth', priorite: 'Medium', status: 'todo', assignee: 'Leila Amiri', deadline: '20/04/2026', projet: 'API REST', commentaires: [] },
-    { id: 4, titre: 'Design dashboard', description: 'Mockups pour le dashboard admin', priorite: 'Medium', status: 'done', assignee: 'Sofia Karoui', deadline: '05/04/2026', projet: 'Dashboard', commentaires: [{id: 1, auteur: 'Chef', texte: 'Bien reçu!'}] },
-    { id: 5, titre: 'Correction bugs login', description: 'Bug sur la validation du mot de passe', priorite: 'High', status: 'inprogress', assignee: 'Youssef Mejri', deadline: '08/04/2026', projet: 'Application Mobile', commentaires: [] },
-    { id: 6, titre: 'Documentation API', description: 'Rédiger la doc Swagger', priorite: 'Low', status: 'todo', assignee: 'Ahmed Ben Ali', deadline: '30/04/2026', projet: 'API REST', commentaires: [] }
+    { id: 1, titre: 'Créer la page d\'accueil', description: 'Design et implémentation de la page d\'accueil', priorite: 'High', statut: 'todo', assignee: 'Ahmed Ben Ali', dateLimite: '2026-04-10', projet: 'Application Mobile', commentaires: [{id: 1, auteur: 'Chef', texte: 'Priorité absolue'}] },
+    { id: 2, titre: 'Intégrer API REST', description: 'Connexion avec le backend', priorite: 'High', statut: 'inprogress', assignee: 'Mohamed Salah', dateLimite: '2026-04-15', projet: 'API REST', commentaires: [] },
+    { id: 3, titre: 'Tests unitaires', description: 'Écrire les tests pour le module auth', priorite: 'Medium', statut: 'todo', assignee: 'Leila Amiri', dateLimite: '2026-04-20', projet: 'API REST', commentaires: [] },
+    { id: 4, titre: 'Design dashboard', description: 'Mockups pour le dashboard admin', priorite: 'Medium', statut: 'done', assignee: 'Sofia Karoui', dateLimite: '2026-04-05', projet: 'Dashboard', commentaires: [{id: 1, auteur: 'Chef', texte: 'Bien reçu!'}] },
+    { id: 5, titre: 'Correction bugs login', description: 'Bug sur la validation du mot de passe', priorite: 'High', statut: 'inprogress', assignee: 'Youssef Mejri', dateLimite: '2026-04-08', projet: 'Application Mobile', commentaires: [] },
+    { id: 6, titre: 'Documentation API', description: 'Rédiger la doc Swagger', priorite: 'Low', statut: 'todo', assignee: 'Ahmed Ben Ali', dateLimite: '2026-04-30', projet: 'API REST', commentaires: [] }
   ];
 
   membres = [
@@ -693,14 +696,44 @@ export class ChefTachesComponent implements OnInit {
   loadData() {
     this.api.getTaches().subscribe({
       next: (taches) => {
-        this.taches = (taches || []).filter((t: any) => t.societeId === this.societeId).map((t: any) => {
-          // Si on a des tacheAssignees avec des Utilisateurs, on les mappe
-          if (t.tacheAssignees && !t.assignees) {
-            t.assignees = t.tacheAssignees
+        this.taches = (taches || []).filter((t: any) => {
+          const sId = t.societeId || t.SocieteId;
+          const matchesSociete = sId === this.societeId;
+          if (!matchesSociete) return false;
+
+          if (this.selectedProjet) {
+            const pId = t.projetId || t.ProjetId;
+            return pId === this.selectedProjet;
+          }
+          return true;
+        }).map((t: any) => {
+          // Normalisation pour le Kanban
+          const rawStatus = (t.statut || t.Statut || t.status || t.Status || 'To Do').toLowerCase();
+          let normalizedStatus = 'To Do';
+          if (rawStatus === 'done' || rawStatus === 'terminé') normalizedStatus = 'Done';
+          else if (rawStatus === 'in progress' || rawStatus === 'en cours') normalizedStatus = 'In Progress';
+
+          const mappedTask = {
+            ...t,
+            id: t.id || t.Id,
+            titre: t.titre || t.Titre,
+            description: t.description || t.Description,
+            statut: normalizedStatus,
+            priorite: t.priorite || t.Priorite || 'Medium',
+            dateLimite: t.dateLimite || t.DateLimite || t.dateFin || t.DateFin,
+            projetId: t.projetId || t.ProjetId,
+            assignees: t.assignees || []
+          };
+
+          if (t.tacheAssignees && (!mappedTask.assignees || mappedTask.assignees.length === 0)) {
+            mappedTask.assignees = t.tacheAssignees
               .filter((ta: any) => ta.utilisateur)
               .map((ta: any) => ta.utilisateur);
+          } else if ((t.utilisateur || t.Utilisateur) && mappedTask.assignees.length === 0) {
+             mappedTask.assignees = [t.utilisateur || t.Utilisateur];
           }
-          return t;
+          
+          return mappedTask;
         });
       },
       error: () => {}
@@ -715,14 +748,17 @@ export class ChefTachesComponent implements OnInit {
     
     this.api.getProjetsBySociete(this.societeId).subscribe({
       next: (projets) => {
-        this.projets = projets.map((p: any) => ({ id: p.id, nom: p.nom }));
+        const user = this.api.getCurrentUser();
+        this.projets = (projets || [])
+          .filter((p: any) => p.utilisateurId === user?.id)
+          .map((p: any) => ({ id: p.id, nom: p.nom }));
       },
       error: () => {}
     });
   }
 
-  getColumnTasks(status: string): any[] {
-    return this.taches.filter(t => t.status === status);
+  getColumnTasks(statut: string): any[] {
+    return this.taches.filter(t => (t.statut || t.status) === statut);
   }
 
   drop(event: CdkDragDrop<any[]>) {
@@ -731,7 +767,9 @@ export class ChefTachesComponent implements OnInit {
     } else {
       transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
       const task = event.container.data[event.currentIndex];
+      task.statut = event.container.id;
       task.status = event.container.id;
+      this.api.saveTache(task).subscribe();
     }
   }
 
@@ -739,18 +777,18 @@ export class ChefTachesComponent implements OnInit {
   editTache(t: any) { 
     this.editingTache = t; 
     this.formData = { 
-      titre: t.nom, 
+      titre: t.titre || t.nom, 
       description: t.description, 
       priorite: t.priorite || 'Medium', 
       assigneeId: t.assigneeIds && t.assigneeIds.length > 0 ? t.assigneeIds[0] : (t.tacheAssignees && t.tacheAssignees.length > 0 ? t.tacheAssignees[0].utilisateurId : ''), 
-      dateEcheance: t.dateEcheance ? new Date(t.dateEcheance).toISOString().split('T')[0] : '', 
+      dateEcheance: (t.dateLimite || t.dateEcheance) ? new Date(t.dateLimite || t.dateEcheance).toISOString().split('T')[0] : '', 
       projetId: t.projetId 
     }; 
   }
   deleteTache(t: any) {
     if (confirm('Supprimer cette tâche?')) {
-      this.taches = this.taches.filter(x => x.id !== t.id);
-      alert('Tâche supprimée');
+      this.taches = this.taches.filter((x: any) => x.id !== t.id);
+      this.snackBar.open('Tâche supprimée', 'Fermer', { duration: 3000 });
     }
   }
 
@@ -767,23 +805,24 @@ export class ChefTachesComponent implements OnInit {
 
   saveTache() {
     if (!this.formData.titre) {
-      alert('Veuillez entrer un titre');
+      this.snackBar.open('Veuillez entrer un titre', 'Fermer', { duration: 3000 });
       return;
     }
     if (!this.formData.projetId) {
-      alert('Veuillez sélectionner un projet');
+      this.snackBar.open('Veuillez sélectionner un projet', 'Fermer', { duration: 3000 });
       return;
     }
     
     // Mapping frontend data to backend Tache entity
     const taskData: any = {
-      nom: this.formData.titre,
+      titre: this.formData.titre,
       description: this.formData.description,
       priorite: this.formData.priorite,
-      status: this.editingTache ? this.editingTache.status : 'todo',
-      dateEcheance: (this.formData.dateEcheance && !isNaN(new Date(this.formData.dateEcheance).getTime())) ? new Date(this.formData.dateEcheance).toISOString() : null,
+      statut: this.editingTache ? (this.editingTache.statut || this.editingTache.status) : 'To Do',
+      dateFin: (this.formData.dateEcheance && !isNaN(new Date(this.formData.dateEcheance).getTime())) ? new Date(this.formData.dateEcheance).toISOString() : null,
       projetId: this.formData.projetId,
       societeId: this.societeId,
+      utilisateurId: this.formData.assigneeId || '',
       actif: true
     };
 
@@ -791,13 +830,8 @@ export class ChefTachesComponent implements OnInit {
       taskData.id = this.editingTache.id;
     }
 
-    // Map assignments to IDs for the DTO
-    if (this.formData.assigneeId) {
-      taskData.assigneeIds = [this.formData.assigneeId];
-    }
-
     this.api.saveTache(taskData).subscribe({
-      next: (res) => {
+      next: () => {
         // Trigger notification for assignee
         if (this.formData.assigneeId) {
           this.api.createNotification(
@@ -808,13 +842,13 @@ export class ChefTachesComponent implements OnInit {
             this.formData.assigneeId
           );
         }
-        alert('Tâche enregistrée avec succès');
+        this.snackBar.open('Tâche enregistrée avec succès', 'Fermer', { duration: 3000 });
         this.loadData();
         this.closeForm();
       },
       error: (err) => {
         console.error('Error saving task:', err);
-        alert('Erreur lors de l\'enregistrement de la tâche');
+        this.snackBar.open('Erreur lors de l\'enregistrement de la tâche', 'Fermer', { duration: 3000 });
       }
     });
   }

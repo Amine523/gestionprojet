@@ -10,7 +10,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Repository
     public interface IModuleRepository
     {
         Task<OperationResult> AjouterOuModifierAsync(ModuleCore entity);
-        Task<ModuleCore> ObtenirAsync(string id);
+        Task<ModuleCore?> ObtenirAsync(string id);
         Task<IEnumerable<ModuleCore>> ListeAsync();
         Task<IEnumerable<ModuleCore>> ListeParCritereAsync(ConditionRecherche critere);
         Task<OperationResult> SupprimerAsync(string id);

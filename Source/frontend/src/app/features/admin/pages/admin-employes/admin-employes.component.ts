@@ -145,23 +145,23 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                  </button>
               </div>
 
-              <form>
+              <form (ngSubmit)="saveEmploye()">
                  <div class="form-grid">
                     <div class="form-field">
                        <label>Identité</label>
-                       <input [(ngModel)]="formData.nom" class="form-input" placeholder="Entrez le nom complet...">
+                       <input [(ngModel)]="formData.nom" name="nom" class="form-input" placeholder="Entrez le nom complet...">
                     </div>
                     <div class="form-field">
                        <label>Email de Transmission</label>
-                       <input [(ngModel)]="formData.email" class="form-input" placeholder="nom@domaine.com">
+                       <input [(ngModel)]="formData.email" name="email" class="form-input" placeholder="nom@domaine.com">
                     </div>
                     <div class="form-field">
                        <label>Clé de Sécurité</label>
-                       <input type="password" [(ngModel)]="formData.password" class="form-input" placeholder="••••••••">
+                       <input type="password" [(ngModel)]="formData.password" name="password" class="form-input" placeholder="••••••••">
                     </div>
                     <div class="form-field">
                        <label>Unité Fonctionnelle</label>
-                       <select [(ngModel)]="formData.typeUtilisateurId" class="form-input">
+                       <select [(ngModel)]="formData.typeUtilisateurId" name="role" class="form-input">
                           <option value="developpeur">Développeur</option>
                           <option value="testeur">Testeur</option>
                           <option value="chef_projet">Chef de projet</option>
@@ -183,8 +183,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
               </form>
 
               <div class="modal-actions">
-                 <button (click)="closeDialog()" class="btn btn-ghost">Séquence d'Avortement</button>
-                 <button (click)="saveEmploye()" class="btn btn-primary">
+                 <button type="button" (click)="closeDialog()" class="btn btn-ghost">Séquence d'Avortement</button>
+                 <button type="button" (click)="saveEmploye()" class="btn btn-primary">
                     {{editingEmploye ? 'Valider Mise à Jour' : 'Initialiser Talent'}}
                  </button>
               </div>
@@ -781,8 +781,8 @@ export class AdminEmployesComponent implements OnInit {
   }
 
   loadEmployes() {
-    this.api.getUtilisateurs().subscribe(data => {
-      this.employes = (data || []).filter(u => u.societeId === this.societeId);
+    this.api.getEmployesBySociete(this.societeId).subscribe(data => {
+      this.employes = data || [];
       this.filterEmployes();
     });
   }
@@ -809,9 +809,17 @@ export class AdminEmployesComponent implements OnInit {
     if (!this.formData.nom || !this.formData.email) return;
     const payload = { ...this.formData, societeId: this.societeId };
     if (this.editingEmploye) {
-      this.api.updateUtilisateur(this.editingEmploye.id, payload).subscribe(() => { this.loadEmployes(); this.closeDialog(); });
+      this.api.updateUtilisateur(this.editingEmploye.id, payload).subscribe(() => { 
+        this.loadEmployes(); 
+        this.closeDialog(); 
+        this.snackBar.open('Talent mis à jour', 'OK', { duration: 2000 });
+      });
     } else {
-      this.api.createUtilisateur(payload).subscribe(() => { this.loadEmployes(); this.closeDialog(); });
+      this.api.createUtilisateur(payload).subscribe(() => { 
+        this.loadEmployes(); 
+        this.closeDialog(); 
+        this.snackBar.open('Nouveau talent intégré', 'OK', { duration: 2000 });
+      });
     }
   }
 
@@ -821,6 +829,16 @@ export class AdminEmployesComponent implements OnInit {
   }
 
   deleteEmploye(e: any) {
-    if (confirm('Supprimer cette unité ?')) this.api.deleteUtilisateur(e.id).subscribe(() => this.loadEmployes());
+    if (confirm('Supprimer cette unité ?')) {
+      this.api.deleteUtilisateur(e.id).subscribe({
+        next: () => {
+          this.snackBar.open('Unité supprimée', 'Fermer', { duration: 3000 });
+          this.loadEmployes();
+        },
+        error: (err) => {
+          this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
+        }
+      });
+    }
   }
 }

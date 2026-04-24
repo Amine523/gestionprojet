@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-dev-docs',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="docs-container">
@@ -942,6 +943,7 @@ PUT  /api/taches/:id</code></pre>
 })
 export class DevDocsComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   searchQuery = '';
   societeNom = '';
   societeId = '';
@@ -967,7 +969,7 @@ export class DevDocsComponent implements OnInit {
       if (this.folders.indexOf(folderName) < 0) {
         this.folders.push(folderName);
         this.selectedFolder = folderName;
-        alert('Dossier ajouté: ' + folderName);
+        this.snackBar.open('Dossier ajouté: ' + folderName, 'Fermer', { duration: 3000 });
       }
     }
   }
@@ -1022,7 +1024,7 @@ export class DevDocsComponent implements OnInit {
       this.docs = this.docs.filter(d => d.type !== doc.type);
       this.filterDocs();
       this.saveDocsToStorage();
-      alert('Document supprimé');
+      this.snackBar.open('Document supprimé', 'Fermer', { duration: 3000 });
     }
   }
 
@@ -1033,7 +1035,7 @@ export class DevDocsComponent implements OnInit {
 
   saveDoc() {
     if (!this.docForm.title || !this.docForm.description) {
-      alert('Veuillez remplir tous les champs');
+      this.snackBar.open('Veuillez remplir tous les champs', 'Fermer', { duration: 3000 });
       return;
     }
 
@@ -1042,11 +1044,11 @@ export class DevDocsComponent implements OnInit {
       if (idx >= 0) {
         this.docs[idx] = { ...this.docForm, type: this.editingDoc.type };
       }
-      alert('Document modifié');
+      this.snackBar.open('Document modifié', 'Fermer', { duration: 3000 });
     } else {
       const newType = 'doc_' + Date.now();
       this.docs.push({ ...this.docForm, type: newType });
-      alert('Document ajouté');
+      this.snackBar.open('Document ajouté', 'Fermer', { duration: 3000 });
     }
 
     this.filterDocs();
@@ -1078,9 +1080,9 @@ export class DevDocsComponent implements OnInit {
     const url = this.externalLinks[link.toLowerCase()];
     if (url && url.startsWith('http')) {
       window.open(url, '_blank');
-      alert('Ouverture: ' + link);
+      this.snackBar.open('Ouverture: ' + link, 'Fermer', { duration: 3000 });
     } else {
-      alert('Lien non configuré pour ' + link);
+      this.snackBar.open('Lien non configuré pour ' + link, 'Fermer', { duration: 3000 });
     }
   }
 
@@ -1115,7 +1117,7 @@ export class DevDocsComponent implements OnInit {
         };
         this.uploadedFiles.push(fileData);
         this.saveFilesToStorage();
-        alert('Fichier importé: ' + file.name);
+        this.snackBar.open('Fichier importé: ' + file.name, 'Fermer', { duration: 3000 });
       }
     }, 100);
   }
@@ -1175,14 +1177,14 @@ export class DevDocsComponent implements OnInit {
     link.href = URL.createObjectURL(file.data);
     link.download = file.name;
     link.click();
-    alert('Téléchargement: ' + file.name);
+    this.snackBar.open('Téléchargement: ' + file.name, 'Fermer', { duration: 3000 });
   }
 
   deleteFile(file: any) {
     if (confirm('Voulez-vous supprimer ce fichier?')) {
       this.uploadedFiles = this.uploadedFiles.filter((f: any) => f.name !== file.name);
       this.saveFilesToStorage();
-      alert('Fichier supprimé');
+      this.snackBar.open('Fichier supprimé', 'Fermer', { duration: 3000 });
     }
   }
 }

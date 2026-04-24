@@ -27,6 +27,34 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
 
+        [HttpPost("ajouter")]
+        public async Task<IActionResult> Ajouter([FromBody] TacheCore entity)
+        {
+            if (entity == null) return BadRequest("Données Tache invalides");
+            entity.Id = string.Empty;
+            var result = await _tacheBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPut("modifier")]
+        public async Task<IActionResult> Modifier([FromBody] TacheCore entity)
+        {
+            if (entity == null) return BadRequest("Données Tache invalides");
+            var result = await _tacheBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] TacheCore entity)
+            => await AjouterOuModifier(entity);
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(string id, [FromBody] TacheCore entity)
+        {
+            if (entity != null) entity.Id = id;
+            return await AjouterOuModifier(entity!);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
             => Ok(await _tacheBusiness.ListeAsync());
@@ -65,6 +93,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
 
+        [HttpDelete("supprimer/id/{id}")]
+        public async Task<IActionResult> SupprimerParId(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
+            var result = await _tacheBusiness.SupprimerAsync(id);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
         [HttpDelete("SupprimerParCondition")]
         public async Task<IActionResult> SupprimerParCondition([FromBody] ConditionRecherche critere)
         {
@@ -90,7 +126,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             => Ok(await _tacheBusiness.ListeDetailleParPageAsync(pageNumero, pageTaille));
 
         [HttpPost("ListeDetailleParConditionParPage")]
-        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche critere = null)
+        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche? critere = null)
         {
             var result = await _tacheBusiness.ListeDetailleParConditionParPageAsync(critere ?? new ConditionRecherche(), pageNumero, pageTaille);
             return Ok(result);

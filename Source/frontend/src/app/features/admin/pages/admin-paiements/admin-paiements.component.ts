@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface Plan {
   id: string;
@@ -13,10 +14,22 @@ interface Plan {
   periods?: { monthly: number; quarterly: number; yearly: number };
 }
 
+interface PaymentMethod {
+  id: string;
+  type: 'card' | 'virement';
+  nom: string;
+  details: string;
+  defaut: boolean;
+  numero?: string;
+  expiration?: string;
+  cvv?: string;
+  iban?: string;
+}
+
 @Component({
   selector: 'app-admin-paiements',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -261,6 +274,87 @@ interface Plan {
                  </button>
               </section>
            </div>
+        </div>
+      }
+
+      <!-- Payment Modal -->
+      @if (showPaymentModal) {
+        <div class="modal-backdrop" (click)="showPaymentModal = false">
+          <div class="modal-container payment-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <div class="header-icon-small">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/>
+                  <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+              </div>
+              <div>
+                <h3>Secure Gateway</h3>
+                <p>Authorized Financial Node</p>
+              </div>
+              <button (click)="showPaymentModal = false" class="btn-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="modal-body">
+              <div class="payment-summary">
+                <p>Plan: <span>{{selectedPlan?.nom || abonnement?.plan}}</span></p>
+                <p>Amount: <span>{{selectedPlan?.prix || abonnement?.prix}} DT</span></p>
+              </div>
+
+              <form #payForm="ngForm" (ngSubmit)="confirmPayment()" class="payment-form">
+                <div class="form-group">
+                  <label>Cardholder Signal</label>
+                  <input type="text" [(ngModel)]="paymentData.cardName" name="cardName" class="form-input" placeholder="FULL NAME" required>
+                </div>
+
+                <div class="form-group">
+                  <label>Card Identity (Primary Number)</label>
+                  <div class="input-with-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="5" width="20" height="14" rx="2"/>
+                      <line x1="2" y1="10" x2="22" y2="10"/>
+                    </svg>
+                    <input type="text" [(ngModel)]="paymentData.cardNumber" name="cardNumber" class="form-input" placeholder="0000 0000 0000 0000" required>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Expiration</label>
+                    <input type="text" [(ngModel)]="paymentData.expiry" name="expiry" class="form-input" placeholder="MM/YY" required>
+                  </div>
+                  <div class="form-group">
+                    <label>CVC (Shield Key)</label>
+                    <input type="password" [(ngModel)]="paymentData.cvc" name="cvc" class="form-input" placeholder="•••" required>
+                  </div>
+                </div>
+
+                <div class="security-assurance">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  <span>Encrypted via AES-256 Protocol</span>
+                </div>
+
+            <div class="modal-footer">
+              <button type="button" (click)="showPaymentModal = false" class="btn btn-ghost">Abort</button>
+              <button type="submit" [disabled]="isLoading || payForm.invalid" class="btn btn-primary btn-full">
+                @if (isLoading) {
+                  <div class="spinner-small"></div>
+                  <span>Synchronizing...</span>
+                } @else {
+                  <span>Authorize Contribution</span>
+                }
+              </button>
+            </div>
+              </form>
+            </div>
+          </div>
         </div>
       }
     </div>
@@ -1012,6 +1106,248 @@ interface Plan {
       background: rgba(255, 255, 255, 0.02);
     }
 
+
+
+    /* Modal Styling */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .modal-container {
+      background: white;
+      border-radius: var(--radius-2xl);
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .payment-modal {
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .modal-header {
+      padding: var(--space-xl);
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      position: relative;
+    }
+
+    .header-icon-small {
+      width: 40px;
+      height: 40px;
+      background: #6366f1;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .modal-header p {
+      margin: 0;
+      font-size: var(--font-size-xs);
+      color: #6366f1;
+      font-weight: var(--font-weight-semibold);
+      text-transform: uppercase;
+    }
+
+    .btn-close {
+      position: absolute;
+      top: var(--space-lg);
+      right: var(--space-lg);
+      background: transparent;
+      border: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .btn-close:hover {
+      color: #ef4444;
+    }
+
+    .modal-body {
+      padding: var(--space-xl);
+    }
+
+    .payment-summary {
+      background: #f8fafc;
+      padding: var(--space-md);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-xl);
+      border-left: 4px solid #6366f1;
+    }
+
+    .payment-summary p {
+      margin: var(--space-xs) 0;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .payment-summary p span {
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+    }
+
+    .payment-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .form-group label {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: var(--space-md);
+      background: white;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      font-size: var(--font-size-sm);
+      color: var(--color-text);
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .input-with-icon {
+      position: relative;
+    }
+
+    .input-with-icon svg {
+      position: absolute;
+      left: var(--space-md);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-text-muted);
+    }
+
+    .input-with-icon .form-input {
+      padding-left: calc(var(--space-md) * 2.5);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+
+    .security-assurance {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: var(--font-size-xs);
+      color: #10b981;
+      font-weight: var(--font-weight-semibold);
+      margin-top: var(--space-md);
+    }
+
+    .modal-footer {
+      padding: var(--space-xl);
+      background: var(--color-bg);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      gap: var(--space-md);
+    }
+
+    .btn-full {
+      flex: 1;
+      height: 54px;
+      justify-content: center;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-muted);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(239, 68, 68, 0.05);
+      color: #ef4444;
+    }
+
+    .spinner-small {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Dark mode */
+    :host-context(.dark) .modal-container {
+      background: var(--color-surface);
+    }
+
+    :host-context(.dark) .modal-header,
+    :host-context(.dark) .modal-footer {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    :host-context(.dark) .payment-summary {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    :host-context(.dark) .form-input {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-border);
+    }
+
     @media (max-width: 1024px) {
       .billing-grid {
         grid-template-columns: 1fr;
@@ -1030,6 +1366,7 @@ interface Plan {
 export class AdminPaiementsComponent implements OnInit {
   private api = inject(ApiService);
   private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
 
   societeId: string = '';
   societeNom: string = '';
@@ -1038,12 +1375,20 @@ export class AdminPaiementsComponent implements OnInit {
   transactions: any[] = [];
   paymentMethods: any[] = [];
   selectedPlan: Plan | null = null;
-  selectedPeriod: string = 'monthly';
+  selectedPeriod: 'monthly' | 'quarterly' | 'yearly' = 'monthly';
+  
+  showPaymentModal: boolean = false;
+  isLoading: boolean = false;
+  paymentData = { cardName: '', cardNumber: '', expiry: '', cvc: '' };
+  selectedPaymentMethod: PaymentMethod | null = null;
+  paymentMethodSaved = false;
+  paymentCompleted = false;
+  newPayment: any = { type: 'card', numero: '', expiration: '', cvv: '', iban: '' };
 
   plans: Plan[] = [
-    { id: 'starter', nom: 'Starter Node', prix: 99, utilisateurs: '5', features: ['Task Management', '1 Core Project', 'Email Support', '5 User Seats'] },
-    { id: 'pro', nom: 'Pro Ecosystem', prix: 299, utilisateurs: '20', features: ['Full Access', 'Unlimited Projects', 'AI Assistant', '20 User Seats', 'Analytics'] },
-    { id: 'enterprise', nom: 'Omni Enterprise', prix: 599, utilisateurs: 'Unlimited', features: ['All Premium', '24/7 Priority', 'Custom API', 'Dedicated Success Manager'] }
+    { id: 'starter', nom: 'Starter Node', prix: 99, utilisateurs: '5', features: ['Task Management', '1 Core Project', 'Email Support', '5 User Seats'], periods: { monthly: 99, quarterly: 279, yearly: 990 } },
+    { id: 'pro', nom: 'Pro Ecosystem', prix: 299, utilisateurs: '20', features: ['Full Access', 'Unlimited Projects', 'AI Assistant', '20 User Seats', 'Analytics'], periods: { monthly: 299, quarterly: 797, yearly: 2691 } },
+    { id: 'enterprise', nom: 'Omni Enterprise', prix: 599, utilisateurs: 'Unlimited', features: ['All Premium', '24/7 Priority', 'Custom API', 'Dedicated Success Manager'], periods: { monthly: 599, quarterly: 1597, yearly: 5391 } }
   ];
 
   ngOnInit() {
@@ -1052,6 +1397,7 @@ export class AdminPaiementsComponent implements OnInit {
     this.societeId = user?.societeId || '';
     this.societeNom = user?.societe?.nom || 'Votre société';
     this.loadData();
+    this.checkExpiringSubscriptions();
   }
 
   loadData() {
@@ -1073,8 +1419,8 @@ export class AdminPaiementsComponent implements OnInit {
       .map((t: any) => ({ ...t, id: t.id || Math.random().toString(36).substr(2, 20), date: new Date(t.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) }));
     
     this.paymentMethods = storage.paymentMethods || [
-      { id: '1', nom: 'Mastercard Node', details: '•••• •••• •••• 4492', defaut: true },
-      { id: '2', nom: 'Visa Network', details: '•••• •••• •••• 9901', defaut: false }
+      { id: '1', nom: 'Mastercard Node', details: '•••• •••• •••• 4492', defaut: true, type: 'card' },
+      { id: '2', nom: 'Visa Network', details: '•••• •••• •••• 9901', defaut: false, type: 'card' }
     ];
   }
 
@@ -1084,6 +1430,405 @@ export class AdminPaiementsComponent implements OnInit {
   }
 
   selectPlan(p: Plan) { this.selectedPlan = p; }
-  goToPaymentMethod() { alert('Routing to secure payment node...'); }
-  processPayment() { alert('Cycle synchronization successful.'); }
+  
+  goToPaymentMethod() {
+    if (!this.selectedPlan) return;
+    this.showPaymentModal = true;
+    this.paymentData = { cardName: '', cardNumber: '', expiry: '', cvc: '' };
+  }
+
+  processPayment() {
+    this.showPaymentModal = true;
+    this.paymentData = { cardName: '', cardNumber: '', expiry: '', cvc: '' };
+  }
+
+  confirmPayment() {
+    this.isLoading = true;
+    
+    const currentPrice = this.getCurrentPrice();
+    const periodLabel = this.getPeriodLabel();
+    
+    // 1. Create Payment record
+    const paiementDto = {
+      id: crypto.randomUUID(),
+      societeId: this.societeId,
+      societeNom: this.societeNom,
+      montant: currentPrice,
+      date: new Date().toISOString(),
+      description: `Subscription Sync: ${this.selectedPlan?.nom || this.abonnement?.plan} - ${periodLabel}`,
+      methode: 'Card',
+      statut: 'Success',
+      type: 'NEW_SUBSCRIPTION',
+      periode: this.selectedPeriod
+    };
+
+    this.api.createPaiement(paiementDto).subscribe({
+      next: () => {
+        this.saveTransactionToStorage(paiementDto);
+        
+        // 2. Create/Update Subscription
+        const aboDto = {
+          id: this.abonnement?.id || crypto.randomUUID(),
+          societeId: this.societeId,
+          societeNom: this.societeNom,
+          adminId: this.currentUser?.id,
+          adminNom: this.currentUser?.nom,
+          adminEmail: this.currentUser?.email,
+          type: this.selectedPlan?.nom || this.abonnement?.plan,
+          periode: this.selectedPeriod,
+          dateDebut: new Date().toISOString(),
+          dateFin: this.getNextDate(),
+          actif: true,
+          prix: currentPrice,
+          nbUsers: this.getPlanUsers() ? parseInt(this.getPlanUsers()) : 20
+        };
+
+        this.api.createAbonnement(aboDto).subscribe({
+          next: () => {
+            this.saveAbonnementToStorage(aboDto);
+            this.sendPaymentNotificationToSuperAdmin(this.societeNom, this.selectedPlan?.nom || this.abonnement?.plan, currentPrice, this.selectedPlan?.utilisateurs || this.abonnement?.utilisateurs);
+            this.isLoading = false;
+            this.showPaymentModal = false;
+            this.paymentCompleted = true;
+            this.snackBar.open('Payment verified. Subscription ecosystem synchronized.', 'OK', { duration: 5000 });
+            this.loadData();
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.snackBar.open('Ecosystem sync failed. Please check your secure node.', 'Retry');
+          }
+        });
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.snackBar.open('Financial authorization failed. Security breach prevented.', 'Retry');
+      }
+    });
+  }
+
+  getCurrentPrice(): number {
+    if (!this.selectedPlan) return this.abonnement?.prix || 0;
+    const periods = this.selectedPlan.periods;
+    if (!periods) return this.selectedPlan.prix;
+    return periods[this.selectedPeriod] || this.selectedPlan.prix;
+  }
+
+  getPeriodLabel(): string {
+    const labels: any = { monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' };
+    return labels[this.selectedPeriod] || 'Monthly';
+  }
+
+  getDiscount(): number {
+    if (!this.selectedPlan) return 0;
+    const periods = this.selectedPlan.periods;
+    if (!periods) return 0;
+    const monthlyTotal = periods.monthly * 12;
+    const yearlyPrice = periods.yearly;
+    return Math.round(((monthlyTotal - yearlyPrice) / monthlyTotal) * 100);
+  }
+
+  getPlanUsers(): string {
+    if (!this.selectedPlan) return '';
+    const users = this.selectedPlan.utilisateurs;
+    if (users === 'Unlimited') return '9999';
+    const num = users.match(/\d+/);
+    return num ? num[0] : '20';
+  }
+
+  getNextDate(): string {
+    const date = new Date();
+    switch (this.selectedPeriod) {
+      case 'quarterly':
+        date.setMonth(date.getMonth() + 3);
+        break;
+      case 'yearly':
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+      default:
+        date.setMonth(date.getMonth() + 1);
+    }
+    return date.toISOString();
+  }
+
+  selectPaymentMethod(method: PaymentMethod) {
+    this.selectedPaymentMethod = method;
+    this.paymentMethodSaved = true;
+  }
+
+  isPaymentMethodValid(): boolean {
+    if (this.newPayment.type === 'card') {
+      return !!(this.newPayment.numero && this.newPayment.expiration && this.newPayment.cvv);
+    } else {
+      return !!(this.newPayment.iban && this.newPayment.iban.length >= 20);
+    }
+  }
+
+  savePaymentMethod() {
+    const storage = this.api.getRawStorage();
+    
+    if (this.newPayment.type === 'card') {
+      const method: PaymentMethod = {
+        id: Date.now().toString(),
+        type: 'card',
+        nom: 'Visa ****' + this.newPayment.numero.slice(-4),
+        details: 'Expire ' + this.newPayment.expiration,
+        defaut: true,
+        numero: this.newPayment.numero,
+        expiration: this.newPayment.expiration,
+        cvv: this.newPayment.cvv
+      };
+      this.paymentMethods.push(method);
+      storage.paymentMethods = storage.paymentMethods || [];
+      storage.paymentMethods.push(method);
+    } else if (this.newPayment.type === 'virement' && this.newPayment.iban) {
+      const method: PaymentMethod = {
+        id: Date.now().toString(),
+        type: 'virement',
+        nom: 'Bank Transfer',
+        details: 'RIB: ' + this.newPayment.iban,
+        defaut: false,
+        iban: this.newPayment.iban
+      };
+      this.paymentMethods.push(method);
+      storage.paymentMethods = storage.paymentMethods || [];
+      storage.paymentMethods.push(method);
+    }
+    
+    localStorage.setItem('app_data', JSON.stringify(storage));
+    this.paymentMethodSaved = true;
+    this.selectedPaymentMethod = this.paymentMethods[this.paymentMethods.length - 1];
+    this.snackBar.open('Payment method registered successfully', 'OK', { duration: 3000 });
+  }
+
+  setDefault(method: PaymentMethod) {
+    this.paymentMethods.forEach(m => m.defaut = m.id === method.id);
+    const storage = this.api.getRawStorage();
+    storage.paymentMethods = this.paymentMethods;
+    localStorage.setItem('app_data', JSON.stringify(storage));
+    this.snackBar.open('Default payment method updated', 'OK', { duration: 3000 });
+  }
+
+  supprimerMoyen(method: PaymentMethod) {
+    this.paymentMethods = this.paymentMethods.filter(m => m.id !== method.id);
+    const storage = this.api.getRawStorage();
+    storage.paymentMethods = this.paymentMethods;
+    localStorage.setItem('app_data', JSON.stringify(storage));
+    this.snackBar.open('Payment method removed', 'OK', { duration: 3000 });
+  }
+
+  saveTransactionToStorage(transaction: any) {
+    const storage = this.api.getRawStorage();
+    if (!storage.paiements) storage.paiements = [];
+    storage.paiements.push(transaction);
+    localStorage.setItem('app_data', JSON.stringify(storage));
+  }
+
+  saveAbonnementToStorage(abo: any) {
+    const storage = this.api.getRawStorage();
+    if (!storage.abonnements) storage.abonnements = [];
+    const existingIndex = storage.abonnements.findIndex((a: any) => a.societeId === this.societeId);
+    if (existingIndex >= 0) {
+      storage.abonnements[existingIndex] = abo;
+    } else {
+      storage.abonnements.push(abo);
+    }
+    localStorage.setItem('app_data', JSON.stringify(storage));
+  }
+
+  telechargerRecu(transaction: any) {
+    const content = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment Receipt - ${transaction.id}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .logo { font-size: 24px; font-weight: bold; color: #6366f1; }
+    .title { font-size: 18px; margin: 20px 0; }
+    .info { margin: 15px 0; }
+    .label { font-weight: bold; color: #555; }
+    .total { font-size: 20px; font-weight: bold; color: #10b981; margin-top: 20px; }
+    .footer { margin-top: 40px; text-align: center; color: #777; font-size: 12px; }
+    .status { display: inline-block; padding: 5px 15px; background: #10b981; color: white; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">NADHEMNI</div>
+    <div>Payment Receipt</div>
+  </div>
+  
+  <div class="title"><strong>Receipt Nº:</strong> ${transaction.id}</div>
+  
+  <div class="info">
+    <span class="label">Company:</span> ${this.societeNom}
+  </div>
+  <div class="info">
+    <span class="label">Date:</span> ${transaction.date}
+  </div>
+  <div class="info">
+    <span class="label">Description:</span> ${transaction.description}
+  </div>
+  <div class="info">
+    <span class="label">Status:</span> <span class="status">${transaction.statut}</span>
+  </div>
+  
+  <div class="total">
+    Amount: ${transaction.montant} DT
+  </div>
+  
+  <div class="footer">
+    <p>Thank you for your trust!</p>
+    <p>Generated on ${new Date().toLocaleString('fr-FR')}</p>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([content], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `receipt_${transaction.id}.html`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    this.snackBar.open('Receipt downloaded', 'OK', { duration: 3000 });
+  }
+
+  voirHistorique() {
+    const content = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Transaction History - ${this.societeNom}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background: #6366f1; color: white; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .total { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Transaction History</h1>
+  <p><strong>Company:</strong> ${this.societeNom}</p>
+  <p><strong>Generated on:</strong> ${new Date().toLocaleString('fr-FR')}</p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${this.transactions.map(t => `
+      <tr>
+        <td>${t.date}</td>
+        <td>${t.description}</td>
+        <td>${t.montant} DT</td>
+        <td>${t.statut}</td>
+      </tr>
+      `).join('')}
+    </tbody>
+  </table>
+  
+  <p style="margin-top: 20px;"><strong>Total:</strong> ${this.transactions.reduce((sum, t) => sum + (parseFloat(t.montant) || 0), 0)} DT</p>
+</body>
+</html>`;
+
+    const blob = new Blob([content], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `history_${this.societeNom.replace(/\s+/g, '_')}.html`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    this.snackBar.open('History downloaded', 'OK', { duration: 3000 });
+  }
+
+  contacterSupport() {
+    const initialMessage = `Hello, I would like to activate a subscription for our company ${this.societeNom}.`;
+    this.initiateChatWithSuperAdmin(initialMessage);
+    this.snackBar.open('You can contact support via chat', 'OK', { duration: 3000 });
+  }
+
+  initiateChatWithSuperAdmin(message: string) {
+    const storage = this.api.getRawStorage();
+    if (!storage.conversations) storage.conversations = {};
+
+    const key = this.societeId || 'SUPER';
+    if (!storage.conversations[key]) storage.conversations[key] = [];
+
+    const user = this.api.getCurrentUser();
+    storage.conversations[key].push({
+      id: Date.now().toString(),
+      text: message,
+      from: user?.id || this.societeId,
+      fromName: user?.nom || this.societeNom,
+      fromRole: user?.typeUtilisateurId || 'Company Admin',
+      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      date: new Date().toISOString()
+    });
+
+    localStorage.setItem('app_data', JSON.stringify(storage));
+  }
+
+  checkExpiringSubscriptions() {
+    const storage = this.api.getRawStorage();
+    const abos = storage.abonnements || [];
+    const today = new Date();
+    const warningDays = 7;
+
+    const myAbo = abos.find((a: any) => a.societeId === this.societeId);
+    if (!myAbo || !myAbo.dateFin) return;
+
+    const endDate = new Date(myAbo.dateFin);
+    const daysUntilExpiry = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysUntilExpiry <= warningDays && daysUntilExpiry > 0 && !myAbo.notified) {
+      this.sendPaymentNotificationToSuperAdmin(
+        this.societeNom,
+        myAbo.type || 'Plan',
+        myAbo.prix || 0,
+        myAbo.nbUsers ? `${myAbo.nbUsers} users` : 'N/A',
+        'RENEWAL'
+      );
+      
+      myAbo.notified = true;
+      localStorage.setItem('app_data', JSON.stringify(storage));
+    }
+  }
+
+  sendPaymentNotificationToSuperAdmin(societeNom: string, planNom: string, prix: number, utilisateurs: any, type: string = 'NEW') {
+    const storage = this.api.getRawStorage();
+    if (!storage.conversations) storage.conversations = {};
+    
+    const superAdminKey = 'SUPER_ADMIN';
+    if (!storage.conversations[superAdminKey]) {
+      storage.conversations[superAdminKey] = [];
+    }
+
+    const isRenewal = type === 'RENEWAL';
+    const emoji = isRenewal ? '🔄' : '📢';
+    const title = isRenewal ? 'Subscription Renewal' : 'New Payment Processed';
+
+    const notificationMessage = {
+      id: Date.now().toString(),
+      text: `${emoji} ${title}!\n\nCompany: ${societeNom}\nPlan: ${planNom}\nAmount: ${prix} DT\nUsers: ${utilisateurs}\nDate: ${new Date().toLocaleDateString('fr-FR')}`,
+      from: this.currentUser?.id,
+      fromName: this.currentUser?.nom || societeNom,
+      fromRole: 'Company Admin',
+      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      date: new Date().toISOString(),
+      type: type
+    };
+
+    storage.conversations[superAdminKey].push(notificationMessage);
+    localStorage.setItem('app_data', JSON.stringify(storage));
+    console.log(`Notification of ${type === 'RENEWAL' ? 'renewal' : 'payment'} sent to Super Admin`);
+  }
 }

@@ -10,6 +10,7 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
             {
                 projetCore.Id,
                 projetCore.Nom,
+                projetCore.SocieteId,
                 projetCore.Description,
                 projetCore.StartDate,
                 projetCore.EndDate,

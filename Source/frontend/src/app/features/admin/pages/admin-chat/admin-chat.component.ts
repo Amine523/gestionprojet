@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface Message {
   id: string;
@@ -28,7 +29,7 @@ interface Contact {
 @Component({
   selector: 'app-admin-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="chat-container">
@@ -666,6 +667,7 @@ interface Contact {
 export class AdminChatComponent implements OnInit, AfterViewChecked {
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   
   currentUserId: string = '';
   societeId: string = '';
@@ -712,14 +714,22 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
 
   selectContact(c: Contact) {
     this.selectedContact = c;
-    this.messages = [
-      { id: '1', text: 'Operational status report required.', from: c.id, fromName: c.nom, time: '11:45' },
-      { id: '2', text: 'Encryption protocol synchronized. All systems nominal.', from: this.currentUserId, fromName: 'Me', time: '11:50' }
-    ];
+    this.loadMessages(c);
+  }
+
+  loadMessages(c: Contact) {
+    const allMessages = JSON.parse(localStorage.getItem('admin_chat_messages') || '{}');
+    const key = `conv_${c.id}_${this.societeId}`;
+    const saved = allMessages[key];
+    if (saved && saved.length > 0) {
+      this.messages = saved;
+    } else {
+      this.messages = [];
+    }
   }
 
   sendMessage() {
-    if (!this.newMessage.trim()) return;
+    if (!this.newMessage.trim() || !this.selectedContact) return;
     this.messages.push({
       id: Date.now().toString(),
       text: this.newMessage,
@@ -727,9 +737,22 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
       fromName: 'Me',
       time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     });
+    
+    this.saveMessages();
+    
+    this.selectedContact.dernierMessage = this.newMessage;
+    this.selectedContact.time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     this.newMessage = '';
   }
 
-  onFileSelected(e: any) { alert('Uploading transmission packets...'); }
-  openNewGroupDialog() { alert('Initializing multi-node channel...'); }
+  saveMessages() {
+    if (!this.selectedContact) return;
+    const allMessages = JSON.parse(localStorage.getItem('admin_chat_messages') || '{}');
+    const key = `conv_${this.selectedContact.id}_${this.societeId}`;
+    allMessages[key] = this.messages;
+    localStorage.setItem('admin_chat_messages', JSON.stringify(allMessages));
+  }
+
+  onFileSelected(e: any) { this.snackBar.open('Uploading transmission packets...', 'Fermer', { duration: 3000 }); }
+  openNewGroupDialog() { this.snackBar.open('Initializing multi-node channel...', 'Fermer', { duration: 3000 }); }
 }

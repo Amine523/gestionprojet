@@ -8,11 +8,20 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
         {
             return new
             {
-                applicationCore.Id,
-                applicationCore.UtilisateurId,
-                applicationCore.AppelDate,
-                applicationCore.Statut,
-                applicationCore.Actif,
+                Id = applicationCore.Id,
+                UtilisateurId = applicationCore.UtilisateurId,
+                SocieteId = applicationCore.SocieteId,
+                OffreId = applicationCore.OffreId,
+                Titre = applicationCore.Titre,
+                Description = applicationCore.Description,
+                Lieu = applicationCore.Lieu,
+                Salaire = applicationCore.Salaire,
+                Poste = applicationCore.Poste,
+                Quiz = applicationCore.Quiz,
+                AppelDate = applicationCore.AppelDate,
+                Statut = applicationCore.Statut,
+                Type = applicationCore.Type,
+                Actif = applicationCore.Actif
             };
         }
     }

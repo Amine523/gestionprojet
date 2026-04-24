@@ -51,19 +51,46 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
         }
 
         [HttpGet("stats/societe/{societeId}")]
-        public async Task<IActionResult> GetSocieteStats(string societeId)
+        public async Task<IActionResult> GetStatsBySociete(string societeId)
         {
+            var societes = await _societeBusiness.ListeAsync();
+            var societe = societes.FirstOrDefault(s => s.Id == societeId);
+            
+            if (societe == null)
+            {
+                return NotFound(new { error = "Société non trouvée", societeId });
+            }
+
             var utilisateurs = await _utilisateurBusiness.ListeAsync();
-            var projects = await _projetBusiness.ListeParSocieteAsync(societeId);
-            var rhStats = await _rhCalculationService.CalculateRHStatsAsync(societeId);
+            var societeUsers = utilisateurs.Where(u => u.SocieteId == societeId).ToList();
+            
+            var projets = await _projetBusiness.ListeAsync();
+            var societeProjets = projets.Where(p => p.SocieteId == societeId).ToList();
 
             return Ok(new
             {
-                TotalEmployes = utilisateurs.Count(u => u.SocieteId == societeId),
-                TotalProjets = projects.Count(),
-                ProjetsEnCours = projects.Count(p => p.Status == "En cours" || p.Status == "In Progress"),
-                RH = rhStats
+                SocieteId = societeId,
+                SocieteNom = societe.Nom,
+                TotalUtilisateurs = societeUsers.Count(),
+                TotalProjets = societeProjets.Count(),
+                ProjetsEnCours = societeProjets.Count(p => p.Status?.ToLower() == "en cours"),
+                UtilisateursActifs = societeUsers.Count(u => u.Actif.GetValueOrDefault(true))
             });
+        }
+
+        [HttpGet("rh-stats/{societeId}")]
+        public async Task<IActionResult> GetRHStats(string societeId, [FromQuery] string? date = null)
+        {
+            try
+            {
+                var targetDate = string.IsNullOrEmpty(date) ? (DateTime?)null : DateTime.Parse(date);
+                var stats = await _rhCalculationService.CalculateRHStatsAsync(societeId, targetDate);
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Erreur lors du calcul des statistiques RH", message = ex.Message });
+            }
         }
 
         [HttpGet("projects/progress/{societeId}")]
@@ -94,7 +121,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
         }
 
         [HttpGet("attendance/trends/{societeId}")]
-        public async Task<IActionResult> GetAttendanceTrends(string societeId)
+        public IActionResult GetAttendanceTrends(string societeId)
         {
             // Mock trend data for last 7 days
             var trends = new List<object>();
@@ -126,7 +153,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
         }
 
         [HttpGet("revenus")]
-        public async Task<IActionResult> GetRevenus([FromQuery] string filter = "month")
+        public IActionResult GetRevenus([FromQuery] string filter = "month")
         {
             int revenus;
             if (filter == "year")
@@ -191,7 +218,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
         }
 
         [HttpGet("societes-par-mois")]
-        public async Task<IActionResult> GetSocietesParMois([FromQuery] int months = 12)
+        public IActionResult GetSocietesParMois([FromQuery] int months = 12)
         {
             var result = new List<object>();
             for (int i = months - 1; i >= 0; i--)

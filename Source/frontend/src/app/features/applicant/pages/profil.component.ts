@@ -201,7 +201,7 @@ export class ApplicantProfilComponent implements OnInit {
     if (user) {
       this.userName = user.nom;
       this.userEmail = user.email;
-      this.loadCandidatures(user.id);
+      this.loadCandidatures(user.id || user.utilisateurId);
     } else {
       this.router.navigate(['/applicant/postuler']);
     }
@@ -255,7 +255,8 @@ export class ApplicantProfilComponent implements OnInit {
     // Update status in API
     this.api.updateCandidatureStatus(this.selectedCandidature.id, 'Test_termine', this.score, this.quizQuestions.length)
       .subscribe(() => {
-        this.loadCandidatures(this.api.getCurrentUser().id);
+        const user = this.api.getCurrentUser();
+        this.loadCandidatures(user.id || user.utilisateurId);
       });
   }
 

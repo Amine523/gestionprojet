@@ -11,6 +11,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 {
     [ApiController]
     [Route("api/pointages")]
+    [Route("api/pointage")]
     [AllowAnonymous]
     [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
     public class PointageController : ControllerBase
@@ -22,6 +23,42 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
         [HttpPost("AjouterOuModifier")]
         public async Task<IActionResult> AjouterOuModifier([FromBody] PointageCore entity)
+        {
+            if (entity == null) return BadRequest("Données Pointage invalides");
+            var result = await _pointageBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPost("ajouter")]
+        public async Task<IActionResult> Ajouter([FromBody] PointageCore entity)
+        {
+            if (entity == null) return BadRequest("Données Pointage invalides");
+            if (string.IsNullOrWhiteSpace(entity.UtilisateurId)) return BadRequest("UtilisateurId requis");
+            if (string.IsNullOrWhiteSpace(entity.TypeId)) return BadRequest("TypeId requis");
+            if (!entity.Date.HasValue) return BadRequest("Date requis");
+            entity.Id = string.Empty;
+            var result = await _pointageBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPut("modifier")]
+        public async Task<IActionResult> Modifier([FromBody] PointageCore entity)
+        {
+            if (entity == null) return BadRequest("Données Pointage invalides");
+            var result = await _pointageBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] PointageCore entity)
+        {
+            if (entity == null) return BadRequest("Données Pointage invalides");
+            var result = await _pointageBusiness.AjouterOuModifierAsync(entity);
+            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] PointageCore entity)
         {
             if (entity == null) return BadRequest("Données Pointage invalides");
             var result = await _pointageBusiness.AjouterOuModifierAsync(entity);
@@ -46,6 +83,13 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
         [HttpPost("ListeParCritere")]
         public async Task<IActionResult> ListeParCritere([FromBody] ConditionRecherche critere)
+        {
+            if (critere == null) return BadRequest("Critère manquant");
+            return Ok(await _pointageBusiness.ListeParCritereAsync(critere));
+        }
+
+        [HttpPost("liste-par-condition")]
+        public async Task<IActionResult> ListeParCondition([FromBody] ConditionRecherche critere)
         {
             if (critere == null) return BadRequest("Critère manquant");
             return Ok(await _pointageBusiness.ListeParCritereAsync(critere));
@@ -79,6 +123,10 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         public async Task<IActionResult> ListeParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 20)
             => Ok(await _pointageBusiness.ListeParPageAsync(pageNumero, pageTaille));
 
+        [HttpGet("liste-par-page/{pageNumero}/{pageTaille}")]
+        public async Task<IActionResult> ListeParPageRoute(int pageNumero, int pageTaille)
+            => Ok(await _pointageBusiness.ListeParPageAsync(pageNumero, pageTaille));
+
         [HttpPost("ListeParConditionParPage")]
         public async Task<IActionResult> ListeParConditionParPage([FromBody] ConditionRecherche critere, [FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 20)
         {
@@ -105,10 +153,25 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         }
 
         [HttpPost("ListeDetailleParConditionParPage")]
-        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche critere = null)
+        public async Task<IActionResult> ListeDetailleParConditionParPage([FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 10, [FromBody] ConditionRecherche? critere = null)
         {
             var result = await _pointageBusiness.ListeDetailleParConditionParPageAsync(critere ?? new ConditionRecherche(), pageNumero, pageTaille);
             return Ok(result);
+        }
+
+        [HttpGet("rapport")]
+        public IActionResult GetRapportUrl([FromQuery] string societeId, [FromQuery] int mois, [FromQuery] int annee, [FromQuery] string format = "pdf")
+        {
+            // Return URL for the rapport endpoint in EnhancedRHController
+            return Ok(new { url = $"/api/rh/enhanced/societe/{societeId}/rapport-presence?mois={mois}&annee={annee}&format={format}" });
+        }
+
+        [HttpGet("rapport-file")]
+        public IActionResult GetRapportFile([FromQuery] string societeId, [FromQuery] int mois, [FromQuery] int annee)
+        {
+            // This endpoint should redirect to EnhancedRHController or implement the logic
+            // For now, return 501 Not Implemented
+            return StatusCode(501, new { error = "Utilisez l'endpoint /api/rh/enhanced/societe/{societeId}/rapport-presence?format=csv" });
         }
     }
 }

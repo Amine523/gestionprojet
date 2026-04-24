@@ -23,6 +23,13 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi
             {
                 options.AddPolicy("AllowAllWithCredentials", policyBuilder =>
                 {
+                    policyBuilder.WithOrigins("http://localhost:4200", "http://127.0.0.1:4200", "http://127.0.0.1:55307", "http://localhost:55307")
+                                 .AllowAnyMethod()
+                                 .AllowAnyHeader()
+                                 .AllowCredentials();
+                });
+                options.AddPolicy("AllowAll", policyBuilder =>
+                {
                     policyBuilder.SetIsOriginAllowed(origin => true)
                                  .AllowAnyMethod()
                                  .AllowAnyHeader()
@@ -54,11 +61,37 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 };
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        // Allow preflight requests to pass through authentication
+                        if (context.Request.Method == "OPTIONS")
+                        {
+                            context.NoResult();
+                            return Task.CompletedTask;
+                        }
+                        return Task.CompletedTask;
+                    },
+                    OnChallenge = context =>
+                    {
+                        // Skip challenge for OPTIONS requests
+                        if (context.Request.Method == "OPTIONS")
+                        {
+                            context.HandleResponse();
+                            return Task.CompletedTask;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             // === Controllers ===
-                        builder.Services.AddControllers()
-                .AddNewtonsoftJson();
+            builder.Services.AddControllers()
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+                });
 
             // === SignalR ===
             builder.Services.AddSignalR();
@@ -92,81 +125,145 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi
             builder.Services.AddScoped<IApplicationApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new ApplicationApi(config);
             });
             builder.Services.AddScoped<IAttachementApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new AttachementApi(config);
             });
             builder.Services.AddScoped<IModuleApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new ModuleApi(config);
             });
             builder.Services.AddScoped<IPermissionApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new PermissionApi(config);
             });
             builder.Services.AddScoped<IPointageApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new PointageApi(config);
             });
             builder.Services.AddScoped<IProjetApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new ProjetApi(config);
             });
             builder.Services.AddScoped<IProjetUtilisateurApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new ProjetUtilisateurApi(config);
             });
             builder.Services.AddScoped<IRoleApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new RoleApi(config);
             });
             builder.Services.AddScoped<ISocieteApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new SocieteApi(config);
             });
             builder.Services.AddScoped<ISousTacheApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new SousTacheApi(config);
             });
             builder.Services.AddScoped<ITacheApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new TacheApi(config);
             });
             builder.Services.AddScoped<ITacheAssignationApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new TacheAssignationApi(config);
             });
             builder.Services.AddScoped<ITypeApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new TypeApi(config);
             });
             builder.Services.AddScoped<ITypeUtilisateurApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new TypeUtilisateurApi(config);
             });
             builder.Services.AddScoped<IUtilisateurApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new UtilisateurApi(config);
             });
             builder.Services.AddScoped<IDemandeCongeApi>(provider =>
             {
                 var config = new Gestprojet.Core.ApiParamSociete.Client.Client.Configuration { BasePath = apiParamSocieteBaseAdresse };
+                config.DefaultHeaders = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Content-Type", "application/json" }
+                };
                 return new DemandeCongeApi(config);
             });
 
@@ -218,8 +315,8 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi
 
             // === Pipeline HTTP ===
             app.UseStaticFiles();
-            app.UseMiddleware<Gestprojet.Metier.ApiParamSociete.WebApi.Middleware.ExceptionMiddleware>();
             app.UseCors("AllowAllWithCredentials");
+            app.UseMiddleware<Gestprojet.Metier.ApiParamSociete.WebApi.Middleware.ExceptionMiddleware>();
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();

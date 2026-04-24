@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, from } from 'rxjs';
+import { Observable, of, from, forkJoin } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import emailjs from '@emailjs/browser';
 
@@ -29,15 +29,20 @@ export class ApiService {
 
   setToken(token: string): void { localStorage.setItem(this.tokenKey, token); }
   getToken(): string | null { return localStorage.getItem(this.tokenKey); }
-  logout(): void { 
-    localStorage.removeItem(this.tokenKey); 
-    localStorage.removeItem('utilisateur'); 
-    localStorage.removeItem(this.permissionsKey); 
+  logout(): void {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem('utilisateur');
+    localStorage.removeItem(this.permissionsKey);
     localStorage.removeItem('selectedOffre');
   }
   isLoggedIn(): boolean { return !!this.getToken(); }
   getCurrentUser(): any { const user = localStorage.getItem('utilisateur'); return user ? JSON.parse(user) : null; }
-  getUserRole(): string { const user = this.getCurrentUser(); return (user?.typeUtilisateurId || user?.typeUtilisateur?.id || 'candidat').toLowerCase(); }
+  getUserRole(): string { 
+    const user = this.getCurrentUser(); 
+    const role = (user?.typeUtilisateurId || user?.typeUtilisateur?.id || 'candidat').toLowerCase();
+    console.log('ApiService.getUserRole - Rôle détecté:', role, 'User:', user);
+    return role;
+  }
   setPermissions(perms: string[]): void { localStorage.setItem(this.permissionsKey, JSON.stringify(perms)); }
   getPermissions(): string[] { const perms = localStorage.getItem(this.permissionsKey); return perms ? JSON.parse(perms) : []; }
   hasPermission(perm: string): boolean { return this.getPermissions().includes(perm); }
@@ -86,95 +91,376 @@ export class ApiService {
 
   // Societes
   getSocietes(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/societes`, { headers: this.getHeaders() }); }
-  getSocieteById(id: string): Observable<any> { return this.http.get(`${this.baseUrl}/societes/${id}`, { headers: this.getHeaders() }); }
-  getSocietesPage(page: number, size: number): Observable<any> { 
-    return this.http.get<any>(`${this.baseUrl}/societes/ListeParPage?pageNumero=${page}&pageTaille=${size}`, { headers: this.getHeaders() }); 
+  getSocieteById(id: string): Observable<any> { return this.http.get(`${this.baseUrl}/societes/obtenir/id/${id}`, { headers: this.getHeaders() }); }
+  getSocietesPage(page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/societes/ListeParPage?pageNumero=${page}&pageTaille=${size}`, { headers: this.getHeaders() });
   }
-  createSociete(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/societes`, data, { headers: this.getHeaders() }); }
-  updateSociete(data: any): Observable<any> { return this.http.put(`${this.baseUrl}/societes`, data, { headers: this.getHeaders() }); }
-  deleteSociete(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/societes/${id}`, { headers: this.getHeaders() }); }
+  createSociete(data: any): Observable<any> {
+    const payload = {
+      Id: data.id || data.Id || '',
+      Nom: data.nom || data.Nom || '',
+      Adresse: data.adresse || data.Adresse || '',
+      Email: data.email || data.Email || '',
+      Telephone: data.telephone || data.Telephone || '',
+      Logo: data.logo || data.Logo || '',
+      PlanAbonnement: data.planAbonnement || data.PlanAbonnement || '',
+      Actif: data.actif !== undefined ? data.actif : data.Actif
+    };
+    return this.http.post(`${this.baseUrl}/societes/ajouter`, payload, { 
+      headers: this.getHeaders(),
+      responseType: 'text'
+    });
+  }
+  updateSociete(data: any): Observable<any> {
+    const payload = {
+      Id: data.id || data.Id || '',
+      Nom: data.nom || data.Nom || '',
+      Adresse: data.adresse || data.Adresse || '',
+      Email: data.email || data.Email || '',
+      Ville: data.ville || data.Ville || '',
+      Pays: data.pays || data.Pays || '',
+      PlanAbonnement: data.planAbonnement || data.PlanAbonnement || '',
+      Actif: data.actif !== undefined ? data.actif : data.Actif
+    };
+    return this.http.put(`${this.baseUrl}/societes/modifier`, payload, { headers: this.getHeaders() });
+  }
+  deleteSociete(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/societes/supprimer/id/${id}`, { headers: this.getHeaders() }); }
   updateSocieteModules(id: string, modules: string): Observable<any> { return this.http.put(`${this.baseUrl}/societes/${id}/modules`, { enabledModules: modules }, { headers: this.getHeaders() }); }
 
   // Utilisateurs
-  getUtilisateurs(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/utilisateurs`, { headers: this.getHeaders() }); }
-  getUtilisateursPage(page: number, size: number): Observable<any> { 
-    return this.http.get<any>(`${this.baseUrl}/utilisateurs/ListeParPage?pageNumero=${page}&pageTaille=${size}`, { headers: this.getHeaders() }); 
+  getUtilisateurs(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/utilisateurs/liste`, { headers: this.getHeaders() }); }
+  getUtilisateursPage(page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/utilisateurs/liste-par-page/${page}/${size}`, { headers: this.getHeaders() });
   }
   getUtilisateursByConditionPage(page: number, size: number, condition: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/utilisateurs/ListeParConditionParPage?pageNumero=${page}&pageTaille=${size}`, condition, { headers: this.getHeaders() });
+    return this.http.post<any>(`${this.baseUrl}/utilisateurs/liste-par-condition-par-page/${page}/${size}`, condition, { headers: this.getHeaders() });
   }
-  createUtilisateur(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/utilisateurs`, data, { headers: this.getHeaders() }); }
-  updateUtilisateur(id: string, data: any): Observable<any> { return this.http.put(`${this.baseUrl}/utilisateurs`, data, { headers: this.getHeaders() }); }
-  deleteUtilisateur(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/utilisateurs/${id}`, { headers: this.getHeaders() }); }
-  getEmployesBySociete(societeId: string): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/Utilisateur/ParSociete/${societeId}`, { headers: this.getHeaders() }); }
+  createUtilisateur(data: any): Observable<any> {
+    const payload = {
+      id: data.id || data.Id || '',
+      nom: data.nom || data.Nom || '',
+      email: data.email || data.Email || '',
+      motDePasse: data.motDePasse || data.MotDePasse || data.password || '123456',
+      cv: data.cv || data.Cv || '',
+      typeUtilisateurId: data.typeUtilisateurId || data.TypeUtilisateurId || 'T005',
+      societeId: data.societeId || data.SocieteId || '',
+      roleId: data.roleId || data.RoleId || 'R001',
+      actif: data.actif !== undefined ? data.actif : (data.Actif !== undefined ? data.Actif : true)
+    };
+    return this.http.post(`${this.baseUrl}/utilisateurs/ajouter`, payload, { 
+      headers: this.getHeaders(),
+      responseType: 'text'
+    });
+  }
+  updateUtilisateur(id: string, data: any): Observable<any> {
+    const payload = {
+      Id: id || data.id || data.Id || '',
+      Nom: data.nom || data.Nom || '',
+      Email: data.email || data.Email || '',
+      MotDePasse: data.motDePasse || data.MotDePasse || '',
+      Telephone: data.telephone || data.Telephone || '',
+      Poste: data.poste || data.Poste || '',
+      Departement: data.departement || data.Departement || '',
+      Contrat: data.contrat || data.Contrat || '',
+      TypeUtilisateurId: data.typeUtilisateurId || data.TypeUtilisateurId || 'T005',
+      SocieteId: data.societeId || data.SocieteId || '',
+      Actif: data.actif !== undefined ? data.actif : (data.Actif !== undefined ? data.Actif : true),
+      RoleId: data.roleId || data.RoleId || 'R001'
+    };
+    return this.http.put(`${this.baseUrl}/utilisateurs/modifier`, payload, { headers: this.getHeaders() });
+  }
+  deleteUtilisateur(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/utilisateurs/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  getEmployesBySociete(societeId: string): Observable<any[]> {
+    const critere = { Criteres: { 'SocieteId': societeId } };
+    return this.http.post<any[]>(`${this.baseUrl}/utilisateurs/liste-par-condition`, critere, { headers: this.getHeaders() });
+  }
 
   // Projets & Taches
   getProjets(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/projets`, { headers: this.getHeaders() }); }
-  getProjetsPage(page: number, size: number): Observable<any> { 
-    return this.http.get<any>(`${this.baseUrl}/projets/ListeParPage?pageNumero=${page}&pageTaille=${size}`, { headers: this.getHeaders() }); 
+  getProjetsPage(page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/projets/liste-par-page/${page}/${size}`, { headers: this.getHeaders() });
   }
   getProjetsByConditionPage(page: number, size: number, condition: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/projets/ListeParConditionParPage?pageNumero=${page}&pageTaille=${size}`, condition, { headers: this.getHeaders() });
+    return this.http.post<any>(`${this.baseUrl}/projets/liste-par-condition-par-page/${page}/${size}`, condition, { headers: this.getHeaders() });
   }
-  saveProjet(data: any): Observable<any> { return data.id ? this.http.put(`${this.baseUrl}/projets`, data, { headers: this.getHeaders() }) : this.http.post(`${this.baseUrl}/projets`, data, { headers: this.getHeaders() }); }
-  createProjet(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/projets`, data, { headers: this.getHeaders() }); }
-  updateProjet(data: any): Observable<any> { return this.http.put(`${this.baseUrl}/projets`, data, { headers: this.getHeaders() }); }
-  deleteProjet(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/projets/${id}`, { headers: this.getHeaders() }); }
-  addMembreAuProjet(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/projetutilisateurs`, data, { headers: this.getHeaders() }); }
+  private normalizeProjet(data: any): any {
+    return {
+      Id: data.id || data.Id || '',
+      Nom: data.nom || data.Nom || '',
+      Description: data.description || data.Description || '',
+      Status: data.status || data.Status || 'En attente',
+      StartDate: data.startDate || data.StartDate || data.dateDebut || null,
+      EndDate: data.endDate || data.EndDate || data.dateFin || null,
+      SocieteId: data.societeId || data.SocieteId || '',
+      UtilisateurId: data.utilisateurId || data.UtilisateurId || data.chef || '',
+      NomClient: data.nomClient || data.NomClient || '',
+      Avancee: data.avancee ?? data.Avancee ?? 0
+    };
+  }
+  saveProjet(data: any): Observable<any> {
+    const payload = this.normalizeProjet(data);
+    return payload.Id ? this.http.put(`${this.baseUrl}/projets/modifier`, payload, { headers: this.getHeaders() }) : this.http.post(`${this.baseUrl}/projets/ajouter`, payload, { headers: this.getHeaders() });
+  }
+  createProjet(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/projets/ajouter`, this.normalizeProjet(data), { headers: this.getHeaders(), responseType: 'text' }); }
+  updateProjet(data: any): Observable<any> { return this.http.put(`${this.baseUrl}/projets/modifier`, this.normalizeProjet(data), { headers: this.getHeaders() }); }
+  deleteProjet(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/projets/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  addMembreAuProjet(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/membresdeprojet`, data, { headers: this.getHeaders() }); }
   getBurndown(id: string): Observable<any> { return this.http.get(`${this.baseUrl}/projets/${id}/burndown`, { headers: this.getHeaders() }); }
-  getProjetsBySociete(societeId: string): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/Projet/ParSociete/${societeId}`, { headers: this.getHeaders() }); }
+  getProjetsBySociete(societeId: string): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/projets/ParSociete/${societeId}`, { headers: this.getHeaders() }); }
   getTaches(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/taches`, { headers: this.getHeaders() }); }
-  saveTache(data: any): Observable<any> { return data.id ? this.http.put(`${this.baseUrl}/taches`, data, { headers: this.getHeaders() }) : this.http.post(`${this.baseUrl}/taches`, data, { headers: this.getHeaders() }); }
-
-  // RH
-  clockIn(uId: string, sId: string, type = 'NORMAL', note?: string): Observable<any> { return this.http.post(`${this.baseUrl}/rh/enhanced/clock-in`, { utilisateurId: uId, societeId: sId, typeId: type, date: new Date().toISOString(), note }, { headers: this.getHeaders() }); }
-  clockOut(uId: string, sId: string, note?: string): Observable<any> { return this.http.post(`${this.baseUrl}/rh/enhanced/clock-out`, { utilisateurId: uId, societeId: sId, note }, { headers: this.getHeaders() }); }
-  getRHStats(sId: string, date?: string): Observable<any> { return this.http.get(`${this.baseUrl}/rh/enhanced/societe/${sId}/stats?date=${date || ''}`, { headers: this.getHeaders() }); }
-  getWorkedHoursReal(uId: string, date?: string): Observable<any> { return this.http.get(`${this.baseUrl}/rh/enhanced/user/${uId}/worked-hours?date=${date || ''}`, { headers: this.getHeaders() }); }
-  updateDemandeConge(data: any): Observable<any> { return this.http.put(`${this.baseUrl}/demandesconge`, data, { headers: this.getHeaders() }); }
-  getPointages(uId?: string): Observable<any[]> { 
-    const url = uId ? `${this.baseUrl}/pointages/user/${uId}` : `${this.baseUrl}/pointages`;
-    return this.http.get<any[]>(url, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); 
+  saveTache(data: any): Observable<any> {
+    const payload = {
+      Id: data.id || data.Id || '',
+      Titre: data.titre || data.Titre || data.nom || '',
+      Description: data.description || data.Description || '',
+      Statut: data.statut || data.Statut || data.status || data.Status || 'En attente',
+      Status: data.statut || data.Statut || data.status || data.Status || 'En attente',
+      Priorite: data.priorite || data.Priorite || 'Normale',
+      ProjetId: data.projetId || data.ProjetId || '',
+      SocieteId: data.societeId || data.SocieteId || '',
+      UtilisateurId: data.utilisateurId || data.UtilisateurId || '',
+      DateDebut: data.dateDebut || data.DateDebut || null,
+      DateFin: data.dateFin || data.DateFin || data.dateLimite || null
+    };
+    return payload.Id 
+      ? this.http.put(`${this.baseUrl}/taches/modifier`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' }) 
+      : this.http.post(`${this.baseUrl}/taches/ajouter`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' });
   }
-  getDemandesConge(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/demandesconge`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
-  getDemandesEnAttenteReal(sId: string): Observable<any[]> { 
-    return this.getDemandesConge().pipe(
-      map(demandes => demandes.filter((d: any) => d.societeId === sId && d.statut === 'En_attente'))
+
+  // RH & Pointage
+  clockIn(uId: string, sId: string, type = 'NORMAL', note?: string): Observable<any> {
+    const now = new Date();
+    const payload = {
+      Id: '', // Let backend generate the ID
+      UtilisateurId: uId,
+      TypeId: type,
+      Date: now.toISOString().split('T')[0],
+      HeureEntree: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
+      HeureSortie: null,
+      Duree: null,
+      Note: note || '',
+      Actif: true
+    };
+    console.log('ClockIn payload:', payload);
+    return this.http.post(`${this.baseUrl}/pointage/ajouter`, payload, { headers: this.getHeaders() });
+  }
+  clockOut(uId: string, sId: string, note?: string): Observable<any> {
+    // Update the latest pointage for today with HeureSortie
+    const now = new Date();
+    const payload = {
+      Id: '', // Let backend generate the ID
+      UtilisateurId: uId,
+      TypeId: 'NORMAL',
+      Date: now.toISOString().split('T')[0],
+      HeureEntree: null,
+      HeureSortie: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`,
+      Duree: null,
+      Note: note || '',
+      Actif: true
+    };
+    console.log('ClockOut payload:', payload);
+    return this.http.post(`${this.baseUrl}/pointage/ajouter`, payload, { headers: this.getHeaders() });
+  }
+  getPointages(uId?: string): Observable<any[]> {
+    if (uId) {
+      const critere = { Criteres: { 'UtilisateurId': uId } };
+      return this.http.post<any[]>(`${this.baseUrl}/pointage/liste-par-condition`, critere, { headers: this.getHeaders() }).pipe(catchError(() => of([])));
+    }
+    return this.http.get<any[]>(`${this.baseUrl}/pointage`, { headers: this.getHeaders() }).pipe(catchError(() => of([])));
+  }
+  updatePointage(data: any): Observable<any> {
+    let he = data.heureEntree || data.HeureEntree || null;
+    if (he && he.length === 5) he += ':00';
+    let hs = data.heureSortie || data.HeureSortie || null;
+    if (hs && hs.length === 5) hs += ':00';
+
+    const payload = {
+      Id: data.id || data.Id || '',
+      UtilisateurId: data.utilisateurId || data.UtilisateurId || '',
+      TypeId: data.typePointageId || data.TypePointageId || data.typeId || data.TypeId || '',
+      Date: data.date || data.Date || data.dateEntree || data.DateEntree || null,
+      HeureEntree: he,
+      HeureSortie: hs,
+      Duree: data.duree || data.Duree || null,
+      Note: data.note || data.Note || ''
+    };
+    return this.http.put(`${this.baseUrl}/pointage/modifier`, payload, { headers: this.getHeaders() });
+  }
+  createPointage(data: any): Observable<any> {
+    const now = new Date();
+    const payload = {
+      UtilisateurId: data.utilisateurId || data.UtilisateurId || '',
+      TypeId: data.typePointageId || data.TypePointageId || data.typeId || data.TypeId || 'NORMAL',
+      Date: data.date || data.Date || data.dateEntree || data.DateEntree || now.toISOString().split('T')[0],
+      HeureEntree: data.heureEntree || data.HeureEntree || `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`,
+      HeureSortie: data.heureSortie || data.HeureSortie || null,
+      Duree: data.duree || data.Duree || null,
+      Note: data.note || data.Note || '',
+      Actif: true
+    };
+    console.log('Pointage payload:', payload);
+    return this.http.post(`${this.baseUrl}/pointage/ajouter`, payload, { headers: this.getHeaders() });
+  }
+
+  // RH & Monitoring
+  getRHStats(sId: string, date?: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/Dashboard/rh-stats/${sId}?date=${date || ''}`, { headers: this.getHeaders() }).pipe(catchError(() => of({ totalEmployes: 0, employesActifs: 0, employesAbsents: 0, tauxPresence: 0, congesValidesCeMois: 0, demandesCongesEnAttente: 0 })));
+  }
+  getDemandesEnAttenteReal(sId: string): Observable<any[]> {
+    return forkJoin({
+      demandes: this.getDemandesConge(),
+      employes: this.getEmployesBySociete(sId)
+    }).pipe(
+      map(({demandes, employes}) => {
+        const employeMap = new Map(employes.map((e: any) => [e.id || e.Id, e]));
+        return demandes.filter((d: any) => {
+          const uId = d.utilisateurId || d.UtilisateurId;
+          const matchesSociete = employeMap.has(uId) || d.societeId === sId || d.SocieteId === sId;
+          const status = d.status || d.Status || '';
+          const matchesStatus = status === 'En attente' || status === 'En_attente' || status === 'EN_ATTENTE';
+          return matchesSociete && matchesStatus;
+        }).map((d: any) => {
+          const uId = d.utilisateurId || d.UtilisateurId;
+          const emp = employeMap.get(uId);
+          if (emp) {
+            d.utilisateurNom = `${emp.prenom || ''} ${emp.nom || ''}`.trim() || emp.Nom;
+          }
+          const dDebut = new Date(d.dateDebut || d.DateDebut);
+          const dFin = new Date(d.dateFin || d.DateFin);
+          if (!d.jours && !d.Jours && !isNaN(dDebut.getTime()) && !isNaN(dFin.getTime())) {
+            const diffTime = Math.abs(dFin.getTime() - dDebut.getTime());
+            d.jours = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+          }
+          return d;
+        });
+      })
     );
   }
-  validerDemandeCongeReal(id: string, adminId: string, accepted: boolean): Observable<any> { return this.http.post(`${this.baseUrl}/rh/enhanced/demandes-conge/${id}/valider`, { adminId, accepted }, { headers: this.getHeaders() }); }
-  getSoldeConge(uId: string): Observable<any> { return this.http.get(`${this.baseUrl}/rh/enhanced/user/${uId}/solde-conge`, { headers: this.getHeaders() }); }
-  createDemandeCongeReal(dto: any): Observable<any> { return this.http.post(`${this.baseUrl}/rh/enhanced/demandes-conge`, dto, { headers: this.getHeaders() }); }
-  uploadJustificatif(id: string, file: File): Observable<any> { 
+  validerDemandeCongeReal(id: string, adminId: string, accepted: boolean): Observable<any> {
+    const status = accepted ? 'Validée' : 'Refusée';
+    return this.updateDemandeConge({ id, status, valideParId: adminId });
+  }
+  getRapportPresenceUrl(sId: string, m: number, a: number, f: string = 'pdf'): string { return `${this.baseUrl}/pointage/rapport?societeId=${sId}&mois=${m}&annee=${a}&format=${f}`; }
+  getRapportPresence(sId: string, m: number, a: number): Observable<Blob> { return this.http.get(`${this.baseUrl}/pointage/rapport-file?societeId=${sId}&mois=${m}&annee=${a}`, { responseType: 'blob', headers: this.getHeaders() }); }
+  getWorkedHoursReal(uId: string, date?: string): Observable<any> { return this.http.get(`${this.baseUrl}/pointage/heures-travaillees/${uId}?date=${date || ''}`, { headers: this.getHeaders() }); }
+  getSoldeConge(uId: string): Observable<any> { return this.http.get(`${this.baseUrl}/DemandesConge/solde/${uId}`, { headers: this.getHeaders() }); }
+  createDemandeCongeReal(dto: any): Observable<any> { return this.createDemandeConge(dto); }
+  uploadJustificatif(id: string, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post(`${this.baseUrl}/rh/enhanced/demandes-conge/${id}/justificatif`, formData, { headers: this.getHeaders() }); 
+    return this.http.post(`${this.baseUrl}/attachement/ajouter`, { referenceId: id, type: 'JustificatifConge', file: formData }, { headers: this.getHeaders() });
   }
-  getRapportPresenceUrl(sId: string, m: number, a: number, f: string = 'pdf'): string { return `${this.baseUrl}/rh/enhanced/societe/${sId}/rapport-presence?mois=${m}&annee=${a}&format=${f}`; }
-  getRapportPresence(sId: string, m: number, a: number): Observable<Blob> { return this.http.get(`${this.baseUrl}/rh/enhanced/societe/${sId}/rapport-presence?mois=${m}&annee=${a}`, { responseType: 'blob', headers: this.getHeaders() }); }
-  updatePointage(data: any): Observable<any> { return this.http.put(`${this.baseUrl}/pointages`, data, { headers: this.getHeaders() }); }
-  createPointage(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/pointages`, data, { headers: this.getHeaders() }); }
+
+  // Demandes de Congé
+  getDemandesConge(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/DemandesConge`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
+  getDemandesCongeBySociete(sId: string): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/DemandesConge/societe/${sId}`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
+  createDemandeConge(data: any): Observable<any> {
+    const payload = {
+      UtilisateurId: data.utilisateurId || data.UtilisateurId || '',
+      SocieteId: data.societeId || data.SocieteId || '',
+      TypePointageId: data.typePointageId || data.TypePointageId || '',
+      DateDebut: data.dateDebut || data.DateDebut || null,
+      DateFin: data.dateFin || data.DateFin || null,
+      Status: data.status || data.Status || 'En_attente',
+      Motif: data.motif || data.Motif || '',
+      AvecCertificat: data.avecCertificat ?? data.AvecCertificat ?? false,
+      Jours: data.jours || data.Jours || 0
+    };
+    return this.http.post(`${this.baseUrl}/DemandesConge`, payload, { headers: this.getHeaders() });
+  }
+  updateDemandeConge(data: any): Observable<any> {
+    const payload = {
+      Id: data.id || data.Id || '',
+      UtilisateurId: data.utilisateurId || data.UtilisateurId || '',
+      SocieteId: data.societeId || data.SocieteId || '',
+      TypePointageId: data.typePointageId || data.TypePointageId || '',
+      DateDebut: data.dateDebut || data.DateDebut || null,
+      DateFin: data.dateFin || data.DateFin || null,
+      Status: data.status || data.Status || 'En_attente',
+      Motif: data.motif || data.Motif || '',
+      AvecCertificat: data.avecCertificat ?? data.AvecCertificat ?? false,
+      Jours: data.jours || data.Jours || 0,
+      ValideParId: data.valideParId || data.ValideParId || ''
+    };
+    return this.http.put(`${this.baseUrl}/DemandesConge`, payload, { headers: this.getHeaders() });
+  }
+  deleteDemandeConge(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/DemandesConge/${id}`, { headers: this.getHeaders() }); }
 
   // Recrutement
-  getOffresEmploi(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/offresemploi`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
-  saveOffreEmploi(data: any): Observable<any> { return data.id ? this.http.put(`${this.baseUrl}/offresemploi`, data, { headers: this.getHeaders() }) : this.http.post(`${this.baseUrl}/offresemploi`, data, { headers: this.getHeaders() }); }
-  deleteOffreEmploi(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/offresemploi/${id}`, { headers: this.getHeaders() }); }
-  getCandidatures(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/candidatures`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
-  deleteCandidature(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/candidatures/${id}`, { headers: this.getHeaders() }); }
-  clearCandidatures(): void { this.http.delete(`${this.baseUrl}/candidatures`, { headers: this.getHeaders() }).subscribe(); }
-  convertCandidatToEmploye(id: string): Observable<any> { return this.http.post(`${this.baseUrl}/candidatures/${id}/convert`, {}, { headers: this.getHeaders() }); }
+  getOffresEmploi(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/OffreEmploI/liste`, { headers: this.getHeaders() }).pipe(catchError(() => of([])));
+  }
+  saveOffreEmploi(data: any): Observable<any> {
+    const payload = {
+      Id: data.id || data.Id || '',
+      Titre: data.titre || data.Titre || '',
+      Description: data.description || data.Description || '',
+      Poste: data.poste || data.Poste || '',
+      Lieu: data.lieu || data.Lieu || '',
+      Salaire: data.salaire || data.Salaire || '',
+      Quiz: data.quiz || data.Quiz || '',
+      SocieteId: data.societeId || data.SocieteId || '',
+      Statut: data.statut || data.Statut || 'Ouvert',
+      Actif: data.actif !== undefined ? data.actif : true
+    };
+
+    if (!payload.Id) {
+      return this.http.post(`${this.baseUrl}/OffreEmploI/ajouter`, payload, { headers: this.getHeaders() });
+    }
+    return this.http.put(`${this.baseUrl}/OffreEmploI/modifier`, payload, { headers: this.getHeaders() });
+  }
+  deleteOffreEmploi(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/OffreEmploI/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  getCandidatures(): Observable<any[]> {
+    const critere = { Criteres: { 'Type': 'Candidature' } };
+    return this.http.post<any[]>(`${this.baseUrl}/application/liste-par-condition`, critere, { headers: this.getHeaders() }).pipe(catchError(() => of([])));
+  }
+  deleteCandidature(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/application/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  clearCandidatures(): void {
+    const critere = { Criteres: { 'Type': 'Candidature' } };
+    this.http.post(`${this.baseUrl}/application/supprimer-par-condition`, critere, { headers: this.getHeaders() }).subscribe();
+  }
+  convertCandidatToEmploye(id: string): Observable<any> {
+    // This might need a specialized endpoint or a sequence of calls
+    return this.http.post(`${this.baseUrl}/utilisateurs/ajouter`, { fromCandidatId: id }, { headers: this.getHeaders() });
+  }
   setOffreEmploiTemp(o: any): void { localStorage.setItem('selectedOffre', JSON.stringify(o)); }
   getOffreEmploiTemp(): any { const d = localStorage.getItem('selectedOffre'); return d ? JSON.parse(d) : null; }
-  saveCandidature(c: any): Observable<any> { return this.http.post(`${this.baseUrl}/recrutement/postuler`, c, { headers: this.getHeaders() }); }
-  updateCandidature(c: any): Observable<any> { return this.http.put(`${this.baseUrl}/candidatures`, c, { headers: this.getHeaders() }); }
-  getCandidaturesByCandidat(id: string): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/candidatures/candidat/${id}`, { headers: this.getHeaders() }); }
-  updateCandidatureStatus(id: string, status: string, score?: number, total?: number): Observable<any> { return this.http.put(`${this.baseUrl}/candidatures/${id}/status`, { status, score, total }, { headers: this.getHeaders() }); }
+  saveCandidature(c: any): Observable<any> {
+    const payload = {
+      Id: c.id || c.Id || '',
+      UtilisateurId: c.utilisateurId || c.UtilisateurId || '',
+      SocieteId: c.societeId || c.SocieteId || '',
+      OffreId: c.offreId || c.OffreId || '',
+      Titre: c.titre || c.Titre || '',
+      Statut: c.statut || c.Statut || 'Nouveau',
+      Type: 'Candidature',
+      Actif: true
+    };
+    return this.http.post(`${this.baseUrl}/application/ajouter`, payload, { headers: this.getHeaders() });
+  }
+  updateCandidature(c: any): Observable<any> {
+    const payload = {
+      Id: c.id || c.Id || '',
+      Statut: c.statut || c.Statut || '',
+      Quiz: c.quiz || c.Quiz || '',
+      // ... other fields
+    };
+    return this.http.put(`${this.baseUrl}/application/modifier`, payload, { headers: this.getHeaders() });
+  }
+  getCandidaturesByCandidat(id: string): Observable<any[]> {
+    const critere = { Criteres: { 'UtilisateurId': id } };
+    return this.http.post<any[]>(`${this.baseUrl}/application/liste-par-condition`, critere, { headers: this.getHeaders() });
+  }
+  updateCandidatureStatus(id: string, status: string, score?: number, total?: number): Observable<any> {
+    const payload = { Id: id, Statut: status, Quiz: score !== undefined ? `${score}/${total}` : '' };
+    return this.http.put(`${this.baseUrl}/application/modifier`, payload, { headers: this.getHeaders() });
+  }
 
   // New Recrutement Methods
   postulerForm(formData: FormData): Observable<any> {
-    const headers = new HttpHeaders();
+    let headers = new HttpHeaders();
     const token = this.getToken();
-    if (token) headers.set('Authorization', `Bearer ${token}`);
+    if (token) headers = headers.set('Authorization', `Bearer ${token}`);
     return this.http.post(`${this.baseUrl}/recrutement/postuler`, formData, { headers });
   }
 
@@ -200,22 +486,62 @@ export class ApiService {
 
   // Email & Notifications
   getNotifications(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/notifications`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
-  createNotification(sId: string, type: string, titre: string, msg: string, uId?: string): void { this.http.post(`${this.baseUrl}/notifications`, { societeId: sId, type, titre, contenu: msg, utilisateurId: uId || 'SYSTEM', estLu: false, dateCreation: new Date().toISOString() }, { headers: this.getHeaders() }).subscribe(); }
+  createNotification(sId: string, type: string, titre: string, msg: string, uId?: string): void {
+    const url = uId ? `${this.baseUrl}/notifications/send-to-user` : `${this.baseUrl}/notifications/send-to-societe`;
+    const payload = uId
+      ? { userId: uId, title: titre, message: msg, type: type }
+      : { societeId: sId, title: titre, message: msg, type: type };
+
+    this.http.post(url, payload, { headers: this.getHeaders() }).subscribe({
+      error: (err) => console.error('Failed to create notification', err)
+    });
+  }
   sendTestEmail(e: string): Observable<any> { return this.http.post(`${this.baseUrl}/email/test`, { toEmail: e }, { headers: this.getHeaders() }); }
   sendEmailNotification(type: string, data: any): void { this.http.post(`${this.baseUrl}/email/${type}`, data, { headers: this.getHeaders() }).subscribe(); }
 
   // Others
   getRoles(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/typeutilisateurs`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
   getAbonnements(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/abonnements`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
-  createAbonnement(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/abonnements`, data, { headers: this.getHeaders() }); }
+  createAbonnement(data: any): Observable<any> {
+    const payload = {
+      Id: data.id || data.Id || '',
+      SocieteId: data.societeId || data.SocieteId || '',
+      TypeAbonnement: data.typeAbonnement || data.TypeAbonnement || '',
+      DateDebut: data.dateDebut || data.DateDebut || null,
+      DateFin: data.dateFin || data.DateFin || null,
+      Actif: data.actif ?? data.Actif ?? true
+    };
+    return this.http.post(`${this.baseUrl}/abonnements`, payload, { headers: this.getHeaders() });
+  }
   getPaiements(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/paiements`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
-  createPaiement(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/paiements`, data, { headers: this.getHeaders() }); }
+  createPaiement(data: any): Observable<any> {
+    const payload = {
+      Id: data.id || data.Id || '',
+      SocieteId: data.societeId || data.SocieteId || '',
+      SocieteNom: data.societeNom || data.SocieteNom || '',
+      Description: data.description || data.Description || '',
+      Montant: data.montant || data.Montant || 0,
+      Date: data.date || data.Date || null,
+      Statut: data.statut || data.Statut || 'En_attente',
+      Type: data.type || data.Type || ''
+    };
+    return this.http.post(`${this.baseUrl}/paiements`, payload, { headers: this.getHeaders() });
+  }
   getExpiringSubscriptions(days: number): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/abonnements/expiring?days=${days}`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
   sendNotification(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/notifications`, data, { headers: this.getHeaders() }); }
-  getModules(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/modules`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
-  saveModule(data: any): Observable<any> { return data.id ? this.http.put(`${this.baseUrl}/modules`, data, { headers: this.getHeaders() }) : this.http.post(`${this.baseUrl}/modules`, data, { headers: this.getHeaders() }); }
-  deleteModule(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/modules/${id}`, { headers: this.getHeaders() }); }
-  sendTestAuthorizationEmail(data: any): Observable<any> { 
+  getModules(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/module/liste`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
+  saveModule(data: any): Observable<any> {
+    const payload = {
+      Id: data.id || data.Id || '',
+      Nom: data.nom || data.Nom || '',
+      Description: data.description || data.Description || '',
+      Icon: data.icon || data.Icon || '',
+      Actif: data.actif ?? data.Actif ?? true
+    };
+    return payload.Id ? this.http.put(`${this.baseUrl}/module/modifier`, payload, { headers: this.getHeaders() }) : this.http.post(`${this.baseUrl}/module/ajouter`, payload, { headers: this.getHeaders() });
+  }
+  deleteModule(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/module/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  sendTestAuthorizationEmail(data: any): Observable<any> {
     const config = this.getEmailJsConfig();
     if (!config || !config.serviceId || !config.publicKey || !config.templates.testAuthorized) {
       return of({ success: false, error: { error: 'Configuration EmailJS incomplète ou manquante' } });
@@ -232,8 +558,8 @@ export class ApiService {
       .catch(err => ({ success: false, error: err }))
     );
   }
-  
-  sendCandidatureRefusedEmail(c: any): Observable<any> { 
+
+  sendCandidatureRefusedEmail(c: any): Observable<any> {
     const config = this.getEmailJsConfig();
     if (!config || !config.serviceId || !config.publicKey || !config.templates.candidatureRefused) {
       return of({ success: false, error: { error: 'Configuration EmailJS incomplète' } });
@@ -249,8 +575,8 @@ export class ApiService {
       .catch(err => ({ success: false, error: err }))
     );
   }
-  
-  sendCandidatureAcceptedEmail(c: any): Observable<any> { 
+
+  sendCandidatureAcceptedEmail(c: any): Observable<any> {
     const config = this.getEmailJsConfig();
     if (!config || !config.serviceId || !config.publicKey || !config.templates.testAuthorized /* fallback */) {
       return of({ success: false, error: { error: 'Configuration EmailJS incomplète' } });
@@ -268,7 +594,7 @@ export class ApiService {
       .catch(err => ({ success: false, error: err }))
     );
   }
-  
+
   initRecrutementData(): void { console.log('[Mock] initRecrutementData - backend endpoint absent'); }
   loadEmailJsConfig(): void { /* Optional: fetch from backend if persisted */ }
   getEmailJsConfig(): any { const c = localStorage.getItem('emailjs_config'); return c ? JSON.parse(c) : { serviceId: '', publicKey: '', templates: { testAuthorized: '', candidatureRefused: '', candidatureAccepted: '' } }; }

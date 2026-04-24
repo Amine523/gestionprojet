@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface SystemStats {
   cpu: number;
@@ -15,7 +16,7 @@ interface SystemStats {
 @Component({
   selector: 'app-super-admin-parametres',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -228,7 +229,7 @@ interface SystemStats {
                   <span class="toggle-label">Verrouillage après échecs</span>
                   <span class="toggle-desc">Bloquer après N tentatives</span>
                 </div>
-                <select class="form-input small-field" [(ngModel)]="settings.maxLoginAttempts">
+                <select class="form-input small-field" [(ngModel)]="settings.maxLoginAttempts" name="maxLoginAttempts">
                   <option [value]="3">3 tentatives</option>
                   <option [value]="5">5 tentatives</option>
                   <option [value]="10">10 tentatives</option>
@@ -239,7 +240,7 @@ interface SystemStats {
                   <span class="toggle-label">Délai de session</span>
                   <span class="toggle-desc">Déconnexion automatique</span>
                 </div>
-                <select class="form-input small-field" [(ngModel)]="settings.sessionTimeout">
+                <select class="form-input small-field" [(ngModel)]="settings.sessionTimeout" name="sessionTimeout">
                   <option [value]="15">15 min</option>
                   <option [value]="30">30 min</option>
                   <option [value]="60">1 heure</option>
@@ -356,7 +357,7 @@ interface SystemStats {
               <div class="form-field full-width">
                 <label>Clé API</label>
                 <div class="input-group">
-                  <input [type]="showApiKey ? 'text' : 'password'" class="form-input" [(ngModel)]="settings.publicApiKey" readonly>
+                  <input [type]="showApiKey ? 'text' : 'password'" class="form-input" [(ngModel)]="settings.publicApiKey" name="publicApiKey" readonly>
                   <button class="btn-icon btn-ghost" (click)="showApiKey = !showApiKey">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       @if (showApiKey) {
@@ -388,11 +389,11 @@ interface SystemStats {
             <div class="form-grid">
               <div class="form-field">
                 <label>Rate Limit (req/min)</label>
-                <input type="number" class="form-input" [(ngModel)]="settings.rateLimit">
+                <input type="number" class="form-input" [(ngModel)]="settings.rateLimit" name="rateLimit">
               </div>
               <div class="form-field">
                 <label>Timeout (ms)</label>
-                <input type="number" class="form-input" [(ngModel)]="settings.apiTimeout">
+                <input type="number" class="form-input" [(ngModel)]="settings.apiTimeout" name="apiTimeout">
               </div>
             </div>
           </div>
@@ -1122,6 +1123,7 @@ interface SystemStats {
 })
 export class SuperAdminParametresComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
 
   activeTab = 'general';
   systemStats: SystemStats = { cpu: 23, memory: 47, disk: 62, uptime: '14 jours', users: 42, companies: 10 };
@@ -1178,43 +1180,43 @@ export class SuperAdminParametresComponent implements OnInit {
 
   copyApiKey() {
     navigator.clipboard.writeText(this.settings.publicApiKey);
-    alert('Clé API copiée');
+    this.snackBar.open('Clé API copiée', 'Fermer', { duration: 3000 });
   }
 
   regenerateApiKey() {
     if (confirm('Générer une nouvelle clé API? L\'ancienne sera invalidée.')) {
       this.settings.publicApiKey = 'pk_live_' + this.generateApiKey();
-      alert('Nouvelle clé API générée');
+      this.snackBar.open('Nouvelle clé API générée', 'Fermer', { duration: 3000 });
     }
   }
 
   createBackup() {
-    alert('Sauvegarde en cours...');
+    this.snackBar.open('Sauvegarde en cours...', 'Fermer', { duration: 3000 });
     setTimeout(() => {
       this.lastBackup = new Date().toLocaleString('fr-FR');
-      alert('Sauvegarde créée avec succès');
+      this.snackBar.open('Sauvegarde créée avec succès', 'Fermer', { duration: 3000 });
     }, 1500);
   }
 
   downloadBackup() {
-    alert('Téléchargement...');
+    this.snackBar.open('Téléchargement...', 'Fermer', { duration: 3000 });
   }
 
   onFileSelected(event: any) {
     this.selectedFile = event.target.files[0];
     if (this.selectedFile) {
-      alert(`Fichier sélectionné: ${this.selectedFile.name}`);
+      this.snackBar.open(`Fichier sélectionné: ${this.selectedFile.name}`, 'Fermer', { duration: 3000 });
     }
   }
 
   saveSettings() {
     localStorage.setItem('app_settings', JSON.stringify(this.settings));
-    alert('Paramètres enregistrés avec succès');
+    this.snackBar.open('Paramètres enregistrés avec succès', 'Fermer', { duration: 3000 });
   }
 
   resetDefaults() {
     if (confirm('Réinitialiser tous les paramètres aux valeurs par défaut?')) {
-      alert('Paramètres réinitialisés');
+      this.snackBar.open('Paramètres réinitialisés', 'Fermer', { duration: 3000 });
     }
   }
 }

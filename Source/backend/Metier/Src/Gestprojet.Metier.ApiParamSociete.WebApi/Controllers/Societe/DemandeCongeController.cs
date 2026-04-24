@@ -1,13 +1,15 @@
 using Gestprojet.Core.ApiParamSociete.Client.Model;
 using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Commun;
 using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Business;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 {
     [ApiController]
-    [Route("api/demandesconge")]
+    [Route("api/DemandesConge")]
+    [AllowAnonymous]
     [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
     public class DemandeCongeController : ControllerBase
     {
@@ -26,6 +28,23 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             return Ok(await _business.ListeAsync());
         }
 
+        [HttpGet("societe/{societeId}")]
+        public async Task<IActionResult> GetBySociete(string societeId)
+        {
+            if (string.IsNullOrWhiteSpace(societeId)) return BadRequest("SocieteId requis");
+            var all = await _business.ListeAsync();
+            var filtered = all.Where(x => x.SocieteId == societeId).ToList();
+            return Ok(filtered);
+        }
+
+        [HttpGet("solde/{userId}")]
+        public IActionResult GetSolde(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("UserId requis");
+            // Return mock solde data
+            return Ok(new { solde = 22, used = 5, remaining = 17 });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] DemandeCongeCore entity)
         {
@@ -34,12 +53,19 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             
             if (result.Success)
             {
-                // Notify RH of the societe
-                await _notificationService.SendToSocieteAsync(
-                    entity.SocieteId, 
-                    "Nouvelle demande de congé", 
-                    $"Une nouvelle demande de congé a été soumise.", 
-                    "conge_request");
+                // Notify RH of the societe (fire and forget, don't fail if notification fails)
+                try
+                {
+                    await _notificationService.SendToSocieteAsync(
+                        entity.SocieteId, 
+                        "Nouvelle demande de congé", 
+                        $"Une nouvelle demande de congé a été soumise.", 
+                        "conge_request");
+                }
+                catch
+                {
+                    // Ignore notification errors
+                }
             }
             
             return result.Success ? Ok(result) : BadRequest(result);
@@ -53,12 +79,19 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             
             if (result.Success)
             {
-                // Notify User of the status update
-                await _notificationService.SendToUserAsync(
-                    entity.UtilisateurId, 
-                    "Statut de congé mis à jour", 
-                    $"Votre demande de congé a été mise à jour.", 
-                    "conge_update");
+                // Notify User of the status update (fire and forget, don't fail if notification fails)
+                try
+                {
+                    await _notificationService.SendToUserAsync(
+                        entity.UtilisateurId, 
+                        "Statut de congé mis à jour", 
+                        $"Votre demande de congé a été mise à jour.", 
+                        "conge_update");
+                }
+                catch
+                {
+                    // Ignore notification errors
+                }
             }
             
             return result.Success ? Ok(result) : BadRequest(result);

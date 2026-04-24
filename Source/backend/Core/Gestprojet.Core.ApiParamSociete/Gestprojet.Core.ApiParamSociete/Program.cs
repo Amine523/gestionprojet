@@ -17,7 +17,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers()
-    .AddNewtonsoftJson();
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+    });
 
 // SignalR
 builder.Services.AddSignalR();
@@ -43,6 +46,7 @@ builder.Services.AddScoped<ITacheAssignationCoreRepository, TacheAssignationCore
 builder.Services.AddScoped<ITypeCoreRepository, TypeCoreRepository>();
 builder.Services.AddScoped<IAbonnementCoreRepository, AbonnementCoreRepository>();
 builder.Services.AddScoped<IDemandeCongeCoreRepository, DemandeCongeCoreRepository>();
+builder.Services.AddScoped<IJourFerieCoreRepository, JourFerieCoreRepository>();
 builder.Services.AddScoped<ITestCoreRepository, TestCoreRepository>();
 
 // Business - Only existing in Core project
@@ -63,6 +67,7 @@ builder.Services.AddScoped<ITacheAssignationCoreBusiness, TacheAssignationCoreBu
 builder.Services.AddScoped<ITypeCoreBusiness, TypeCoreBusiness>();
 builder.Services.AddScoped<IAbonnementCoreBusiness, AbonnementCoreBusiness>();
 builder.Services.AddScoped<IDemandeCongeCoreBusiness, DemandeCongeCoreBusiness>();
+builder.Services.AddScoped<IJourFerieCoreBusiness, JourFerieCoreBusiness>();
 builder.Services.AddScoped<ITestCoreBusiness, TestCoreBusiness>();
 
 // AI Services

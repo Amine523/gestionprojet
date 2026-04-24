@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-admin-rh',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -704,6 +705,7 @@ import { ApiService } from '@core/services/api.service';
 })
 export class AdminRhComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   
   currentView: 'pointage' | 'conges' | 'salaires' = 'pointage';
   societeId = '';
@@ -751,6 +753,6 @@ export class AdminRhComponent implements OnInit {
   }
 
   validerConge(c: any, ok: boolean) { c.statut = ok ? 'Validé' : 'Refusé'; }
-  genererSalaires() { alert('Logique de compensation batch exécutée.'); }
-  imprimerFiche(s: any) { alert('Génération du reçu de rendement PDF...'); }
+  genererSalaires() { this.snackBar.open('Logique de compensation batch exécutée.', 'Fermer', { duration: 3000 }); }
+  imprimerFiche(s: any) { this.snackBar.open('Génération du reçu de rendement PDF...', 'Fermer', { duration: 3000 }); }
 }

@@ -44,59 +44,75 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
 
         public async Task<SoldeCongeDTO> CalculateSoldeCongeAsync(string utilisateurId)
         {
-            var utilisateur = await _utilisateurBusiness.ObtenirAsync(utilisateurId);
-            if (utilisateur == null)
-                throw new KeyNotFoundException($"User {utilisateurId} not found");
+            try {
+                var utilisateur = await _utilisateurBusiness.ObtenirAsync(utilisateurId);
+                if (utilisateur == null)
+                    throw new KeyNotFoundException($"User {utilisateurId} not found");
 
-            decimal soldeTotal = 30; // Default annual leave balance
-            
-            var demandes = await _demandeCongeBusiness.ListeParUtilisateurAsync(utilisateurId);
+                decimal soldeTotal = 30; // Default annual leave balance
+                
+                IEnumerable<DemandeCongeCore> demandes = new List<DemandeCongeCore>();
+                try {
+                    demandes = await _demandeCongeBusiness.ListeParUtilisateurAsync(utilisateurId);
+                } catch (Exception ex) {
+                    _logger.LogWarning($"Could not fetch leave requests for user {utilisateurId}: {ex.Message}");
+                }
 
-            decimal soldeUtilise = 0;
-            int congesEnAttente = 0;
-            int congesValides = 0;
-            int congesRefuses = 0;
+                decimal soldeUtilise = 0;
+                int congesEnAttente = 0;
+                int congesValides = 0;
+                int congesRefuses = 0;
 
-            foreach (var demande in demandes)
-            {
-                if (demande.DateDebut.HasValue && demande.DateFin.HasValue)
-                {
-                    var nombreJours = (demande.DateFin.Value - demande.DateDebut.Value).Days + 1;
-
-                    switch (demande.Status?.ToLower())
+                if (demandes != null) {
+                    foreach (var demande in demandes)
                     {
-                        case "validée":
-                        case "validee":
-                        case "approved":
-                            soldeUtilise += nombreJours;
-                            congesValides++;
-                            break;
-                        case "en attente":
-                        case "pending":
-                            congesEnAttente++;
-                            break;
-                        case "refusée":
-                        case "refusee":
-                        case "rejected":
-                            congesRefuses++;
-                            break;
+                        if (demande.DateDebut.HasValue && demande.DateFin.HasValue)
+                        {
+                            var nombreJours = (demande.DateFin.Value - demande.DateDebut.Value).Days + 1;
+
+                            switch (demande.Status?.ToLower())
+                            {
+                                case "validée":
+                                case "validee":
+                                case "approved":
+                                    soldeUtilise += nombreJours;
+                                    congesValides++;
+                                    break;
+                                case "en attente":
+                                case "pending":
+                                    congesEnAttente++;
+                                    break;
+                                case "refusée":
+                                case "refusee":
+                                case "rejected":
+                                    congesRefuses++;
+                                    break;
+                            }
+                        }
                     }
                 }
+
+                var soldeRestant = soldeTotal - soldeUtilise;
+
+                return new SoldeCongeDTO
+                {
+                    UtilisateurId = utilisateur.Id,
+                    UtilisateurNom = utilisateur.Nom,
+                    SoldeTotal = soldeTotal,
+                    SoldeUtilise = soldeUtilise,
+                    SoldeRestant = soldeRestant,
+                    CongesEnAttente = congesEnAttente,
+                    CongesValides = congesValides,
+                    CongesRefuses = congesRefuses
+                };
+            } catch (Exception ex) {
+                _logger.LogError(ex, $"Critical error calculating leave balance for {utilisateurId}");
+                return new SoldeCongeDTO { 
+                    UtilisateurId = utilisateurId, 
+                    UtilisateurNom = "Inconnu",
+                    SoldeRestant = 30 
+                };
             }
-
-            var soldeRestant = soldeTotal - soldeUtilise;
-
-            return new SoldeCongeDTO
-            {
-                UtilisateurId = utilisateur.Id,
-                UtilisateurNom = utilisateur.Nom,
-                SoldeTotal = soldeTotal,
-                SoldeUtilise = soldeUtilise,
-                SoldeRestant = soldeRestant,
-                CongesEnAttente = congesEnAttente,
-                CongesValides = congesValides,
-                CongesRefuses = congesRefuses
-            };
         }
 
         public async Task<RHStatsDTO> CalculateRHStatsAsync(string societeId, DateTime? date = null)
@@ -132,11 +148,11 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
                 totalHeuresAujourdhui = societePointagesToday.Sum(p => p.Duree ?? 0);
 
                 var demandes = await _demandeCongeBusiness.ListeParSocieteAsync(societeId);
-                demandesCongesEnAttente = demandes.Count(d => d.Status == "En attente");
-                congesValidesCeMois = demandes.Count(d => 
+                demandesCongesEnAttente = demandes?.Count(d => d.Status == "En attente") ?? 0;
+                congesValidesCeMois = demandes?.Count(d => 
                     d.Status == "Validée" && 
                     d.DateDebut.HasValue && 
-                    d.DateDebut.Value >= startOfMonth);
+                    d.DateDebut.Value >= startOfMonth) ?? 0;
             }
             catch (Exception ex)
             {
@@ -207,10 +223,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
             lastPointage.HeureSortie = DateTime.Now.ToString("HH:mm");
             
             // Calculate duration if possible
-            if (TimeSpan.TryParse(lastPointage.HeureEntree, out var start) && TimeSpan.TryParse(lastPointage.HeureSortie, out var end))
+            if (!string.IsNullOrEmpty(lastPointage.HeureEntree) && !string.IsNullOrEmpty(lastPointage.HeureSortie))
             {
-                var duration = end - start;
-                lastPointage.Duree = (double)duration.TotalHours;
+                if (TimeSpan.TryParse(lastPointage.HeureEntree, out TimeSpan entree) && 
+                    TimeSpan.TryParse(lastPointage.HeureSortie, out TimeSpan sortie))
+                {
+                    var duration = sortie - entree;
+                    lastPointage.Duree = duration.TotalHours;
+                }
             }
 
             return await _pointageBusiness.AjouterOuModifierAsync(lastPointage);
@@ -220,5 +240,75 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
         {
             return await _demandeCongeBusiness.AjouterOuModifierAsync(dto);
         }
+
+        public async Task<IEnumerable<RapportPresenceDTO>> CalculateRapportPresenceAsync(string societeId, int mois, int annee)
+        {
+            var allUsers = await _utilisateurBusiness.ListeAsync();
+            var employes = allUsers.Where(u => u.SocieteId == societeId && u.Actif == true).ToList();
+
+            var allPointages = await _pointageBusiness.ListeAsync();
+            var periodPointages = allPointages.Where(p =>
+                p.Date.HasValue &&
+                p.Date.Value.Month == mois &&
+                p.Date.Value.Year == annee &&
+                p.Actif == true).ToList();
+
+            var allDemandes = await _demandeCongeBusiness.ListeParSocieteAsync(societeId);
+            var periodDemandes = allDemandes.Where(d =>
+                d.DateDebut.HasValue &&
+                ((d.DateDebut.Value.Month == mois && d.DateDebut.Value.Year == annee) ||
+                 (d.DateFin.HasValue && d.DateFin.Value.Month == mois && d.DateFin.Value.Year == annee)) &&
+                (d.Status == "Validée" || d.Status == "Validee" || d.Status == "approved")).ToList();
+
+            int joursOuvrables = CalculerJoursOuvrables(annee, mois);
+
+            var result = new List<RapportPresenceDTO>();
+            foreach (var emp in employes)
+            {
+                var empPointages = periodPointages.Where(p => p.UtilisateurId == emp.Id).ToList();
+                int joursTravailles = empPointages.Select(p => p.Date?.Date).Distinct().Count();
+                decimal heuresTotales = (decimal)empPointages.Sum(p => p.Duree ?? 0);
+
+                var empDemandes = periodDemandes.Where(d => d.UtilisateurId == emp.Id).ToList();
+                int joursConge = empDemandes.Sum(d =>
+                {
+                    if (d.DateDebut.HasValue && d.DateFin.HasValue)
+                        return (d.DateFin.Value - d.DateDebut.Value).Days + 1;
+                    return 0;
+                });
+
+                int joursAbsent = Math.Max(0, joursOuvrables - joursTravailles - joursConge);
+                decimal tauxPresence = joursOuvrables > 0
+                    ? Math.Round((decimal)(joursTravailles + joursConge) / joursOuvrables * 100, 2)
+                    : 0;
+
+                result.Add(new RapportPresenceDTO
+                {
+                    UtilisateurId = emp.Id ?? "",
+                    NomComplet = emp.Nom ?? "",
+                    JoursTravailles = joursTravailles,
+                    HeuresTotales = Math.Round(heuresTotales, 2),
+                    JoursConge = joursConge,
+                    JoursAbsent = joursAbsent,
+                    TauxPresence = tauxPresence
+                });
+            }
+
+            return result;
+        }
+
+        private static int CalculerJoursOuvrables(int annee, int mois)
+        {
+            int count = 0;
+            int daysInMonth = DateTime.DaysInMonth(annee, mois);
+            for (int d = 1; d <= daysInMonth; d++)
+            {
+                var day = new DateTime(annee, mois, d).DayOfWeek;
+                if (day != DayOfWeek.Saturday && day != DayOfWeek.Sunday)
+                    count++;
+            }
+            return count;
+        }
     }
 }
+

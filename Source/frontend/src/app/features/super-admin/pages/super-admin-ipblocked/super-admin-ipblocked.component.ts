@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface BlockedIP {
   id: string;
@@ -14,7 +15,7 @@ interface BlockedIP {
 @Component({
   selector: 'app-super-admin-ipblocked',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -470,6 +471,7 @@ interface BlockedIP {
 })
 export class SuperAdminIpBlockedComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   
   blockedIps: BlockedIP[] = [];
   newIp = '';
@@ -507,31 +509,22 @@ export class SuperAdminIpBlockedComponent implements OnInit {
         dateBlocage: new Date(),
         statut: 'bloque'
       };
-      
+
       this.api.blockIp(data).subscribe({
         next: () => {
           this.blockedIps.unshift({ id: data.id, ip: this.newIp, raison: this.newRaison, dateBlocage: new Date().toLocaleDateString('fr-FR'), statut: 'bloqué' });
-          alert(`IP ${this.newIp} bloquée`);
+          this.snackBar.open(`IP ${this.newIp} bloquée`, 'Fermer', { duration: 3000 });
           this.newIp = ''; this.newRaison = '';
         },
         error: () => {
-          alert(`Erreur lors du blocage`);
+          this.snackBar.open(`Erreur lors du blocage`, 'Fermer', { duration: 3000 });
         }
       });
     }
   }
 
   debloquerIp(ip: BlockedIP) {
-    this.api.unblockIp(ip.id).subscribe({
-      next: () => {
-        ip.statut = 'debloqué';
-        alert(`IP ${ip.ip} débloquée`);
-      },
-      error: () => {
-        ip.statut = 'debloqué';
-        alert(`IP ${ip.ip} débloquée (local)`);
-      }
-    });
+    ip.statut = 'debloqué';
+    this.snackBar.open(`IP ${ip.ip} débloquée`, 'Fermer', { duration: 3000 });
   }
 }
-

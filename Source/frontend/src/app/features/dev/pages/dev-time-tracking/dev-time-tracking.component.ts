@@ -44,7 +44,7 @@ import { ApiService } from '@core/services/api.service';
                    <div class="active-stats">
                       <div class="a-stat">
                          <span class="a-label">Début à</span>
-                         <span class="a-val">{{clockInData?.heureDebut}}</span>
+                         <span class="a-val">{{clockInData?.heureEntree}}</span>
                       </div>
                       <div class="a-stat">
                          <span class="a-label">Cumul Jour</span>
@@ -103,8 +103,8 @@ import { ApiService } from '@core/services/api.service';
              <div class="history-list">
                 @for (p of history; track p.id) {
                    <div class="history-item-p">
-                      <div class="h-icon" [class.full]="p.heureFin">
-                        @if (p.heureFin) {
+                      <div class="h-icon" [class.full]="p.heureSortie">
+                        @if (p.heureSortie) {
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                             <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -130,14 +130,14 @@ import { ApiService } from '@core/services/api.service';
                                 <polyline points="10 17 15 12 10 7"></polyline>
                                 <line x1="15" y1="12" x2="3" y2="12"></line>
                               </svg>
-                              {{p.heureDebut}}
-                              @if (p.heureFin) {
+                              {{p.heureEntree}}
+                              @if (p.heureSortie) {
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                   <polyline points="16 17 21 12 16 7"></polyline>
                                   <line x1="21" y1="12" x2="9" y2="12"></line>
                                 </svg>
-                                {{p.heureFin}}
+                                {{p.heureSortie}}
                               } @else {
                                 <span>...</span>
                               }
@@ -588,9 +588,9 @@ export class DevTimeTrackingComponent implements OnInit, OnDestroy {
       
       if (todayEntry) {
         this.clockInData = todayEntry;
-        this.isClockedIn = !todayEntry.heureFin;
+        this.isClockedIn = !todayEntry.heureSortie;
         
-        if (todayEntry.heureDebut) {
+        if (todayEntry.heureEntree) {
           this.api.getWorkedHoursReal(user.id).subscribe(res => {
              this.workedHours = res.heuresTravaillees.toFixed(1);
           });
@@ -608,7 +608,8 @@ export class DevTimeTrackingComponent implements OnInit, OnDestroy {
 
   clockIn() {
     const user = this.api.getCurrentUser();
-    this.api.clockIn(user.id, user.societeId).subscribe({
+    const uid = user.id || user.utilisateurId;
+    this.api.clockIn(uid, user.societeId).subscribe({
       next: (res) => {
         this.snackBar.open('Pointage d\'entrée validé. Bon travail !', 'Fermer', { duration: 4000 });
         this.loadTodayStatus();
@@ -622,7 +623,8 @@ export class DevTimeTrackingComponent implements OnInit, OnDestroy {
 
   clockOut() {
     const user = this.api.getCurrentUser();
-    this.api.clockOut(user.id, user.societeId).subscribe({
+    const uid = user.id || user.utilisateurId;
+    this.api.clockOut(uid, user.societeId).subscribe({
       next: () => {
         this.snackBar.open('Pointage de sortie validé. Bonne soirée !', 'Fermer', { duration: 4000 });
         this.loadTodayStatus();

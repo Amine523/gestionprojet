@@ -145,4 +145,17 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Models.DTOs
         
         public string? Note { get; set; }
     }
+
+    // ─── Rapport de Présence ────────────────────────────────────────────────────
+    public class RapportPresenceDTO
+    {
+        public string UtilisateurId { get; set; } = string.Empty;
+        public string NomComplet { get; set; } = string.Empty;
+        public int JoursTravailles { get; set; }
+        public decimal HeuresTotales { get; set; }
+        public int JoursConge { get; set; }
+        public int JoursAbsent { get; set; }
+        public decimal TauxPresence { get; set; }
+    }
 }
+

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface Message {
   id: string;
@@ -36,7 +37,7 @@ interface ChatGroup {
 @Component({
   selector: 'app-admin-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="d-flex" style="height: calc(100vh - 112px); background: white; border-radius: 12px; overflow: hidden;">
@@ -228,6 +229,7 @@ export class AdminChatComponent implements OnInit {
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
   
   societeId: string = '';
   currentUserId: string = '';
@@ -585,7 +587,7 @@ get groupMembreCount(): number {
     this.selectedGroupMembers = [];
     this.availableMembers = [];
     
-    alert('Groupe créé: ' + group.nom);
+    this.snackBar.open('Groupe créé: ' + group.nom, 'Fermer', { duration: 3000 });
   }
 
   viewGroupMembers() {

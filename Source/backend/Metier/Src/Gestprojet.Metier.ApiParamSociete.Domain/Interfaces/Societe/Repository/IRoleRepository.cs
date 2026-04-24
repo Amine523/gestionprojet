@@ -10,7 +10,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Repository
     public interface IRoleRepository
     {
         Task<OperationResult> AjouterOuModifierAsync(RoleCore entity);
-        Task<RoleCore> ObtenirAsync(string id);
+        Task<RoleCore?> ObtenirAsync(string id);
         Task<IEnumerable<RoleCore>> ListeAsync();
         Task<IEnumerable<RoleCore>> ListeParCritereAsync(ConditionRecherche critere);
         Task<OperationResult> SupprimerAsync(string id);

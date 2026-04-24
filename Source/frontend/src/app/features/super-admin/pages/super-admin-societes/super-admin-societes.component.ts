@@ -1,15 +1,16 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
 import { ExportService } from '@core/services/export.service';
 import { SelectionModel } from '@angular/cdk/collections';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-super-admin-societes',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -30,7 +31,7 @@ import { SelectionModel } from '@angular/cdk/collections';
           <div class="stats-card">
             <div class="stat-item">
               <p class="stat-label">Total</p>
-              <p class="stat-value">{{societes.length}}</p>
+              <p class="stat-value">{{societesSignal().length}}</p>
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
@@ -58,7 +59,7 @@ import { SelectionModel } from '@angular/cdk/collections';
             </svg>
             <input type="text" [(ngModel)]="searchFilters.global" (ngModelChange)="applyAdvancedFilter()" placeholder="Rechercher par organisation, DNS, email...">
           </div>
-          <select [(ngModel)]="searchFilters.plan" (change)="applyAdvancedFilter()" class="filter-select">
+          <select [(ngModel)]="searchFilters.planAbonnement" (change)="applyAdvancedFilter()" class="filter-select">
             <option value="">Tous les plans</option>
             <option value="GOLD">Gold (Entreprise)</option>
             <option value="SILVER">Silver (Pro)</option>
@@ -101,7 +102,7 @@ import { SelectionModel } from '@angular/cdk/collections';
               </tr>
             </thead>
             <tbody>
-              @for (s of dataSource; track s.id) {
+              @for (s of filteredSocietes(); track s.id) {
                 <tr>
                   <td>
                     <div class="user-info">
@@ -125,8 +126,8 @@ import { SelectionModel } from '@angular/cdk/collections';
                     </div>
                   </td>
                   <td>
-                    <span class="badge" [class.badge-primary]="s.plan === 'GOLD'" [class.badge-secondary]="s.plan === 'SILVER'" [class.badge-tertiary]="!s.plan || s.plan === 'FREE'">
-                      {{s.plan || 'Standard'}}
+                    <span class="badge" [class.badge-primary]="s.planAbonnement === 'GOLD'" [class.badge-secondary]="s.planAbonnement === 'SILVER'" [class.badge-tertiary]="!s.planAbonnement || s.planAbonnement === 'FREE'">
+                      {{s.planAbonnement || 'Standard'}}
                     </span>
                   </td>
                   <td>
@@ -175,7 +176,7 @@ import { SelectionModel } from '@angular/cdk/collections';
         </div>
 
         <!-- Pagination -->
-        @if (dataSource.length > 0) {
+        @if (filteredSocietes().length > 0) {
           <footer class="pagination-footer">
             <p class="pagination-info">
               Affichage de <span class="text-primary">{{(page - 1) * pageSize + 1}}</span> à <span class="text-primary">{{Math.min(page * pageSize, totalItems)}}</span> sur <span class="text-primary">{{totalItems}}</span> entrées
@@ -210,7 +211,7 @@ import { SelectionModel } from '@angular/cdk/collections';
           </footer>
         }
 
-        @if (dataSource.length === 0) {
+        @if (filteredSocietes().length === 0) {
           <div class="empty-state">
             <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/>
@@ -242,15 +243,15 @@ import { SelectionModel } from '@angular/cdk/collections';
                <div class="form-grid">
                   <div class="form-field full-width">
                      <label>Nom de l'organisation</label>
-                     <input [(ngModel)]="formData.nom" class="form-input" placeholder="Ex: Soft Pro Industries">
+                     <input [(ngModel)]="formData.nom" name="nom" class="form-input" placeholder="Ex: Soft Pro Industries">
                   </div>
                   <div class="form-field">
                      <label>Email Administratif</label>
-                     <input [(ngModel)]="formData.email" class="form-input" placeholder="admin@domain.com">
+                     <input [(ngModel)]="formData.email" name="email" class="form-input" placeholder="admin@domain.com">
                   </div>
                   <div class="form-field">
                      <label>Plan de Souscription</label>
-                     <select [(ngModel)]="formData.plan" class="form-input">
+                     <select [(ngModel)]="formData.planAbonnement" name="planAbonnement" class="form-input">
                         <option value="GOLD">Gold (Entreprise)</option>
                         <option value="SILVER">Silver (Pro)</option>
                         <option value="FREE">Standard</option>
@@ -258,15 +259,15 @@ import { SelectionModel } from '@angular/cdk/collections';
                   </div>
                   <div class="form-field full-width">
                      <label>Adresse du Siège</label>
-                     <input [(ngModel)]="formData.adresse" class="form-input" placeholder="Rue, Bâtiment...">
+                     <input [(ngModel)]="formData.adresse" name="adresse" class="form-input" placeholder="Rue, Bâtiment...">
                   </div>
                   <div class="form-field">
                      <label>Ville</label>
-                     <input [(ngModel)]="formData.ville" class="form-input" placeholder="Ex: Tunis">
+                     <input [(ngModel)]="formData.ville" name="ville" class="form-input" placeholder="Ex: Tunis">
                   </div>
                   <div class="form-field">
                      <label>Pays</label>
-                     <input [(ngModel)]="formData.pays" class="form-input" placeholder="Ex: Tunisie">
+                     <input [(ngModel)]="formData.pays" name="pays" class="form-input" placeholder="Ex: Tunisie">
                   </div>
                </div>
                <div class="toggle-field">
@@ -280,8 +281,8 @@ import { SelectionModel } from '@angular/cdk/collections';
                </div>
             </div>
             <div class="modal-footer">
-               <button (click)="showDialog = false" class="btn btn-ghost">ANNULER</button>
-               <button (click)="saveSociete()" class="btn btn-primary">{{editingSociete ? 'VALIDER CONFIGURATION' : 'INITIER DÉPLOIEMENT'}}</button>
+               <button type="button" (click)="showDialog = false" class="btn btn-ghost">ANNULER</button>
+               <button type="button" (click)="saveSociete()" class="btn btn-primary">{{editingSociete ? 'VALIDER CONFIGURATION' : 'INITIER DÉPLOIEMENT'}}</button>
             </div>
          </div>
       </div>
@@ -1009,9 +1010,10 @@ export class SuperAdminSocietesComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private exportService = inject(ExportService);
+  private snackBar = inject(MatSnackBar);
 
   get activeCount() {
-    return this.societes.filter(s => s.actif).length;
+    return this.societesSignal().filter(s => s.actif).length;
   }
 
   viewProjets(societe: any) {
@@ -1020,15 +1022,25 @@ export class SuperAdminSocietesComponent implements OnInit {
     this.router.navigate(['/superadmin/projets'], { queryParams: { societeId: id } });
   }
 
-  societes: any[] = [];
-  dataSource: any[] = [];
-  selection = new SelectionModel<any>(true, []);
+  societesSignal = signal<any[]>([]);
+  searchFiltersSignal = signal({ global: '', city: '', planAbonnement: '' });
 
+  filteredSocietes = computed(() => {
+    const list = this.societesSignal();
+    const filters = this.searchFiltersSignal();
+    return list.filter(s => {
+      const g = (s.nom + (s.email || '')).toLowerCase().includes(filters.global.toLowerCase());
+      const c = (s.ville + (s.pays || '')).toLowerCase().includes(filters.city.toLowerCase());
+      const p = !filters.planAbonnement || (s.planAbonnement || 'Standard').toUpperCase() === filters.planAbonnement;
+      return g && c && p;
+    });
+  });
+
+  searchFilters = { global: '', city: '', planAbonnement: '' };
   searchQuery = '';
-  searchFilters = { global: '', city: '', plan: '' };
   showDialog = false;
   editingSociete: any = null;
-  formData: any = { nom: '', adresse: '', telephoneContact: '', actif: true, plan: 'Standard' };
+  formData: any = { nom: '', adresse: '', telephoneContact: '', actif: true, planAbonnement: 'Standard' };
 
   // Pagination
   page = 1;
@@ -1048,17 +1060,16 @@ export class SuperAdminSocietesComponent implements OnInit {
     this.isLoading = true;
     this.api.getSocietesPage(this.page, this.pageSize).subscribe({
       next: (res: any) => {
-        this.societes = (res.items || []).map((s: any, idx: number) => {
+        const items = (res.items || []).map((s: any, idx: number) => {
           if (!s.id && !s.Id) s.id = 'SOC_TN' + (idx + 1);
           return s;
         });
-        this.dataSource = this.societes;
+        this.societesSignal.set(items);
         this.totalItems = res.totalCount || 0;
         this.isLoading = false;
       },
       error: () => {
-        this.societes = [];
-        this.dataSource = [];
+        this.societesSignal.set([]);
         this.isLoading = false;
       }
     });
@@ -1111,24 +1122,19 @@ export class SuperAdminSocietesComponent implements OnInit {
   }
 
   exportExcel() {
-    this.exportService.exportToExcel(this.dataSource, 'Societes_Nadhemni');
+    this.exportService.exportToExcel(this.filteredSocietes(), 'Societes_Nadhemni');
   }
 
   exportPdf() {
     const cols = ['Nom', 'Email', 'Ville', 'Statut'];
-    const data = this.dataSource.map(s => [
+    const data = this.filteredSocietes().map(s => [
       s.nom, s.email, s.ville, s.actif ? 'Actif' : 'Suspendu'
     ]);
     this.exportService.exportToPdf(cols, data, 'Societes_Nadhemni', 'Liste des Sociétés');
   }
 
   applyAdvancedFilter() {
-    this.dataSource = this.societes.filter(s => {
-      const g = (s.nom + (s.email || '')).toLowerCase().includes(this.searchFilters.global.toLowerCase());
-      const c = (s.ville + (s.pays || '')).toLowerCase().includes(this.searchFilters.city.toLowerCase());
-      const p = !this.searchFilters.plan || (s.plan || 'Standard').toUpperCase() === this.searchFilters.plan;
-      return g && c && p;
-    });
+    this.searchFiltersSignal.update(f => ({ ...f, ...this.searchFilters }));
   }
 
   openDialog(societe?: any) {
@@ -1136,17 +1142,25 @@ export class SuperAdminSocietesComponent implements OnInit {
     this.formData = societe ? { 
       ...societe
     } : { 
-      nom: '', adresse: '', telephoneContact: '', actif: true, plan: 'Standard', email: '', ville: '', pays: ''
+      nom: '', adresse: '', telephoneContact: '', actif: true, planAbonnement: 'Standard', email: '', ville: '', pays: ''
     };
     this.showDialog = true;
   }
 
   saveSociete() {
+    if (!this.formData.nom || this.formData.nom.trim().length < 2) {
+      this.snackBar.open("Le nom de la société doit contenir au moins 2 caractères", 'Fermer', { duration: 3000 });
+      return;
+    }
+    
     if (this.editingSociete) {
       this.api.updateSociete(this.formData).subscribe({
         next: () => {
+          this.societesSignal.update(list => list.map(s => 
+            (s.id === this.formData.id) ? { ...this.formData } : s
+          ));
+          this.snackBar.open('Société mise à jour', 'Fermer', { duration: 3000 });
           this.showDialog = false;
-          this.loadSocietes();
         }
       });
     } else {
@@ -1154,8 +1168,9 @@ export class SuperAdminSocietesComponent implements OnInit {
       this.formData.id = societeId;
       this.api.createSociete(this.formData).subscribe({
         next: () => {
-          this.showDialog = false;
           this.loadSocietes();
+          this.snackBar.open('Nouvelle société créée', 'Fermer', { duration: 3000 });
+          this.showDialog = false;
         }
       });
     }
@@ -1164,7 +1179,9 @@ export class SuperAdminSocietesComponent implements OnInit {
   toggleStatus(societe: any) {
     const updated = { ...societe, actif: !societe.actif };
     this.api.updateSociete(updated).subscribe({
-      next: () => this.loadSocietes()
+      next: () => {
+        this.societesSignal.update(list => list.map(s => s.id === societe.id ? updated : s));
+      }
     });
   }
 
@@ -1173,7 +1190,13 @@ export class SuperAdminSocietesComponent implements OnInit {
     if (!id) return;
     if (confirm('Confirmer la suppression définitive de ' + societe.nom + ' ?')) {
       this.api.deleteSociete(id).subscribe({
-        next: () => this.loadSocietes()
+        next: () => {
+          this.snackBar.open('Société supprimée', 'Fermer', { duration: 3000 });
+          this.loadSocietes();
+        },
+        error: (err) => {
+          this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
+        }
       });
     }
   }

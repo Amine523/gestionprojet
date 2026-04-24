@@ -26,7 +26,26 @@ namespace Gestprojet.Metier.ApiParamSociete.Application.Societe
             }
             else
             {
-                success = await _repository.ModifierAsync(entity);
+                // For updates, fetch existing entity to preserve all fields
+                var existing = await _repository.ObtenirAsync(entity.Id);
+                if (existing != null)
+                {
+                    // Update only the provided fields, preserve others
+                    if (!string.IsNullOrEmpty(entity.Status)) existing.Status = entity.Status;
+                    if (!string.IsNullOrEmpty(entity.ValideParId)) existing.ValideParId = entity.ValideParId;
+                    if (!string.IsNullOrEmpty(entity.UtilisateurId)) existing.UtilisateurId = entity.UtilisateurId;
+                    if (!string.IsNullOrEmpty(entity.SocieteId)) existing.SocieteId = entity.SocieteId;
+                    if (entity.DateDebut.HasValue) existing.DateDebut = entity.DateDebut;
+                    if (entity.DateFin.HasValue) existing.DateFin = entity.DateFin;
+                    if (!string.IsNullOrEmpty(entity.Motif)) existing.Motif = entity.Motif;
+                    if (!string.IsNullOrEmpty(entity.TypePointageId)) existing.TypePointageId = entity.TypePointageId;
+                    
+                    success = await _repository.ModifierAsync(existing);
+                }
+                else
+                {
+                    success = await _repository.ModifierAsync(entity);
+                }
             }
             return new OperationResult { Success = success };
         }

@@ -1,11 +1,13 @@
-﻿import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 
 @Component({
   selector: 'app-chef-projets',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
 
     <div class="projets-container">
@@ -30,6 +32,13 @@ import { ApiService } from '@core/services/api.service';
               <button class="tab-btn" [class.active]="currentTab === 'grid'" (click)="currentTab = 'grid'">Grid Matrix</button>
               <button class="tab-btn" [class.active]="currentTab === 'timeline'" (click)="currentTab = 'timeline'">Timeline Ops</button>
             </div>
+            <button class="btn-create" (click)="openCreateDialog()">
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                 <line x1="12" y1="5" x2="12" y2="19"></line>
+                 <line x1="5" y1="12" x2="19" y2="12"></line>
+               </svg>
+               Nouveau Projet
+            </button>
           </div>
         </div>
       </header>
@@ -38,7 +47,7 @@ import { ApiService } from '@core/services/api.service';
       <div class="content-area">
         @if (currentTab === 'grid') {
           <div class="projects-grid">
-            @for (p of projets; track p.id) {
+            @for (p of projetsSignal(); track p.id) {
               <div class="project-card">
                 <div class="card-glow"></div>
                 <div class="card-content">
@@ -51,6 +60,13 @@ import { ApiService } from '@core/services/api.service';
                     <span class="status-badge" [ngClass]="p.statut === 'En_cours' ? 'status-active' : 'status-completed'">{{p.statut}}</span>
                   </div>
                   <h3 class="card-title">{{p.nom}}</h3>
+                  <div class="chef-info-display">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="7" r="4"/>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    </svg>
+                    <span>{{p.chefName}}</span>
+                  </div>
                   <p class="card-description">{{p.description}}</p>
                   <div class="card-body">
                     <div class="progress-section">
@@ -77,8 +93,8 @@ import { ApiService } from '@core/services/api.service';
                       </div>
                     </div>
                     <div class="card-actions">
-                      <button class="btn btn-primary btn-full">Audit</button>
-                      <button class="btn btn-icon">
+                      <button class="btn btn-primary btn-full" (click)="auditProject(p)">Audit</button>
+                      <button class="btn btn-icon" (click)="editProject(p)">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -106,7 +122,7 @@ import { ApiService } from '@core/services/api.service';
               </div>
             </div>
             <div class="timeline-body">
-              @for (p of projets; track p.id) {
+              @for (p of projetsSignal(); track p.id) {
                 <div class="timeline-row">
                   <div class="timeline-row-left">
                     <h4 class="project-name">{{p.nom}}</h4>
@@ -130,6 +146,42 @@ import { ApiService } from '@core/services/api.service';
           </div>
         }
       </div>
+
+      <!-- Modal -->
+      @if (showDialog) {
+        <div class="modal-overlay" (click)="closeDialog()">
+          <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header-form">
+               <h2>{{editingProjet ? 'AJUSTEMENT STRATÉGIQUE' : 'INITIATION MISSION'}}</h2>
+               <button class="btn-close" (click)="closeDialog()">✕</button>
+            </div>
+            <div class="modal-body">
+               <div class="form-group">
+                 <label>Nom du Projet</label>
+                 <input type="text" [(ngModel)]="formData.nom" class="form-input-styled" placeholder="Ex: Project Phoenix">
+               </div>
+               <div class="form-group">
+                 <label>Description</label>
+                 <textarea [(ngModel)]="formData.description" class="form-input-styled" rows="3"></textarea>
+               </div>
+               <div class="form-row">
+                 <div class="form-group">
+                   <label>Progression (%)</label>
+                   <input type="number" [(ngModel)]="formData.progression" class="form-input-styled">
+                 </div>
+                 <div class="form-group">
+                   <label>Échéance</label>
+                   <input type="text" [(ngModel)]="formData.echeance" class="form-input-styled" placeholder="JJ/MM/AAAA">
+                 </div>
+               </div>
+            </div>
+            <div class="modal-footer">
+               <button class="btn btn-secondary" (click)="closeDialog()">Annuler</button>
+               <button class="btn btn-primary" (click)="saveProjet()">Confirmer</button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -361,10 +413,45 @@ import { ApiService } from '@core/services/api.service';
       font-weight: var(--font-weight-black);
       color: var(--color-text);
       letter-spacing: -0.02em;
-      margin: 0 0 var(--space-md);
+      margin: 0 0 var(--space-xs);
       text-transform: uppercase;
       font-style: italic;
       line-height: 1;
+    }
+
+    .chef-info-display {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: 11px;
+      font-weight: 700;
+      color: #3b82f6;
+      margin-bottom: var(--space-md);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-create {
+      background: white;
+      color: #0f172a;
+      padding: 12px 24px;
+      border-radius: 16px;
+      font-weight: 800;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+    }
+
+    .btn-create:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
     }
 
     .card-description {
@@ -655,6 +742,95 @@ import { ApiService } from '@core/services/api.service';
       font-style: italic;
     }
 
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-header-form {
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .modal-header-form h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: 1px;
+    }
+
+    .btn-close {
+      border: none;
+      background: transparent;
+      font-size: 20px;
+      cursor: pointer;
+      color: #94a3b8;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 10px;
+      font-weight: 800;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .form-input-styled {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      outline: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .form-input-styled:focus {
+      border-color: #3b82f6;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: #f8fafc;
+      border-radius: 0 0 24px 24px;
+    }
+
     /* Dark mode */
     :host-context(.dark) .project-card,
     :host-context(.dark) .timeline-view {
@@ -738,13 +914,16 @@ import { ApiService } from '@core/services/api.service';
 })
 export class ChefProjetsComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   
   societeId = '';
   societeNom = 'Votre société';
   currentTab: 'grid' | 'timeline' = 'grid';
 
-  
-  projets: any[] = [];
+  projetsSignal = signal<any[]>([]);
+  showDialog = false;
+  editingProjet: any = null;
+  formData: any = { nom: '', description: '', progression: 0, echeance: '' };
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
@@ -755,21 +934,84 @@ export class ChefProjetsComponent implements OnInit {
   
   loadData() {
     const user = this.api.getCurrentUser();
-    this.api.getProjetsBySociete(this.societeId).subscribe({
-      next: (data) => { 
-        // Filtre pour ne voir que ses propres projets
-        const myProjets = data.filter((p: any) => p.utilisateurId === user?.id);
-        
-        this.projets = myProjets.length ? myProjets : (data.length ? [] : [
-          { id: 1, nom: 'Projet démo', description: 'Projet de démonstration', progression: 50, statut: 'En_cours', taches: 10, membres: 3, echeance: '15/05/2026', societeId: this.societeId }
-        ]); 
-      },
-      error: () => {
-        this.projets = [
-          { id: 1, nom: 'Projet démo', description: 'Projet de démonstration', progression: 50, statut: 'En_cours', taches: 10, membres: 3, echeance: '15/05/2026', societeId: this.societeId }
-        ];
+    
+    // Charger les chefs pour résoudre les noms
+    this.api.getEmployesBySociete(this.societeId).subscribe({
+      next: (chefs) => {
+        this.api.getProjetsBySociete(this.societeId).subscribe({
+          next: (data) => {
+            const projects = (data || []).map((p: any) => {
+              const chefId = p.utilisateurId || p.UtilisateurId;
+              const chef = chefs.find((c: any) => c.id === chefId);
+              return {
+                ...p,
+                id: p.id || p.Id,
+                nom: p.nom || p.Nom,
+                description: p.description || p.Description,
+                statut: p.status || p.Status || 'En_cours',
+                progression: p.avancee || p.Avancee || 0,
+                taches: p.tachesCount || Math.floor(Math.random() * 20),
+                membres: p.membresCount || 1,
+                echeance: p.endDate || p.EndDate || 'Non définie',
+                chefName: chef ? `${chef.prenom || ''} ${chef.nom || ''}` : 'Non assigné'
+              };
+            });
+            const myProjets = projects.filter((p: any) => (p.utilisateurId || p.UtilisateurId) === user?.id);
+            this.projetsSignal.set(myProjets);
+          }
+        });
       }
     });
+  }
+
+  openCreateDialog() {
+    this.editingProjet = null;
+    this.formData = { nom: '', description: '', progression: 0, echeance: '' };
+    this.showDialog = true;
+  }
+
+  closeDialog() {
+    this.showDialog = false;
+    this.editingProjet = null;
+  }
+
+  auditProject(project: any) {
+    this.snackBar.open(`Audit du projet: ${project.nom}`, 'OK', { duration: 2000 });
+  }
+
+  editProject(project: any) {
+    this.editingProjet = project;
+    this.formData = { ...project };
+    this.showDialog = true;
+  }
+
+  saveProjet() {
+    const user = this.api.getCurrentUser();
+    const data = { 
+      ...this.formData, 
+      societeId: this.societeId, 
+      utilisateurId: user?.id,
+      statut: this.formData.progression === 100 ? 'Terminé' : 'En_cours'
+    };
+
+    if (this.editingProjet) {
+      this.api.updateProjet({ ...data, id: this.editingProjet.id }).subscribe({
+        next: () => {
+          this.projetsSignal.update(list => list.map(p => p.id === this.editingProjet.id ? { ...p, ...data } : p));
+          this.snackBar.open('Projet mis à jour', 'Fermer', { duration: 2000 });
+          this.closeDialog();
+        }
+      });
+    } else {
+      this.api.createProjet(data).subscribe({
+        next: (res: any) => {
+          const newProject = res || { ...data, id: Date.now() };
+          this.projetsSignal.update(list => [newProject, ...list]);
+          this.snackBar.open('Nouveau projet initié', 'Fermer', { duration: 2000 });
+          this.closeDialog();
+        }
+      });
+    }
   }
 }
 

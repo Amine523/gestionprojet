@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ApiService } from '@core/services/api.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-dev-taches',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [CommonModule, FormsModule, DragDropModule, MatSnackBarModule],
   template: `
 
     <div class="dashboard-container">
@@ -918,6 +919,7 @@ import { ApiService } from '@core/services/api.service';
 })
 export class DevTachesComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   private timerInterval: any;
 
   viewMode = 'kanban';
@@ -998,31 +1000,30 @@ taches: any[] = [
   }
 
   startTask(tache: any) {
-    tache.statut = 'inprogress';
     this.activeTask = tache;
     this.startTimer();
-    alert('Tâche démarrée');
+    this.snackBar.open('Tâche démarrée', 'Fermer', { duration: 3000 });
   }
 
   pauseTask(tache: any) {
     this.stopTimer();
-    alert('Tâche en pause');
+    this.snackBar.open('Tâche en pause', 'Fermer', { duration: 3000 });
   }
 
   doneTask(tache: any) {
     tache.statut = 'done';
     this.activeTask = null;
     this.stopTimer();
-    
+
     // Trigger notification for Test/QA team
     this.api.createNotification(
-      this.societeId, 
-      'qa', 
-      'Tâche Prête pour Test (QA)', 
+      this.societeId,
+      'qa',
+      'Tâche Prête pour Test (QA)',
       `La tâche "${tache.titre}" a été complétée par le développeur et attend votre validation.`
     );
-    
-    alert('Tâche terminée et envoyée en QA!');
+
+    this.snackBar.open('Tâche terminée et envoyée en QA!', 'Fermer', { duration: 3000 });
   }
 
   viewTache(tache: any) {
@@ -1052,7 +1053,7 @@ taches: any[] = [
       this.viewingTache.tempsTravaille = this.tempsTravaille;
     }
     this.viewingTache = null;
-    alert('Modifications enregistrées');
+    this.snackBar.open('Modifications enregistrées', 'Fermer', { duration: 3000 });
   }
 
   startTimer() {
