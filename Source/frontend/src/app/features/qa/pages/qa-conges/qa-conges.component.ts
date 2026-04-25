@@ -5,7 +5,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 
 @Component({
-  selector: 'app-dev-conges',
+  selector: 'app-qa-conges',
   standalone: true,
   imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
@@ -729,7 +729,7 @@ import { ApiService } from '@core/services/api.service';
     }
   `]
 })
-export class DevCongesComponent implements OnInit {
+export class QaCongesComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
 
@@ -854,4 +854,3 @@ export class DevCongesComponent implements OnInit {
     if (file) this.justificatifFile = file;
   }
 }
-

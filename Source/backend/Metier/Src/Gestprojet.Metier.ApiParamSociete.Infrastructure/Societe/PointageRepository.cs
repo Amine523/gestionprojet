@@ -54,10 +54,9 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
                 }
 
                 // ==========================
-                // ADD (Generate Code)
+                // ADD (Use GUID to avoid PK conflicts)
                 // ==========================
-                var lastSequence = await GetLastPointageSequenceAsync();
-                entity.Id = _codeGenerationService.GenerateCode("POI", lastSequence, 50, 3);
+                entity.Id = Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper();
 
                 var addResponse = await _pointageApi.PointageAjouterPostAsync(entity);
                 if (addResponse)
@@ -65,7 +64,7 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
                     _logger.LogInformation($"Pointage ajouté dans Core: {entity.Id}");
                     return OperationResult.Ok("Pointage ajouté avec succès");
                 }
-                return OperationResult.Fail("Échec de l'ajout du pointage");
+                return OperationResult.Fail("Echéc de l'ajout du pointage");
             }
             catch (Exception ex)
             {
@@ -120,7 +119,9 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
         {
             try
             {
-                return await _pointageApi.PointageListeGetAsync();
+                var result = await _pointageApi.PointageListeGetAsync();
+                _logger.LogInformation($"PointageRepository.ListeAsync: Retrieved {result?.Count() ?? 0} pointages from Core API");
+                return result ?? new List<PointageCore>();
             }
             catch (Exception ex) { _logger.LogError(ex, "Erreur Liste"); return new List<PointageCore>(); }
         }

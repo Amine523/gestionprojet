@@ -707,7 +707,7 @@ export class RhDashboardComponent implements OnInit {
       next: (data) => {
         this.stats.totalEmployes = data.totalEmployes || 0;
         this.stats.absences = data.employesAbsents || 0;
-        this.stats.presents = (data.totalEmployes || 0) - (data.employesAbsents || 0);
+        this.stats.presents = data.employesPresents || 0;
         this.stats.congesEnAttente = data.demandesCongesEnAttente || 0;
         this.stats.tauxAbsent = 100 - (data.tauxPresence || 0);
         this.tauxPresence = data.tauxPresence || 0;
@@ -726,11 +726,11 @@ export class RhDashboardComponent implements OnInit {
       }
     });
 
-    this.api.getCandidatures().subscribe(tousCandidats => {
-      const societeCandidats = tousCandidats.filter((c: any) => c.societeId === this.societeId && c.statut === 'Accepté');
-      if (societeCandidats.length > 0) {
-        const delays = societeCandidats.map((c: any) => {
-          const start = new Date(c.dateCandidature).getTime();
+    this.api.getCandidaturesBySociete(this.societeId).subscribe(societeCandidats => {
+      const acceptedCandidats = societeCandidats.filter((c: any) => c.statut === 'Accepté');
+      if (acceptedCandidats.length > 0) {
+        const delays = acceptedCandidats.map((c: any) => {
+          const start = new Date(c.dateCandidature || Date.now()).getTime();
           const end = c.dateEntretien ? new Date(c.dateEntretien).getTime() : new Date().getTime();
           return (end - start) / (1000 * 3600 * 24);
         });
@@ -740,33 +740,39 @@ export class RhDashboardComponent implements OnInit {
       }
     });
 
-    this.api.getPointages().subscribe({
-      next: (pts) => {
-        if (pts && pts.length > 0) {
-          this.activities = pts.slice(0, 10).map((p: any) => ({
-            id: p.id || 'act_'+Math.random(),
-            title: `Pointage: ${p.utilisateurNom || 'Utilisateur'}`,
-            time: p.heureDebut,
-            type: 'pointage'
-          }));
-        } else {
-          // Données par défaut
+    this.api.getEmployesBySociete(this.societeId).subscribe(employes => {
+      const employesMap: { [id: string]: boolean } = {};
+      employes.forEach((e: any) => employesMap[e.id || e.Id] = true);
+
+      this.api.getPointages().subscribe({
+        next: (pts) => {
+          const societePts = (pts || []).filter((p: any) => employesMap[p.utilisateurId || p.UtilisateurId]);
+          if (societePts.length > 0) {
+            this.activities = societePts.slice(0, 10).map((p: any) => ({
+              id: p.id || 'act_'+Math.random(),
+              title: `Pointage: ${p.utilisateurNom || 'Utilisateur'}`,
+              time: p.heureDebut || p.HeureEntree || '--:--',
+              type: 'pointage'
+            }));
+          } else {
+            // Données par défaut
+            this.activities = [
+              { id: 1, title: 'Pointage: Ahmed Benali', time: '08:00', type: 'pointage' },
+              { id: 2, title: 'Pointage: Sara Karoui', time: '08:15', type: 'pointage' },
+              { id: 3, title: 'Pointage: Mohamed Salah', time: '08:30', type: 'pointage' },
+              { id: 4, title: 'Pointage: Fatima Zahra', time: '08:45', type: 'pointage' },
+              { id: 5, title: 'Pointage: Youssef Amrani', time: '09:00', type: 'pointage' }
+            ];
+          }
+        },
+        error: () => {
           this.activities = [
             { id: 1, title: 'Pointage: Ahmed Benali', time: '08:00', type: 'pointage' },
             { id: 2, title: 'Pointage: Sara Karoui', time: '08:15', type: 'pointage' },
-            { id: 3, title: 'Pointage: Mohamed Salah', time: '08:30', type: 'pointage' },
-            { id: 4, title: 'Pointage: Fatima Zahra', time: '08:45', type: 'pointage' },
-            { id: 5, title: 'Pointage: Youssef Amrani', time: '09:00', type: 'pointage' }
+            { id: 3, title: 'Pointage: Mohamed Salah', time: '08:30', type: 'pointage' }
           ];
         }
-      },
-      error: () => {
-        this.activities = [
-          { id: 1, title: 'Pointage: Ahmed Benali', time: '08:00', type: 'pointage' },
-          { id: 2, title: 'Pointage: Sara Karoui', time: '08:15', type: 'pointage' },
-          { id: 3, title: 'Pointage: Mohamed Salah', time: '08:30', type: 'pointage' }
-        ];
-      }
+      });
     });
   }
 

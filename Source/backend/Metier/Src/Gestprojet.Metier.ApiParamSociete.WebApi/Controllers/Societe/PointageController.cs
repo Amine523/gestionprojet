@@ -34,8 +34,10 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         {
             if (entity == null) return BadRequest("Données Pointage invalides");
             if (string.IsNullOrWhiteSpace(entity.UtilisateurId)) return BadRequest("UtilisateurId requis");
-            if (string.IsNullOrWhiteSpace(entity.TypeId)) return BadRequest("TypeId requis");
             if (!entity.Date.HasValue) return BadRequest("Date requis");
+            // TypeId is optional - set to null if not provided or invalid
+            if (entity.TypeId == "NORMAL" || entity.TypeId == "normal")
+                entity.TypeId = null;
             entity.Id = string.Empty;
             var result = await _pointageBusiness.AjouterOuModifierAsync(entity);
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);

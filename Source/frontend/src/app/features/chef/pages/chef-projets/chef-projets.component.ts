@@ -46,63 +46,71 @@ import { ApiService } from '@core/services/api.service';
       <!-- View Content -->
       <div class="content-area">
         @if (currentTab === 'grid') {
-          <div class="projects-grid">
-            @for (p of projetsSignal(); track p.id) {
-              <div class="project-card">
-                <div class="card-glow"></div>
-                <div class="card-content">
-                  <div class="card-header">
-                    <div class="card-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                      </svg>
-                    </div>
-                    <span class="status-badge" [ngClass]="p.statut === 'En_cours' ? 'status-active' : 'status-completed'">{{p.statut}}</span>
-                  </div>
-                  <h3 class="card-title">{{p.nom}}</h3>
-                  <div class="chef-info-display">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="7" r="4"/>
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    </svg>
-                    <span>{{p.chefName}}</span>
-                  </div>
-                  <p class="card-description">{{p.description}}</p>
-                  <div class="card-body">
-                    <div class="progress-section">
-                      <div class="progress-header">
-                        <span class="progress-label">Deployment Progress</span>
-                        <span class="progress-value">{{p.progression}}%</span>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Projet</th>
+                  <th>Statut</th>
+                  <th>Commandant</th>
+                  <th>Déploiement</th>
+                  <th>Unités</th>
+                  <th>Nœuds</th>
+                  <th>Échéance</th>
+                  <th class="text-right">Opérations</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of projetsSignal(); track p.id) {
+                  <tr>
+                    <td>
+                      <div class="project-info">
+                        <span class="project-name">{{p.nom}}</span>
                       </div>
-                      <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="p.progression"></div>
-                      </div>
-                    </div>
-                    <div class="stats-grid">
-                      <div class="stat-item">
-                        <p class="stat-label">Nodes</p>
-                        <p class="stat-value">{{p.taches}}</p>
-                      </div>
-                      <div class="stat-item stat-item-border">
-                        <p class="stat-label">Units</p>
-                        <p class="stat-value">{{p.membres}}</p>
-                      </div>
-                      <div class="stat-item">
-                        <p class="stat-label">Zero Hour</p>
-                        <p class="stat-value">{{p.echeance}}</p>
-                      </div>
-                    </div>
-                    <div class="card-actions">
-                      <button class="btn btn-primary btn-full" (click)="auditProject(p)">Audit</button>
-                      <button class="btn btn-icon" (click)="editProject(p)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </td>
+                    <td>
+                      <span class="status-badge" [ngClass]="p.statut === 'En_cours' ? 'status-active' : 'status-completed'">{{p.statut}}</span>
+                    </td>
+                    <td>
+                      <div class="chef-info-display">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="7" r="4"/>
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                         </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                        <span>{{p.chefName}}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="progress-section">
+                        <div class="progress-header">
+                          <span class="progress-value">{{p.progression}}%</span>
+                        </div>
+                        <div class="progress-bar">
+                          <div class="progress-fill" [style.width.%]="p.progression"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{p.membres}}</td>
+                    <td>{{p.taches}}</td>
+                    <td>{{p.echeance}}</td>
+                    <td class="text-right">
+                      <div class="card-actions">
+                        <button class="btn btn-primary" (click)="auditProject(p)">Audit</button>
+                        <button class="btn-icon" (click)="editProject(p)" title="Modifier">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            @if (projetsSignal().length === 0) {
+              <div class="empty-state">
+                <p>Aucun projet stratégique trouvé.</p>
               </div>
             }
           </div>
@@ -318,73 +326,60 @@ import { ApiService } from '@core/services/api.service';
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: var(--space-xl);
-    }
-
-    .project-card {
-      position: relative;
+    .table-container {
       background: white;
       border: 1px solid var(--color-border);
       border-radius: var(--radius-3xl);
-      padding: var(--space-2xl);
+      overflow-x: auto;
       box-shadow: var(--shadow-sm);
-      transition: all var(--transition-base);
-      overflow: hidden;
     }
 
-    .project-card:hover {
-      box-shadow: var(--shadow-2xl), 0 0 0 1px rgba(59, 130, 246, 0.05);
-      transform: translateY(-8px);
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
     }
 
-    .card-glow {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 128px;
-      height: 128px;
-      background: rgba(59, 130, 246, 0.05);
-      filter: blur(48px);
-      transition: background var(--transition-base);
+    .data-table th {
+      padding: var(--space-md) var(--space-lg);
+      background: var(--color-bg);
+      font-size: 10px;
+      font-weight: var(--font-weight-black);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--color-border);
     }
 
-    .project-card:hover .card-glow {
-      background: rgba(59, 130, 246, 0.1);
+    .data-table td {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
     }
 
-    .card-content {
-      position: relative;
-      z-index: 1;
+    .data-table tr:hover {
+      background: rgba(59, 130, 246, 0.02);
+    }
+
+    .project-info {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      gap: 4px;
     }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: var(--space-xl);
+    .project-name {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin: 0;
+      text-transform: uppercase;
+      font-style: italic;
     }
 
-    .card-icon {
-      width: 56px;
-      height: 56px;
-      background: var(--color-bg);
-      border-radius: var(--radius-lg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #3b82f6;
-      transition: transform var(--transition-base);
+    .text-right {
+      text-align: right;
     }
 
-    .project-card:hover .card-icon {
-      transform: scale(1.1);
-    }
 
     .status-badge {
       padding: var(--space-xs) var(--space-md);
@@ -408,28 +403,7 @@ import { ApiService } from '@core/services/api.service';
       border-color: rgba(16, 185, 129, 0.2);
     }
 
-    .card-title {
-      font-size: 1.5rem;
-      font-weight: var(--font-weight-black);
-      color: var(--color-text);
-      letter-spacing: -0.02em;
-      margin: 0 0 var(--space-xs);
-      text-transform: uppercase;
-      font-style: italic;
-      line-height: 1;
-    }
 
-    .chef-info-display {
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
-      font-size: 11px;
-      font-weight: 700;
-      color: #3b82f6;
-      margin-bottom: var(--space-md);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
 
     .btn-create {
       background: white;
@@ -452,22 +426,6 @@ import { ApiService } from '@core/services/api.service';
     .btn-create:hover {
       transform: translateY(-2px);
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-    }
-
-    .card-description {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-muted);
-      margin: 0 0 var(--space-xl);
-      line-height: 1.6;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .card-body {
-      margin-top: auto;
     }
 
     .progress-section {

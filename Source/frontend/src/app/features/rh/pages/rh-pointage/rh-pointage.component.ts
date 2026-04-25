@@ -20,10 +20,10 @@ import { ApiService } from '@core/services/api.service';
           </p>
         </div>
         <div class="header-stats">
-           <div class="stat-tile">
-              <span class="stat-value emerald">{{stats.employesActifs}}</span>
-              <span class="stat-label">Présents</span>
-           </div>
+            <div class="stat-tile">
+               <span class="stat-value emerald">{{stats.employesPresents}}</span>
+               <span class="stat-label">Présents</span>
+            </div>
            <div class="stat-tile">
               <span class="stat-value amber">{{stats.employesAbsents}}</span>
               <span class="stat-label">Absents</span>
@@ -314,13 +314,21 @@ export class RhPointageComponent implements OnInit {
     
     return list.filter(p => {
       const matchesSearch = !q || p.utilisateurNom?.toLowerCase().includes(q);
-      const matchesDate = !date || p.date?.split('T')[0] === date;
+      
+      // Robust date matching
+      let matchesDate = !date;
+      if (date && p.date) {
+        const pDateStr = typeof p.date === 'string' ? p.date : '';
+        matchesDate = pDateStr.startsWith(date);
+      }
+      
       return matchesSearch && matchesDate;
     });
   });
 
   isLoading = false;
-  stats = { totalEmployes: 0, employesActifs: 0, employesAbsents: 0, tauxPresence: 0 };
+  stats = { totalEmployes: 0, employesActifs: 0, employesPresents: 0, employesAbsents: 0, tauxPresence: 0 };
+  employesMap: { [id: string]: string } = {};
   
   showEditDialog = false;
   editingPointage: any = null;
@@ -338,24 +346,45 @@ export class RhPointageComponent implements OnInit {
     this.isLoading = true;
     this.loadStats();
 
-    this.api.getPointages().subscribe({
-      next: (allPointages) => {
-        const list = allPointages.map((p: any) => ({
-          id: p.id || p.Id,
-          utilisateurId: p.utilisateurId || p.UtilisateurId,
-          utilisateurNom: p.utilisateurNom || 'Utilisateur ' + (p.utilisateurId || p.UtilisateurId),
-          date: p.date || p.Date,
-          heureDebut: p.heureEntree || p.HeureEntree,
-          heureFin: p.heureSortie || p.HeureSortie,
-          heuresTravaillees: p.duree || p.Duree || 0,
-          note: p.note || p.Note,
-          typeId: p.typeId || p.TypeId
-        }));
-        this.pointagesSignal.set(list);
-        this.isLoading = false;
+    this.api.getEmployesBySociete(this.societeId).subscribe({
+      next: (employes) => {
+        this.employesMap = {};
+        employes.forEach((e: any) => {
+          this.employesMap[e.id || e.Id] = e.nom || e.Nom;
+        });
+
+        this.api.getPointages().subscribe({
+          next: (allPointages) => {
+            const list = (allPointages || [])
+              .filter((p: any) => {
+                const uId = p.utilisateurId || p.UtilisateurId;
+                return !!this.employesMap[uId];
+              })
+              .map((p: any) => {
+                const uId = p.utilisateurId || p.UtilisateurId;
+                const uNom = p.utilisateurNom || p.UtilisateurNom || this.employesMap[uId] || 'Utilisateur ' + uId;
+              return {
+                id: p.id || p.Id,
+                utilisateurId: uId,
+                utilisateurNom: uNom,
+                date: p.date || p.Date,
+                heureDebut: p.heureEntree || p.HeureEntree,
+                heureFin: p.heureSortie || p.HeureSortie,
+                heuresTravaillees: p.duree || p.Duree || 0,
+                note: p.note || p.Note,
+                typeId: p.typeId || p.TypeId
+              };
+            });
+            this.pointagesSignal.set(list);
+            this.isLoading = false;
+          },
+          error: () => {
+            this.pointagesSignal.set([]);
+            this.isLoading = false;
+          }
+        });
       },
       error: () => {
-        this.pointagesSignal.set([]);
         this.isLoading = false;
       }
     });

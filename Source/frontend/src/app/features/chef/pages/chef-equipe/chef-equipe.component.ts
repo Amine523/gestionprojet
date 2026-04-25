@@ -949,18 +949,21 @@ export class ChefEquipeComponent implements OnInit {
   loadData() {
     this.api.getEmployesBySociete(this.societeId).subscribe({
       next: (employes) => {
-        this.membres = employes.map((e: any, idx: number) => ({
-          id: e.id,
-          nom: e.nom,
-          initials: e.nom?.charAt(0) || 'E',
-          role: e.typeUtilisateurId || 'Développeur',
-          projet: e.poste || 'Non assigné',
-          charge: 50 + Math.floor(Math.random() * 45),
-          tachesTerminees: Math.floor(Math.random() * 15),
-          tachesTotal: 15 + Math.floor(Math.random() * 10),
-          tempsMoyen: 2 + Math.floor(Math.random() * 4),
-          productivite: 70 + Math.floor(Math.random() * 25)
-        }));
+        this.membres = employes.map((e: any) => {
+          const stats = e.stats || {};
+          return {
+            id: e.id || e.Id,
+            nom: e.nom || e.Nom,
+            initials: (e.nom || e.Nom || 'E').charAt(0),
+            role: e.poste || e.Poste || 'Collaborateur',
+            projet: e.projetNom || 'Aucun',
+            charge: stats.charge || 0,
+            tachesTerminees: stats.tachesTerminees || 0,
+            tachesTotal: stats.tachesTotal || 0,
+            tempsMoyen: stats.tempsMoyen || 0,
+            productivite: stats.productivite || 0
+          };
+        });
         this.filteredMembres = [...this.membres];
         this.calculateStats();
       },
@@ -989,10 +992,17 @@ export class ChefEquipeComponent implements OnInit {
   affecterProjet(m: any) { this.snackBar.open('Affecter projet: ' + m.nom, 'Fermer', { duration: 3000 }); }
   retirerMembre(m: any) {
     if (confirm('Retirer ' + m.nom + ' de l\'équipe?')) {
-      this.membres = this.membres.filter(x => x.id !== m.id);
-      this.filteredMembres = [...this.membres];
-      this.calculateStats();
-      this.snackBar.open('Membre retiré', 'Fermer', { duration: 3000 });
+      // Dans cette plateforme, retirer signifie souvent désactiver ou changer de société
+      // Pour l'instant on va simplement désactiver ou notifier l'admin
+      this.api.updateUtilisateur(m.id, { ...m, Actif: false }).subscribe({
+        next: () => {
+          this.membres = this.membres.filter(x => x.id !== m.id);
+          this.filteredMembres = [...this.membres];
+          this.calculateStats();
+          this.snackBar.open('Membre retiré et désactivé', 'Fermer', { duration: 3000 });
+        },
+        error: () => this.snackBar.open('Erreur lors du retrait', 'Fermer', { duration: 3000 })
+      });
     }
   }
 
@@ -1011,17 +1021,34 @@ export class ChefEquipeComponent implements OnInit {
       this.snackBar.open('Veuillez entrer un nom', 'Fermer', { duration: 3000 });
       return;
     }
-    const initials = this.formData.nom.split(' ').map((n: string) => n[0]).join('').toUpperCase();
+
+    const payload = {
+      nom: this.formData.nom,
+      email: this.formData.email,
+      poste: this.formData.role,
+      societeId: this.societeId,
+      typeUtilisateurId: 'T005', // Par défaut développeur
+      motDePasse: '123456',
+      actif: true
+    };
+
     if (this.editingMembre) {
-      const index = this.membres.findIndex(m => m.id === this.editingMembre.id);
-      if (index >= 0) this.membres[index] = { ...this.formData, initials };
+      this.api.updateUtilisateur(this.editingMembre.id, payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.snackBar.open('Membre mis à jour', 'Fermer', { duration: 3000 });
+          this.closeForm();
+        }
+      });
     } else {
-      this.membres.push({ ...this.formData, initials, id: Date.now(), charge: 0, tachesTerminees: 0, tachesTotal: 0, tempsMoyen: 0, productivite: 0 });
+      this.api.createUtilisateur(payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.snackBar.open('Nouveau membre créé', 'Fermer', { duration: 3000 });
+          this.closeForm();
+        }
+      });
     }
-    this.filteredMembres = [...this.membres];
-    this.calculateStats();
-    this.snackBar.open('Membre enregistré', 'Fermer', { duration: 3000 });
-    this.closeForm();
   }
 }
 

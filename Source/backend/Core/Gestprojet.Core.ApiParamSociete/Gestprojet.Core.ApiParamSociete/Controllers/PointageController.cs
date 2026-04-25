@@ -84,8 +84,22 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         /// Liste Pointage.
         /// </summary>
         /// <returns></returns>
-        [HttpGet("liste-legacy-1")]
+        [HttpGet]
+        public async Task<ActionResult<List<PointageCore>>> Liste()
+        {
+            List<PointageCore> resultat = await _pointageCoreBusiness.ListePointageAsync();
+            return Ok(resultat);
+        }
+
+        [HttpGet("liste")]
         public async Task<ActionResult<List<PointageCore>>> ListePointage()
+        {
+            List<PointageCore> resultat = await _pointageCoreBusiness.ListePointageAsync();
+            return Ok(resultat);
+        }
+
+        [HttpGet("liste-legacy-1")]
+        public async Task<ActionResult<List<PointageCore>>> ListePointageLegacy()
         {
             List<PointageCore> resultat = await _pointageCoreBusiness.ListePointageAsync();
             return Ok(resultat);
@@ -145,13 +159,6 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         public async Task<ActionResult<PointageCore>> GetById([FromRoute] string id)
         {
             var resultat = await _pointageCoreBusiness.ObtenirPointageParIdAsync(id);
-            return Ok(resultat);
-        }
-
-        [HttpGet("liste-legacy-2")]
-        public async Task<ActionResult<List<PointageCore>>> Liste()
-        {
-            List<PointageCore> resultat = await _pointageCoreBusiness.ListePointageAsync();
             return Ok(resultat);
         }
 

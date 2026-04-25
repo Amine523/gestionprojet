@@ -7,10 +7,9 @@ import { QaRapportsComponent } from './pages/qa-rapports/qa-rapports.component';
 import { QaProjetsComponent } from './pages/qa-projets/qa-projets.component';
 import { QaNotificationsComponent } from './pages/qa-notifications/qa-notifications.component';
 import { QaParametresComponent } from './pages/qa-parametres/qa-parametres.component';
+import { QaCongesComponent } from './pages/qa-conges/qa-conges.component';
 import { CalendarViewComponent } from '@shared/components/calendar-view/calendar-view.component';
 import { DevTimeTrackingComponent } from '../dev/pages/dev-time-tracking/dev-time-tracking.component';
-import { TesteurCongesComponent } from '../testeur/pages/testeur-conges/testeur-conges.component';
-import { TesteurPointageComponent } from '../testeur/pages/testeur-pointage/testeur-pointage.component';
 import { AdminChatComponent } from '../admin/pages/admin-chat/admin-chat.component';
 
 export const QA_ROUTES: Routes = [
@@ -22,8 +21,7 @@ export const QA_ROUTES: Routes = [
   { path: 'projets', component: QaProjetsComponent },
   { path: 'calendar', component: CalendarViewComponent },
   { path: 'time', component: DevTimeTrackingComponent },
-  { path: 'conges', component: TesteurCongesComponent },
-  { path: 'pointage', component: TesteurPointageComponent },
+  { path: 'conges', component: QaCongesComponent },
   { path: 'notifications', component: QaNotificationsComponent },
   { path: 'chat', component: AdminChatComponent },
   { path: 'parametres', component: QaParametresComponent },

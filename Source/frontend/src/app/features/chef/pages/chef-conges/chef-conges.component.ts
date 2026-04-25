@@ -43,6 +43,13 @@ interface Conge {
             <span class="pulse-dot" *ngIf="enAttenteCount() > 0"></span>
             {{enAttenteCount()}} en attente
           </div>
+          <button class="btn btn-primary" (click)="showRequestForm.set(true)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nouvelle demande
+          </button>
           <button class="btn btn-secondary" (click)="loadData()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 4v6h-6"/>
@@ -100,8 +107,50 @@ interface Conge {
             <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="activeTab = 'all'">Toutes</button>
             <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="activeTab = 'pending'">En attente</button>
             <button class="tab-btn" [class.active]="activeTab === 'approved'" (click)="activeTab = 'approved'">Approuvées</button>
+            <button class="tab-btn" [class.active]="activeTab === 'mine'" (click)="activeTab = 'mine'">Mes demandes</button>
           </div>
         </div>
+
+        @if (showRequestForm()) {
+          <div class="form-container">
+            <div class="form-card">
+              <div class="form-header">
+                <h4>Nouvelle demande de congé</h4>
+                <button class="btn-close" (click)="showRequestForm.set(false)">&times;</button>
+              </div>
+              <form (ngSubmit)="soumettreDemande()">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Type de congé</label>
+                    <select [(ngModel)]="nouvelleDemande.typePointageId" name="type" class="form-control" required>
+                      <option value="NORMAL">Congé Annuel</option>
+                      <option value="MALADIE">Maladie</option>
+                      <option value="EXCEP">Exceptionnel</option>
+                      <option value="HALFDAY">Demi-journée</option>
+                      <option value="AUTORISATION">Autorisation</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Date de début</label>
+                    <input type="date" [(ngModel)]="nouvelleDemande.dateDebut" name="dateDebut" class="form-control" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Date de fin</label>
+                    <input type="date" [(ngModel)]="nouvelleDemande.dateFin" name="dateFin" class="form-control" required>
+                  </div>
+                  <div class="form-group full-width">
+                    <label>Motif</label>
+                    <textarea [(ngModel)]="nouvelleDemande.motif" name="motif" class="form-control" rows="2" placeholder="Facultatif"></textarea>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn btn-ghost" (click)="showRequestForm.set(false)">Annuler</button>
+                  <button type="submit" class="btn btn-primary" [disabled]="loading()">Envoyer la demande</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        }
 
         <div class="conges-list">
           @for (c of filteredConges(); track c.id) {
@@ -533,6 +582,104 @@ interface Conge {
       margin: 0;
       font-size: 14px;
     }
+    .btn-primary {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #4338ca;
+    }
+
+    .form-container {
+      padding: 0 24px 24px;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-card {
+      background: #f8fafc;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      padding: 24px;
+    }
+
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .form-header h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #64748b;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: #64748b;
+    }
+
+    .btn-ghost:hover {
+      background: #f1f5f9;
+    }
   `]
 })
 export class ChefCongesComponent implements OnInit {
@@ -542,15 +689,22 @@ export class ChefCongesComponent implements OnInit {
   societeId = '';
   societeNom = '';
   currentUserId = '';
-  
+
   congesSignal = signal<Conge[]>([]);
   statsSignal = signal({ totalEquipe: 0, congesValides: 0, demandesCongesEnAttente: 0 });
   activeTab = 'all';
+  employesMap: { [id: string]: string } = {};
+
+  showRequestForm = signal(false);
+  loading = signal(false);
+  mesCongesSignal = signal<Conge[]>([]);
+  nouvelleDemande = { typePointageId: 'NORMAL', dateDebut: '', dateFin: '', motif: '' };
 
   stats = computed(() => this.statsSignal());
   enAttenteCount = computed(() => this.congesSignal().filter(c => c.status === 'En attente').length);
 
   filteredConges = computed(() => {
+    if (this.activeTab === 'mine') return this.mesCongesSignal();
     const list = this.congesSignal();
     if (this.activeTab === 'pending') return list.filter(c => c.status === 'En attente');
     if (this.activeTab === 'approved') return list.filter(c => c.status === 'Validée');
@@ -568,6 +722,55 @@ export class ChefCongesComponent implements OnInit {
   loadData() {
     this.loadStats();
     this.loadConges();
+    this.loadMesConges();
+  }
+
+  loadMesConges() {
+    this.api.getDemandesConge().subscribe(data => {
+      const list = data.filter((d: any) => (d.utilisateurId || d.UtilisateurId) === this.currentUserId)
+        .map((d: any) => ({
+          id: d.id || d.Id,
+          utilisateurId: d.utilisateurId || d.UtilisateurId,
+          utilisateurNom: 'Moi',
+          typeNom: d.typeNom || d.TypeNom || 'Congé',
+          dateDebut: d.dateDebut || d.DateDebut,
+          dateFin: d.dateFin || d.DateFin,
+          nombreJours: d.jours || d.Jours || 0,
+          motif: d.motif || d.Motif || '',
+          status: d.status || d.Status || 'En attente'
+        }));
+      this.mesCongesSignal.set(list);
+    });
+  }
+
+  soumettreDemande() {
+    if (!this.nouvelleDemande.dateDebut || !this.nouvelleDemande.dateFin) {
+      this.snackBar.open('Veuillez remplir les dates', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    this.loading.set(true);
+    const dto = {
+      ...this.nouvelleDemande,
+      utilisateurId: this.currentUserId,
+      societeId: this.societeId,
+      status: 'En attente'
+    };
+
+    this.api.createDemandeCongeReal(dto).subscribe({
+      next: () => {
+        this.snackBar.open('Demande envoyée avec succès', 'Fermer', { duration: 3000 });
+        this.showRequestForm.set(false);
+        this.loading.set(false);
+        this.nouvelleDemande = { typePointageId: 'NORMAL', dateDebut: '', dateFin: '', motif: '' };
+        this.loadMesConges();
+        this.activeTab = 'mine';
+      },
+      error: () => {
+        this.snackBar.open('Erreur lors de l\'envoi de la demande', 'Fermer', { duration: 3000 });
+        this.loading.set(false);
+      }
+    });
   }
 
   loadStats() {
@@ -577,23 +780,39 @@ export class ChefCongesComponent implements OnInit {
   }
 
   loadConges() {
-    this.api.getDemandesEnAttenteReal(this.societeId).subscribe({
-      next: (data) => {
-        const list = data.map((d: any) => ({
-          id: d.id || d.Id,
-          utilisateurId: d.utilisateurId || d.UtilisateurId,
-          utilisateurNom: d.utilisateurNom || 'Utilisateur ' + (d.utilisateurId || d.UtilisateurId),
-          typeNom: d.typeNom || d.TypeNom || 'Congé',
-          dateDebut: d.dateDebut || d.DateDebut,
-          dateFin: d.dateFin || d.DateFin,
-          nombreJours: d.jours || d.Jours || 0,
-          motif: d.motif || d.Motif || '',
-          status: d.status || d.Status || 'En attente'
-        }));
-        this.congesSignal.set(list);
+    this.api.getEmployesBySociete(this.societeId).subscribe({
+      next: (employes) => {
+        this.employesMap = {};
+        employes.forEach((e: any) => {
+          this.employesMap[e.id || e.Id] = e.nom || e.Nom;
+        });
+
+        this.api.getDemandesEnAttenteReal(this.societeId).subscribe({
+          next: (data) => {
+            const list = data.map((d: any) => {
+              const uId = d.utilisateurId || d.UtilisateurId;
+              const uNom = d.utilisateurNom || d.UtilisateurNom || this.employesMap[uId] || 'Utilisateur ' + uId;
+              return {
+                id: d.id || d.Id,
+                utilisateurId: uId,
+                utilisateurNom: uNom,
+                typeNom: d.typeNom || d.TypeNom || 'Congé',
+                dateDebut: d.dateDebut || d.DateDebut,
+                dateFin: d.dateFin || d.DateFin,
+                nombreJours: d.jours || d.Jours || 0,
+                motif: d.motif || d.Motif || '',
+                status: d.status || d.Status || 'En attente'
+              };
+            });
+            this.congesSignal.set(list);
+          },
+          error: () => {
+            this.snackBar.open('Erreur de chargement des demandes', 'Fermer', { duration: 3000 });
+          }
+        });
       },
       error: () => {
-        this.snackBar.open('Erreur de chargement des demandes', 'Fermer', { duration: 3000 });
+        this.snackBar.open('Erreur de chargement des employés', 'Fermer', { duration: 3000 });
       }
     });
   }

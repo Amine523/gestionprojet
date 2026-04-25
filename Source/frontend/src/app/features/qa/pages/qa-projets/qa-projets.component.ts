@@ -36,55 +36,55 @@ import { ApiService } from '@core/services/api.service';
         </div>
       </header>
 
-      <!-- Project Grid -->
-      <div class="projects-grid">
-        @for (projet of projets; track projet.id) {
-          <div class="project-card">
-            <div class="card-glow"></div>
-            <div class="card-header">
-              <div class="card-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                </svg>
-              </div>
-              <div class="card-title-group">
-                <h3 class="card-title">{{projet.nom}}</h3>
-                <div class="card-status">
-                  <span class="status-dot"></span>
-                  <span class="status-text">Sous Audit Qualité</span>
-                </div>
-              </div>
-            </div>
-            <p class="card-description">
-              {{projet.description || 'Synthèse de l\\'environnement de test pour cette mission spécifique.'}}
-            </p>
-            <div class="card-stats">
-              <div class="stat-box">
-                <p class="stat-box-label">Scénarios</p>
-                <p class="stat-box-value">{{projet.tests || 0}}</p>
-              </div>
-              <div class="stat-box">
-                <p class="stat-box-label">Anomalies</p>
-                <p class="stat-box-value bugs">{{projet.bugs || 0}}</p>
-              </div>
-            </div>
-            <div class="card-actions">
-              <a routerLink="/qa/tests" class="btn btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 11l3 3L22 4"/>
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                </svg>
-                Tests
-              </a>
-              <a routerLink="/qa/bugs" class="btn btn-secondary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M8 12h8"/>
-                  <path d="M12 8v8"/>
-                </svg>
-                Bugs
-              </a>
-            </div>
+      <!-- Project Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Projet</th>
+              <th>Statut</th>
+              <th>Description</th>
+              <th>Scénarios</th>
+              <th>Anomalies</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (projet of projets; track projet.id) {
+              <tr>
+                <td>
+                  <div class="project-info">
+                    <span class="project-name">{{projet.nom}}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="card-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Sous Audit Qualité</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="project-desc">{{projet.description || 'Synthèse de l\'environnement de test'}}</span>
+                </td>
+                <td>
+                  <span class="stat-value-text">{{projet.tests || 0}}</span>
+                </td>
+                <td>
+                  <span class="stat-value-text bugs">{{projet.bugs || 0}}</span>
+                </td>
+                <td class="text-right">
+                  <div class="card-actions">
+                    <a routerLink="/qa/tests" class="btn btn-primary">Tests</a>
+                    <a routerLink="/qa/bugs" class="btn btn-secondary">Bugs</a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (projets.length === 0) {
+          <div class="empty-state">
+            <p>Aucune mission trouvée.</p>
           </div>
         }
       </div>
@@ -217,73 +217,48 @@ import { ApiService } from '@core/services/api.service';
       text-transform: uppercase;
     }
 
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: var(--space-xl);
-    }
-
-    .project-card {
+    .table-container {
       background: white;
       border: 1px solid var(--color-border);
       border-radius: var(--radius-xl);
-      padding: var(--space-xl);
+      overflow-x: auto;
       box-shadow: var(--shadow-sm);
-      transition: all var(--transition-base);
-      position: relative;
-      overflow: hidden;
     }
 
-    .project-card:hover {
-      box-shadow: var(--shadow-xl);
-      transform: translateY(-4px);
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
     }
 
-    .card-glow {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 128px;
-      height: 128px;
-      background: rgba(59, 130, 246, 0.05);
-      filter: blur(48px);
-      opacity: 0;
-      transition: opacity var(--transition-base);
+    .data-table th {
+      padding: var(--space-md) var(--space-lg);
+      background: var(--color-bg);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-border);
     }
 
-    .project-card:hover .card-glow {
-      opacity: 1;
+    .data-table td {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
     }
 
-    .card-header {
+    .data-table tr:hover {
+      background: var(--color-bg);
+    }
+
+    .project-info {
       display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      margin-bottom: var(--space-lg);
+      flex-direction: column;
     }
 
-    .card-icon {
-      width: 64px;
-      height: 64px;
-      border-radius: var(--radius-lg);
-      background: rgba(59, 130, 246, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #3b82f6;
-      transition: transform var(--transition-base);
-    }
-
-    .project-card:hover .card-icon {
-      transform: scale(1.1);
-    }
-
-    .card-title-group {
-      flex: 1;
-    }
-
-    .card-title {
-      font-size: var(--font-size-xl);
+    .project-name {
+      font-size: var(--font-size-sm);
       font-weight: var(--font-weight-bold);
       color: var(--color-text);
       margin: 0;
@@ -295,7 +270,6 @@ import { ApiService } from '@core/services/api.service';
       display: flex;
       align-items: center;
       gap: var(--space-xs);
-      margin-top: var(--space-xs);
     }
 
     .status-dot {
@@ -314,63 +288,27 @@ import { ApiService } from '@core/services/api.service';
       font-style: italic;
     }
 
-    .card-description {
+    .project-desc {
       color: var(--color-text-muted);
       font-size: var(--font-size-sm);
       font-weight: var(--font-weight-bold);
-      line-height: var(--line-height-relaxed);
-      margin: 0 0 var(--space-lg);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
       font-style: italic;
     }
 
-    .card-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-md);
-      margin-bottom: var(--space-lg);
-    }
-
-    .stat-box {
-      padding: var(--space-lg);
-      border-radius: var(--radius-xl);
-      background: var(--color-bg);
-      border: 1px solid var(--color-border);
-      text-align: center;
-      transition: background var(--transition-base);
-    }
-
-    .project-card:hover .stat-box:first-child {
-      background: rgba(59, 130, 246, 0.05);
-    }
-
-    .project-card:hover .stat-box:last-child {
-      background: rgba(244, 63, 94, 0.05);
-    }
-
-    .stat-box-label {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin: 0 0 var(--space-xs);
-    }
-
-    .stat-box-value {
-      font-size: var(--font-size-2xl);
+    .stat-value-text {
+      font-size: var(--font-size-sm);
       font-weight: var(--font-weight-bold);
       color: var(--color-text);
       margin: 0;
       font-style: italic;
-      letter-spacing: -0.02em;
     }
 
-    .stat-box-value.bugs {
+    .stat-value-text.bugs {
       color: #e11d48;
+    }
+
+    .text-right {
+      text-align: right;
     }
 
     .card-actions {
@@ -457,10 +395,6 @@ import { ApiService } from '@core/services/api.service';
         flex-direction: column;
         align-items: flex-start;
       }
-
-      .projects-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      }
     }
 
     @media (max-width: 768px) {
@@ -470,14 +404,6 @@ import { ApiService } from '@core/services/api.service';
 
       .header-title {
         font-size: var(--font-size-3xl);
-      }
-
-      .projects-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .card-stats {
-        grid-template-columns: 1fr;
       }
     }
   `]

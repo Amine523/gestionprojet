@@ -1034,23 +1034,10 @@ export class RhEmployesComponent implements OnInit {
 
   loadEmployes() {
     this.isLoading = true;
-    this.api.getUtilisateurs().subscribe({
+    // Utilisation directe du filtrage par société côté Backend
+    this.api.getEmployesBySociete(this.societeId).subscribe({
       next: (res: any) => {
-        let all: any[] = [];
-        if (Array.isArray(res)) {
-          all = res;
-        } else if (res && Array.isArray(res.items)) {
-          all = res.items;
-        } else if (res && typeof res === 'object') {
-          all = [res];
-        }
-
-        let list = all.filter((u: any) => {
-          const sid = (u.societeId || u.SocieteId || '').toString().toLowerCase();
-          const targetSid = (this.societeId || '').toString().toLowerCase();
-          return !targetSid || sid === targetSid;
-        });
-
+        let list: any[] = Array.isArray(res) ? res : (res?.items || []);
         const normalized = list.map((e: any) => this.normalizeEmploye(e)).filter(e => e !== null);
         this.employesSignal.set(normalized);
         this.totalItems = normalized.length;

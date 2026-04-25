@@ -1,4 +1,4 @@
-﻿import { Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { SidebarService } from '@core/services/sidebar.service';
@@ -34,7 +34,7 @@ import { ApiService } from '@core/services/api.service';
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
-            <span class="notification-badge"></span>
+            <span *ngIf="notifCount > 0" class="notification-badge">{{notifCount}}</span>
           </button>
           <button (click)="toggleTheme()" class="header-btn" aria-label="Toggle theme">
             @if (isDark) {
@@ -154,13 +154,20 @@ import { ApiService } from '@core/services/api.service';
 
     .notification-badge {
       position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 8px;
-      height: 8px;
+      top: -2px;
+      right: -2px;
       background: #ef4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      min-width: 18px;
+      height: 18px;
       border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     :host-context(.dark) .notification-badge {
@@ -292,6 +299,7 @@ export class HeaderComponent {
   userName = '';
   userRole = '';
   userInitials = '';
+  notifCount = 3;
 
   ngOnInit() {
 

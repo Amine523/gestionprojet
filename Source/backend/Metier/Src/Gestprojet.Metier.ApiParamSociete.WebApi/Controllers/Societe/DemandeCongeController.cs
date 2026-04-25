@@ -15,11 +15,13 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
     {
         private readonly IDemandeCongeBusiness _business;
         private readonly Gestprojet.Metier.ApiParamSociete.WebApi.Services.INotificationService _notificationService;
+        private readonly ILogger<DemandeCongeController> _logger;
 
-        public DemandeCongeController(IDemandeCongeBusiness business, Gestprojet.Metier.ApiParamSociete.WebApi.Services.INotificationService notificationService)
+        public DemandeCongeController(IDemandeCongeBusiness business, Gestprojet.Metier.ApiParamSociete.WebApi.Services.INotificationService notificationService, ILogger<DemandeCongeController> logger)
         {
             _business = business;
             _notificationService = notificationService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -49,6 +51,10 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         public async Task<IActionResult> Create([FromBody] DemandeCongeCore entity)
         {
             if (entity == null) return BadRequest("Données invalides");
+            
+            // Log the received entity for debugging
+            _logger.LogInformation($"Create DemandeConge: UtilisateurId={entity.UtilisateurId}, SocieteId={entity.SocieteId}, DateDebut={entity.DateDebut}, DateFin={entity.DateFin}");
+            
             var result = await _business.AjouterOuModifierAsync(entity);
             
             if (result.Success)

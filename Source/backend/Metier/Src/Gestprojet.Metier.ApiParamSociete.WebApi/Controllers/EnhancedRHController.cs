@@ -53,12 +53,13 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
         }
 
         [HttpGet("utilisateur/{utilisateurId}/heures-travaillees")]
-        public async Task<IActionResult> GetHeuresTravaillees(string utilisateurId, [FromQuery] DateTime date)
+        public async Task<IActionResult> GetHeuresTravaillees(string utilisateurId, [FromQuery] DateTime? date)
         {
             try
             {
-                var hours = await _rhCalculationService.CalculateWorkedHoursAsync(utilisateurId, date);
-                return Ok(new { utilisateurId, date, hours });
+                var targetDate = date ?? DateTime.Today;
+                var hours = await _rhCalculationService.CalculateWorkedHoursAsync(utilisateurId, targetDate);
+                return Ok(new { utilisateurId, date = targetDate, hours });
             }
             catch (Exception ex)
             {

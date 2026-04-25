@@ -8,12 +8,15 @@ import { AdminChatComponent } from './pages/admin-chat/admin-chat.component';
 import { AdminParametresComponent } from './pages/admin-parametres/admin-parametres.component';
 import { CalendarViewComponent } from '@shared/components/calendar-view/calendar-view.component';
 
+import { AdminCongesComponent } from './pages/admin-conges/admin-conges.component';
+
 export const ADMIN_ROUTES: Routes = [
   { path: '', component: AdminDashboardComponent, pathMatch: 'full' },
   { path: 'dashboard', component: AdminDashboardComponent },
   { path: 'employes', component: AdminEmployesComponent },
   { path: 'projets', component: AdminProjetsComponent },
   { path: 'rh', component: AdminRhComponent },
+  { path: 'conges', component: AdminCongesComponent },
   { path: 'calendar', component: CalendarViewComponent },
   { path: 'paiements', component: AdminPaiementsComponent },
   { path: 'chat', component: AdminChatComponent },

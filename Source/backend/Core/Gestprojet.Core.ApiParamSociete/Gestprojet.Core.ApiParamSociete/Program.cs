@@ -48,6 +48,7 @@ builder.Services.AddScoped<IAbonnementCoreRepository, AbonnementCoreRepository>(
 builder.Services.AddScoped<IDemandeCongeCoreRepository, DemandeCongeCoreRepository>();
 builder.Services.AddScoped<IJourFerieCoreRepository, JourFerieCoreRepository>();
 builder.Services.AddScoped<ITestCoreRepository, TestCoreRepository>();
+builder.Services.AddScoped<IPaiementCoreRepository, PaiementCoreRepository>();
 
 // Business - Only existing in Core project
 builder.Services.AddScoped<IUtilisateurCoreBusiness, UtilisateurCoreBusiness>();
@@ -69,6 +70,7 @@ builder.Services.AddScoped<IAbonnementCoreBusiness, AbonnementCoreBusiness>();
 builder.Services.AddScoped<IDemandeCongeCoreBusiness, DemandeCongeCoreBusiness>();
 builder.Services.AddScoped<IJourFerieCoreBusiness, JourFerieCoreBusiness>();
 builder.Services.AddScoped<ITestCoreBusiness, TestCoreBusiness>();
+builder.Services.AddScoped<IPaiementCoreBusiness, PaiementCoreBusiness>();
 
 // AI Services
 builder.Services.AddScoped<IOllamaService, OllamaService>();

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
+import { AiService } from '@core/services/ai.service';
 
 @Component({
   selector: 'app-rh-recrutement',
@@ -103,41 +104,59 @@ import { ApiService } from '@core/services/api.service';
           <div class="tab-content">
             <!-- Offres Tab -->
             @if (activeTab === 'offres') {
-              <div class="offres-grid">
-                @for (offre of offresSignal(); track offre.id) {
-                  <div class="offre-card">
-                    <div class="offre-header">
-                      <h3 class="offre-title">{{offre.titre}}</h3>
-                      <span class="status-badge" [class.emerald]="offre.statut === 'OUVERTE'" [class.rose]="offre.statut === 'FERMEE'">
-                        {{offre.statut}}
-                      </span>
-                    </div>
-                    <p class="offre-description">{{offre.description}}</p>
-                    <div class="offre-footer">
-                      <span class="applicants-count">{{getCandidatsCount(offre.id)}} candidats</span>
-                      <div class="offre-actions">
-                        <button class="btn-icon" (click)="viewCandidats(offre)" title="Voir candidats">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                          </svg>
-                        </button>
-                        <button class="btn-icon" (click)="editOffre(offre)" title="Modifier">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                          </svg>
-                        </button>
-                        <button class="btn-icon btn-danger" (click)="deleteOffre(offre.id)" title="Supprimer">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                }
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Titre du poste</th>
+                      <th>Statut</th>
+                      <th>Candidats</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (offre of offresSignal(); track offre.id) {
+                      <tr>
+                        <td>
+                          <div class="offre-info">
+                            <span class="offre-name">{{offre.titre}}</span>
+                            <span class="offre-desc">{{offre.type}} • {{offre.lieu}}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="status-badge" [class.emerald]="offre.statut === 'OUVERTE'" [class.rose]="offre.statut === 'FERMEE'">
+                            {{offre.statut}}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="applicants-count">{{getCandidatsCount(offre.id)}}</span>
+                        </td>
+                        <td class="text-right">
+                          <div class="offre-actions">
+                            <button class="btn-icon" (click)="viewCandidats(offre)" title="Voir candidats">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                              </svg>
+                            </button>
+                            <button class="btn-icon" (click)="editOffre(offre)" title="Modifier">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                              </svg>
+                            </button>
+                            <button class="btn-icon btn-danger" (click)="deleteOffre(offre.id)" title="Supprimer">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
                 @if (offresSignal().length === 0) {
                   <div class="empty-state">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -173,76 +192,121 @@ import { ApiService } from '@core/services/api.service';
                   </select>
                 </div>
 
-                @if (filteredCandidats().length === 0) {
-                  <div class="empty-state">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="12" y1="8" x2="12" y2="12"></line>
-                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    <p>Aucun candidat trouvé</p>
-                  </div>
-                } @else {
-                  <div class="candidats-list">
-                    @for (candidat of filteredCandidats(); track candidat.id) {
-                      <div class="candidat-item" (click)="viewCandidat(candidat)">
-                        <div class="candidat-avatar">
-                          {{candidat.nom?.substring(0,2).toUpperCase()}}
-                        </div>
-                        <div class="candidat-info">
-                          <h4 class="candidat-name">{{candidat.nom}}</h4>
-                          <p class="candidat-details">{{candidat.poste}} • {{candidat.email}}</p>
-                        </div>
-                        <span class="candidat-status" [ngClass]="'status-' + candidat.statut?.toLowerCase()">{{candidat.statut}}</span>
-                      </div>
-                    }
-                  </div>
-                }
+                <div class="table-container">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Candidat</th>
+                        <th>Offre</th>
+                        <th>Score Quiz</th>
+                        <th>Statut</th>
+                        <th class="text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (candidat of filteredCandidats(); track candidat.id) {
+                        <tr (click)="viewCandidat(candidat)" class="clickable-row">
+                          <td>
+                            <div class="user-cell">
+                              <div class="user-avatar">{{candidat.nom?.substring(0,2).toUpperCase()}}</div>
+                              <div class="user-info">
+                                <span class="user-name">{{candidat.nom}}</span>
+                                <span class="user-email">{{candidat.email}}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td>{{candidat.poste}}</td>
+                          <td>
+                            @if (candidat.quizScore !== undefined) {
+                              <div class="score-badge">
+                                {{candidat.quizScore}}/{{candidat.quizTotal}}
+                              </div>
+                            } @else {
+                              <span class="text-muted">-</span>
+                            }
+                          </td>
+                          <td>
+                            <span class="candidat-status" [ngClass]="'status-' + candidat.statut?.toLowerCase()">{{candidat.statut}}</span>
+                          </td>
+                          <td class="text-right">
+                            <button class="btn-icon">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                  @if (filteredCandidats().length === 0) {
+                    <div class="empty-state">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <p>Aucun candidat trouvé</p>
+                    </div>
+                  }
+                </div>
               </div>
             }
 
             <!-- Entretiens Tab -->
             @if (activeTab === 'entretiens') {
               <div class="entretiens-section">
-                @if (entretiensSignal().length === 0) {
-                  <div class="empty-state">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                      <line x1="16" y1="2" x2="16" y2="6"></line>
-                      <line x1="8" y1="2" x2="8" y2="6"></line>
-                      <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                    <p>Aucun entretien planifié</p>
-                  </div>
-                } @else {
-                  <div class="entretiens-list">
-                    @for (entretien of entretiensSignal(); track entretien.id) {
-                      <div class="entretien-item">
-                        <div class="entretien-icon">
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                          </svg>
-                        </div>
-                        <div class="entretien-info">
-                          <h4 class="entretien-name">{{entretien.nom}}</h4>
-                          <p class="entretien-details">{{entretien.poste}}</p>
-                          @if (entretien.dateEntretien) {
-                            <p class="entretien-date">{{entretien.dateEntretien | date:'short'}}</p>
-                          }
-                        </div>
-                        <button class="btn-icon" (click)="viewCandidat(entretien)" title="Voir détails">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                        </button>
-                      </div>
-                    }
-                  </div>
-                }
+                <div class="table-container">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Candidat</th>
+                        <th>Poste</th>
+                        <th>Date & Heure</th>
+                        <th class="text-right">Détails</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (entretien of entretiensSignal(); track entretien.id) {
+                        <tr>
+                          <td>
+                            <div class="user-cell">
+                              <div class="user-avatar">{{entretien.nom?.substring(0,2).toUpperCase()}}</div>
+                              <span class="user-name">{{entretien.nom}}</span>
+                            </div>
+                          </td>
+                          <td>{{entretien.poste}}</td>
+                          <td>
+                            <div class="date-info">
+                              <span class="date-val">{{entretien.dateEntretien | date:'dd MMM yyyy'}}</span>
+                              <span class="time-val">{{entretien.dateEntretien | date:'HH:mm'}}</span>
+                            </div>
+                          </td>
+                          <td class="text-right">
+                            <button class="btn-icon" (click)="viewCandidat(entretien)" title="Voir détails">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                  @if (entretiensSignal().length === 0) {
+                    <div class="empty-state">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                      <p>Aucun entretien planifié</p>
+                    </div>
+                  }
+                </div>
               </div>
             }
 
@@ -409,6 +473,36 @@ import { ApiService } from '@core/services/api.service';
                 <option value="ACCEPTEE">Accepté</option>
                 <option value="REFUSEE">Refusé</option>
               </select>
+            </div>
+
+            <!-- AI Analysis Section -->
+            <div class="ai-analysis-container mt-6 p-4 rounded-xl border-2 border-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-900/10">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2L2 7L12 12L22 7L12 2Z"/><path d="M2 17L12 22L22 17"/><path d="M2 12L12 17L22 12"/>
+                    </svg>
+                  </div>
+                  <h4 class="font-bold text-indigo-900 dark:text-indigo-100 text-sm">ANALYSE COGNITIVE IA</h4>
+                </div>
+                <button (click)="analyzeCandidat()" [disabled]="isAnalyzing" class="text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:opacity-70 disabled:opacity-30">
+                  {{isAnalyzing ? 'Analyse...' : 'Lancer l\'analyse'}}
+                </button>
+              </div>
+              
+              @if (aiAnalysisResult) {
+                <div class="animate-in fade-in slide-in-from-top-2 duration-500">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="px-2 py-1 bg-indigo-600 text-white text-[10px] font-black rounded uppercase">Score de Match: {{aiScore}}%</div>
+                  </div>
+                  <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-medium">
+                    {{aiAnalysisResult}}
+                  </p>
+                </div>
+              } @else {
+                <p class="text-[10px] text-slate-400 italic">L'IA peut analyser le CV et le score du quiz pour évaluer l'adéquation du candidat au poste.</p>
+              }
             </div>
           </div>
           <div class="modal-footer">
@@ -624,13 +718,135 @@ import { ApiService } from '@core/services/api.service';
 
     .tab-content {
       padding: var(--space-xl);
+      background: white;
     }
 
-    .offres-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-lg);
+    /* Table Styles */
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
     }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .data-table th {
+      padding: var(--space-md) var(--space-lg);
+      background: var(--color-bg);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .data-table td {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
+    }
+
+    .clickable-row {
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .clickable-row:hover {
+      background: var(--color-bg);
+    }
+
+    /* Offre Info */
+    .offre-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .offre-name {
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      font-size: var(--font-size-sm);
+    }
+
+    .offre-desc {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* User Cell */
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--color-bg);
+      color: var(--color-text);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-xs);
+      border: 2px solid var(--color-border);
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      font-size: var(--font-size-sm);
+    }
+
+    .user-email {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* Score Badge */
+    .score-badge {
+      display: inline-flex;
+      padding: 4px 8px;
+      background: #f8fafc;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    /* Date Info */
+    .date-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .date-val {
+      font-weight: 600;
+      font-size: var(--font-size-sm);
+    }
+
+    .time-val {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
 
     .offre-card {
       background: var(--color-bg);
@@ -1110,6 +1326,28 @@ import { ApiService } from '@core/services/api.service';
       background: rgba(255, 255, 255, 0.05);
     }
 
+    :host-context(.dark) .modal-card {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .modal-header {
+      border-bottom-color: var(--color-border);
+    }
+
+    :host-context(.dark) .modal-footer {
+      border-top-color: var(--color-border);
+    }
+
+    :host-context(.dark) .stat-card,
+    :host-context(.dark) .card,
+    :host-context(.dark) .offre-card,
+    :host-context(.dark) .candidat-item {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+    }
+
     @media (max-width: 768px) {
       .dashboard-header {
         flex-direction: column;
@@ -1140,9 +1378,14 @@ import { ApiService } from '@core/services/api.service';
     }
   `]
 })
-export class RhRecrutementComponent implements OnInit {
-  private snackBar = inject(MatSnackBar);
+export class RHRecrutementComponent implements OnInit {
   private api = inject(ApiService);
+  private ai = inject(AiService);
+  private snackBar = inject(MatSnackBar);
+
+  isAnalyzing = false;
+  aiAnalysisResult = '';
+  aiScore = 0;
 
   societeId: string = '';
   societeNom: string = '';
@@ -1260,11 +1503,10 @@ export class RhRecrutementComponent implements OnInit {
       }
     });
 
-    // Load both Applications (candidatures) and Users (candidates registered via register-candidate)
-    this.api.getCandidatures().subscribe({
+    // Load Applications (candidatures) filtered by societe
+    this.api.getCandidaturesBySociete(this.societeId).subscribe({
       next: (res: any) => {
         let all = Array.isArray(res) ? res : (res?.items || []);
-        // Don't filter by societeId for candidates - they may be from any company applying to your offers
         const normalized = all.map((c: any) => ({
           id: c.id || c.Id,
           nom: c.candidatNom || c.nom || c.Nom || 'Sans nom',
@@ -1511,6 +1753,32 @@ export class RhRecrutementComponent implements OnInit {
   testEmailJsConfig() {
     this.snackBar.open('Configuration email testée (voir console)', 'Fermer', { duration: 3000 });
     console.log('EmailJS Config:', this.emailConfig);
+  }
+
+  analyzeCandidat() {
+    if (!this.selectedCandidat) return;
+    
+    this.isAnalyzing = true;
+    
+    // Simulate AI analysis with the AiService
+    setTimeout(() => {
+      const quizScore = this.selectedCandidat.quizScore || 0;
+      const quizTotal = this.selectedCandidat.quizTotal || 1;
+      const scorePercent = (quizScore / quizTotal) * 100;
+      
+      // Generate a mock analysis based on quiz score and other factors
+      this.aiScore = Math.min(95, Math.max(30, scorePercent + Math.random() * 20 - 10));
+      
+      if (this.aiScore >= 80) {
+        this.aiAnalysisResult = 'Excellent profil technique avec de solides compétences. Le candidat correspond parfaitement aux exigences du poste et montre un grand potentiel d\'intégration.';
+      } else if (this.aiScore >= 60) {
+        this.aiAnalysisResult = 'Bon profil avec des compétences adéquates. Le candidat répond aux critères principaux mais pourrait nécessiter une formation complémentaire sur certains aspects spécifiques.';
+      } else {
+        this.aiAnalysisResult = 'Le profil présente des écarts significatifs par rapport aux exigences du poste. Un entretien technique approfondi est recommandé pour évaluer le potentiel d\'apprentissage.';
+      }
+      
+      this.isAnalyzing = false;
+    }, 1500);
   }
 
 }

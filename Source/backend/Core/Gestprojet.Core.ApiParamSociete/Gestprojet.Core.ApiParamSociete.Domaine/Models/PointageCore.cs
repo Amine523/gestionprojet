@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Gestprojet.Core.ApiParamSociete.Domain.Models
 {
@@ -8,8 +8,8 @@ namespace Gestprojet.Core.ApiParamSociete.Domain.Models
         public string? UtilisateurId { get; set; }
         public string? TypeId { get; set; }
         public DateTime? Date { get; set; }
-        public TimeOnly? HeureEntree { get; set; }
-        public TimeOnly? HeureSortie { get; set; }
+        public TimeSpan? HeureEntree { get; set; }
+        public TimeSpan? HeureSortie { get; set; }
         public double? Duree { get; set; }
         [MaxLength(255)]
         public string Note { get; set; }

@@ -6,7 +6,7 @@ import emailjs from '@emailjs/browser';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private baseUrl = 'http://localhost:5221/api';
+  public baseUrl = 'http://localhost:5221/api';
   private tokenKey = 'app_token';
   private permissionsKey = 'app_permissions';
 
@@ -25,6 +25,22 @@ export class ApiService {
       headers['Authorization'] = `Bearer ${token}`;
     }
     return new HttpHeaders(headers);
+  }
+
+  get<T>(url: string): Observable<T> {
+    return this.http.get<T>(`${this.baseUrl}/${url}`, { headers: this.getHeaders() });
+  }
+
+  post<T>(url: string, data: any): Observable<T> {
+    return this.http.post<T>(`${this.baseUrl}/${url}`, data, { headers: this.getHeaders() });
+  }
+
+  put<T>(url: string, data: any): Observable<T> {
+    return this.http.put<T>(`${this.baseUrl}/${url}`, data, { headers: this.getHeaders() });
+  }
+
+  delete<T>(url: string): Observable<T> {
+    return this.http.delete<T>(`${this.baseUrl}/${url}`, { headers: this.getHeaders() });
   }
 
   setToken(token: string): void { localStorage.setItem(this.tokenKey, token); }
@@ -85,7 +101,11 @@ export class ApiService {
   getSocietesParMois(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/dashboard/societes-par-mois`, { headers: this.getHeaders() }); }
   getSocietesRecentes(limit = 5): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/dashboard/societes-recentes?limit=${limit}`, { headers: this.getHeaders() }); }
   getAbonnementsStats(): Observable<any> { return this.http.get(`${this.baseUrl}/dashboard/abonnements-stats`, { headers: this.getHeaders() }); }
-  getActiviteRecente(limit = 10): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/dashboard/activite-recente?limit=${limit}`, { headers: this.getHeaders() }); }
+  getActiviteRecente(limit = 10, societeId?: string): Observable<any[]> { 
+    let url = `${this.baseUrl}/dashboard/activite-recente?limit=${limit}`;
+    if (societeId) url += `&societeId=${societeId}`;
+    return this.http.get<any[]>(url, { headers: this.getHeaders() }); 
+  }
   getUptime(): Observable<any> { return this.http.get(`${this.baseUrl}/dashboard/uptime`, { headers: this.getHeaders() }); }
   getAlertes(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/dashboard/alertes`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
 
@@ -108,7 +128,7 @@ export class ApiService {
     };
     return this.http.post(`${this.baseUrl}/societes/ajouter`, payload, { 
       headers: this.getHeaders(),
-      responseType: 'text'
+      responseType: 'text' as 'json'
     });
   }
   updateSociete(data: any): Observable<any> {
@@ -122,9 +142,17 @@ export class ApiService {
       PlanAbonnement: data.planAbonnement || data.PlanAbonnement || '',
       Actif: data.actif !== undefined ? data.actif : data.Actif
     };
-    return this.http.put(`${this.baseUrl}/societes/modifier`, payload, { headers: this.getHeaders() });
+    return this.http.put(`${this.baseUrl}/societes/modifier`, payload, { 
+      headers: this.getHeaders(),
+      responseType: 'text' as 'json'
+    });
   }
-  deleteSociete(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/societes/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  deleteSociete(id: string): Observable<any> { 
+    return this.http.delete(`${this.baseUrl}/societes/supprimer/id/${id}`, { 
+      headers: this.getHeaders(),
+      responseType: 'text' as 'json'
+    }); 
+  }
   updateSocieteModules(id: string, modules: string): Observable<any> { return this.http.put(`${this.baseUrl}/societes/${id}/modules`, { enabledModules: modules }, { headers: this.getHeaders() }); }
 
   // Utilisateurs
@@ -137,19 +165,19 @@ export class ApiService {
   }
   createUtilisateur(data: any): Observable<any> {
     const payload = {
-      id: data.id || data.Id || '',
-      nom: data.nom || data.Nom || '',
-      email: data.email || data.Email || '',
-      motDePasse: data.motDePasse || data.MotDePasse || data.password || '123456',
-      cv: data.cv || data.Cv || '',
-      typeUtilisateurId: data.typeUtilisateurId || data.TypeUtilisateurId || 'T005',
-      societeId: data.societeId || data.SocieteId || '',
-      roleId: data.roleId || data.RoleId || 'R001',
-      actif: data.actif !== undefined ? data.actif : (data.Actif !== undefined ? data.Actif : true)
+      Id: data.id || data.Id || '',
+      Nom: data.nom || data.Nom || '',
+      Email: data.email || data.Email || '',
+      MotDePasse: data.motDePasse || data.MotDePasse || data.password || '123456',
+      Cv: data.cv || data.Cv || '',
+      TypeUtilisateurId: data.typeUtilisateurId || data.TypeUtilisateurId || 'T005',
+      SocieteId: data.societeId || data.SocieteId || '',
+      RoleId: data.roleId || data.RoleId || 'R001',
+      Actif: data.actif !== undefined ? data.actif : (data.Actif !== undefined ? data.Actif : true)
     };
     return this.http.post(`${this.baseUrl}/utilisateurs/ajouter`, payload, { 
       headers: this.getHeaders(),
-      responseType: 'text'
+      responseType: 'text' as 'json'
     });
   }
   updateUtilisateur(id: string, data: any): Observable<any> {
@@ -167,9 +195,17 @@ export class ApiService {
       Actif: data.actif !== undefined ? data.actif : (data.Actif !== undefined ? data.Actif : true),
       RoleId: data.roleId || data.RoleId || 'R001'
     };
-    return this.http.put(`${this.baseUrl}/utilisateurs/modifier`, payload, { headers: this.getHeaders() });
+    return this.http.put(`${this.baseUrl}/utilisateurs/modifier`, payload, { 
+      headers: this.getHeaders(),
+      responseType: 'text' as 'json'
+    });
   }
-  deleteUtilisateur(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/utilisateurs/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  deleteUtilisateur(id: string): Observable<any> { 
+    return this.http.delete(`${this.baseUrl}/utilisateurs/supprimer/id/${id}`, { 
+      headers: this.getHeaders(),
+      responseType: 'text' as 'json'
+    }); 
+  }
   getEmployesBySociete(societeId: string): Observable<any[]> {
     const critere = { Criteres: { 'SocieteId': societeId } };
     return this.http.post<any[]>(`${this.baseUrl}/utilisateurs/liste-par-condition`, critere, { headers: this.getHeaders() });
@@ -199,15 +235,36 @@ export class ApiService {
   }
   saveProjet(data: any): Observable<any> {
     const payload = this.normalizeProjet(data);
-    return payload.Id ? this.http.put(`${this.baseUrl}/projets/modifier`, payload, { headers: this.getHeaders() }) : this.http.post(`${this.baseUrl}/projets/ajouter`, payload, { headers: this.getHeaders() });
+    return payload.Id 
+      ? this.http.put(`${this.baseUrl}/projets/modifier`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' }) 
+      : this.http.post(`${this.baseUrl}/projets/ajouter`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' });
   }
-  createProjet(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/projets/ajouter`, this.normalizeProjet(data), { headers: this.getHeaders(), responseType: 'text' }); }
-  updateProjet(data: any): Observable<any> { return this.http.put(`${this.baseUrl}/projets/modifier`, this.normalizeProjet(data), { headers: this.getHeaders() }); }
-  deleteProjet(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/projets/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  createProjet(data: any): Observable<any> { 
+    return this.http.post(`${this.baseUrl}/projets/ajouter`, this.normalizeProjet(data), { 
+      headers: this.getHeaders(), 
+      responseType: 'text' as 'json' 
+    }); 
+  }
+  updateProjet(data: any): Observable<any> { 
+    return this.http.put(`${this.baseUrl}/projets/modifier`, this.normalizeProjet(data), { 
+      headers: this.getHeaders(), 
+      responseType: 'text' as 'json' 
+    }); 
+  }
+  deleteProjet(id: string): Observable<any> { 
+    return this.http.delete(`${this.baseUrl}/projets/supprimer/id/${id}`, { 
+      headers: this.getHeaders(), 
+      responseType: 'text' as 'json' 
+    }); 
+  }
   addMembreAuProjet(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/membresdeprojet`, data, { headers: this.getHeaders() }); }
   getBurndown(id: string): Observable<any> { return this.http.get(`${this.baseUrl}/projets/${id}/burndown`, { headers: this.getHeaders() }); }
   getProjetsBySociete(societeId: string): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/projets/ParSociete/${societeId}`, { headers: this.getHeaders() }); }
-  getTaches(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/taches`, { headers: this.getHeaders() }); }
+  getTaches(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/taches/liste`, { headers: this.getHeaders() }); }
+  getTachesBySociete(societeId: string): Observable<any[]> {
+    const critere = { Criteres: { 'SocieteId': societeId } };
+    return this.http.post<any[]>(`${this.baseUrl}/taches/liste-par-condition`, critere, { headers: this.getHeaders() });
+  }
   saveTache(data: any): Observable<any> {
     const payload = {
       Id: data.id || data.Id || '',
@@ -229,37 +286,24 @@ export class ApiService {
 
   // RH & Pointage
   clockIn(uId: string, sId: string, type = 'NORMAL', note?: string): Observable<any> {
-    const now = new Date();
     const payload = {
-      Id: '', // Let backend generate the ID
-      UtilisateurId: uId,
-      TypeId: type,
-      Date: now.toISOString().split('T')[0],
-      HeureEntree: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
-      HeureSortie: null,
-      Duree: null,
-      Note: note || '',
-      Actif: true
+      utilisateurId: uId,
+      societeId: sId,
+      date: new Date().toISOString(),
+      typeId: type,
+      note: note || ''
     };
-    console.log('ClockIn payload:', payload);
-    return this.http.post(`${this.baseUrl}/pointage/ajouter`, payload, { headers: this.getHeaders() });
+    return this.http.post(`${this.baseUrl}/rh/enhanced/clock-in`, payload, { headers: this.getHeaders() });
   }
-  clockOut(uId: string, sId: string, note?: string): Observable<any> {
-    // Update the latest pointage for today with HeureSortie
-    const now = new Date();
+
+  clockOut(uId: string, sId: string, note?: string, id?: string): Observable<any> {
     const payload = {
-      Id: '', // Let backend generate the ID
-      UtilisateurId: uId,
-      TypeId: 'NORMAL',
-      Date: now.toISOString().split('T')[0],
-      HeureEntree: null,
-      HeureSortie: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`,
-      Duree: null,
-      Note: note || '',
-      Actif: true
+      utilisateurId: uId,
+      societeId: sId,
+      pointageId: id,
+      note: note || ''
     };
-    console.log('ClockOut payload:', payload);
-    return this.http.post(`${this.baseUrl}/pointage/ajouter`, payload, { headers: this.getHeaders() });
+    return this.http.post(`${this.baseUrl}/rh/enhanced/clock-out`, payload, { headers: this.getHeaders() });
   }
   getPointages(uId?: string): Observable<any[]> {
     if (uId) {
@@ -315,9 +359,15 @@ export class ApiService {
         const employeMap = new Map(employes.map((e: any) => [e.id || e.Id, e]));
         return demandes.filter((d: any) => {
           const uId = d.utilisateurId || d.UtilisateurId;
-          const matchesSociete = employeMap.has(uId) || d.societeId === sId || d.SocieteId === sId;
-          const status = d.status || d.Status || '';
-          const matchesStatus = status === 'En attente' || status === 'En_attente' || status === 'EN_ATTENTE';
+
+          const status = (d.status || d.Status || '').toString().toLowerCase();
+          const matchesStatus = status === 'en attente' || status === 'en_attente' || status === 'pending';
+          
+          const dSocieteId = (d.societeId || d.SocieteId || '').toString().toLowerCase();
+          const targetSocieteId = (sId || '').toString().toLowerCase();
+          
+          const matchesSociete = (targetSocieteId && dSocieteId === targetSocieteId) || employeMap.has(uId);
+          
           return matchesSociete && matchesStatus;
         }).map((d: any) => {
           const uId = d.utilisateurId || d.UtilisateurId;
@@ -342,13 +392,26 @@ export class ApiService {
   }
   getRapportPresenceUrl(sId: string, m: number, a: number, f: string = 'pdf'): string { return `${this.baseUrl}/pointage/rapport?societeId=${sId}&mois=${m}&annee=${a}&format=${f}`; }
   getRapportPresence(sId: string, m: number, a: number): Observable<Blob> { return this.http.get(`${this.baseUrl}/pointage/rapport-file?societeId=${sId}&mois=${m}&annee=${a}`, { responseType: 'blob', headers: this.getHeaders() }); }
-  getWorkedHoursReal(uId: string, date?: string): Observable<any> { return this.http.get(`${this.baseUrl}/pointage/heures-travaillees/${uId}?date=${date || ''}`, { headers: this.getHeaders() }); }
+  getWorkedHoursReal(uId: string, date?: string): Observable<any> { 
+    return this.http.get(`${this.baseUrl}/rh/enhanced/utilisateur/${uId}/heures-travaillees?date=${date || ''}`, { headers: this.getHeaders() }); 
+  }
   getSoldeConge(uId: string): Observable<any> { return this.http.get(`${this.baseUrl}/DemandesConge/solde/${uId}`, { headers: this.getHeaders() }); }
   createDemandeCongeReal(dto: any): Observable<any> { return this.createDemandeConge(dto); }
+  private getHeadersWithMultipart(): HttpHeaders {
+    const token = localStorage.getItem(this.tokenKey);
+    const headers: { [key: string]: string } = { }; // No Content-Type for FormData
+    if (token && token.split('.').length === 3) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return new HttpHeaders(headers);
+  }
+
   uploadJustificatif(id: string, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post(`${this.baseUrl}/attachement/ajouter`, { referenceId: id, type: 'JustificatifConge', file: formData }, { headers: this.getHeaders() });
+    formData.append('referenceId', id);
+    formData.append('type', 'JustificatifConge');
+    return this.http.post(`${this.baseUrl}/attachement/upload`, formData, { headers: this.getHeadersWithMultipart() });
   }
 
   // Demandes de Congé
@@ -409,9 +472,18 @@ export class ApiService {
     }
     return this.http.put(`${this.baseUrl}/OffreEmploI/modifier`, payload, { headers: this.getHeaders() });
   }
-  deleteOffreEmploi(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/OffreEmploI/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  deleteOffreEmploi(id: string): Observable<any> { 
+    return this.http.delete(`${this.baseUrl}/OffreEmploI/supprimer/id/${id}`, { 
+      headers: this.getHeaders(),
+      responseType: 'text' as 'json'
+    }); 
+  }
   getCandidatures(): Observable<any[]> {
     const critere = { Criteres: { 'Type': 'Candidature' } };
+    return this.http.post<any[]>(`${this.baseUrl}/application/liste-par-condition`, critere, { headers: this.getHeaders() }).pipe(catchError(() => of([])));
+  }
+  getCandidaturesBySociete(societeId: string): Observable<any[]> {
+    const critere = { Criteres: { 'SocieteId': societeId, 'Type': 'Candidature' } };
     return this.http.post<any[]>(`${this.baseUrl}/application/liste-par-condition`, critere, { headers: this.getHeaders() }).pipe(catchError(() => of([])));
   }
   deleteCandidature(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/application/supprimer/id/${id}`, { headers: this.getHeaders() }); }
@@ -540,7 +612,12 @@ export class ApiService {
     };
     return payload.Id ? this.http.put(`${this.baseUrl}/module/modifier`, payload, { headers: this.getHeaders() }) : this.http.post(`${this.baseUrl}/module/ajouter`, payload, { headers: this.getHeaders() });
   }
-  deleteModule(id: string): Observable<any> { return this.http.delete(`${this.baseUrl}/module/supprimer/id/${id}`, { headers: this.getHeaders() }); }
+  deleteModule(id: string): Observable<any> { 
+    return this.http.delete(`${this.baseUrl}/module/supprimer/id/${id}`, { 
+      headers: this.getHeaders(),
+      responseType: 'text' as 'json'
+    }); 
+  }
   sendTestAuthorizationEmail(data: any): Observable<any> {
     const config = this.getEmailJsConfig();
     if (!config || !config.serviceId || !config.publicKey || !config.templates.testAuthorized) {
@@ -602,6 +679,29 @@ export class ApiService {
 
   chatWithAI(message: string, context: string = ''): Observable<any> {
     return this.http.post(`${this.baseUrl}/ai/chat`, { message, context }, { headers: this.getHeaders() });
+  }
+
+  // Notifications
+  sendNotificationToUser(userId: string, title: string, message: string, type: string = 'info'): Observable<any> {
+    return this.http.post(`${this.baseUrl}/notifications/send-to-user`, { UserId: userId, Title: title, Message: message, Type: type }, { headers: this.getHeaders() });
+  }
+  sendNotificationToSociete(societeId: string, title: string, message: string, type: string = 'info'): Observable<any> {
+    return this.http.post(`${this.baseUrl}/notifications/send-to-societe`, { SocieteId: societeId, Title: title, Message: message, Type: type }, { headers: this.getHeaders() });
+  }
+  sendNotificationToProject(projectId: string, title: string, message: string, type: string = 'info'): Observable<any> {
+    return this.http.post(`${this.baseUrl}/notifications/send-to-project`, { ProjectId: projectId, Title: title, Message: message, Type: type }, { headers: this.getHeaders() });
+  }
+  // Demandes de création de société
+  soumettreDemandeSociete(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/DemandeSociete/soumettre`, data);
+  }
+
+  getDemandesSociete(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/DemandeSociete/liste`, { headers: this.getHeaders() });
+  }
+
+  traiterDemandeSociete(demandeId: string, approuver: boolean): Observable<any> {
+    return this.http.post(`${this.baseUrl}/DemandeSociete/traiter`, { demandeId, approuver }, { headers: this.getHeaders() });
   }
 }
 

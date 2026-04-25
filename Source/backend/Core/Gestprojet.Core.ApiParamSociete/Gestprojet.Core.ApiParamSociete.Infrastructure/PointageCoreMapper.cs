@@ -12,8 +12,8 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
                 UtilisateurId = pointageCore.UtilisateurId,
                 TypeId = pointageCore.TypeId,
                 Date = pointageCore.Date,
-                HeureEntree = pointageCore.HeureEntree.HasValue ? pointageCore.HeureEntree.Value.ToTimeSpan() : (TimeSpan?)null,
-                HeureSortie = pointageCore.HeureSortie.HasValue ? pointageCore.HeureSortie.Value.ToTimeSpan() : (TimeSpan?)null,
+                HeureEntree = pointageCore.HeureEntree,
+                HeureSortie = pointageCore.HeureSortie,
                 Duree = pointageCore.Duree,
                 Note = pointageCore.Note,
                 Actif = pointageCore.Actif

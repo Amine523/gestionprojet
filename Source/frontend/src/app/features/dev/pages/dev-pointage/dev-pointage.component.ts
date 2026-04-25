@@ -5,7 +5,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 
 @Component({
-  selector: 'app-chef-pointage',
+  selector: 'app-dev-pointage',
   standalone: true,
   imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
@@ -21,7 +21,7 @@ import { ApiService } from '@core/services/api.service';
             </svg>
           </div>
           <div>
-            <h1 class="header-title">Monitoring Présence (Chef)</h1>
+            <h1 class="header-title">Monitoring Présence (Dev)</h1>
             <p class="header-subtitle">Équipe {{societeNom}} • {{currentDateDisplay}}</p>
           </div>
         </div>
@@ -200,7 +200,7 @@ import { ApiService } from '@core/services/api.service';
     .empty-state p { margin: 0; font-size: 14px; }
   `]
 })
-export class ChefPointageComponent implements OnInit {
+export class DevPointageComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
 

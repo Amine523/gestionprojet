@@ -95,5 +95,34 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             var result = await _attachementBusiness.ListeDetailleParConditionParPageAsync(critere ?? new ConditionRecherche(), pageNumero, pageTaille);
             return Ok(result);
         }
+
+        [HttpPost("upload")]
+        public async Task<IActionResult> Upload([FromForm] Microsoft.AspNetCore.Http.IFormFile file, [FromForm] string referenceId, [FromForm] string type)
+        {
+            if (file == null || file.Length == 0) return BadRequest("Fichier manquant");
+            
+            var uploads = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!System.IO.Directory.Exists(uploads)) System.IO.Directory.CreateDirectory(uploads);
+
+            var fileName = $"{System.Guid.NewGuid()}_{file.FileName}";
+            var filePath = System.IO.Path.Combine(uploads, fileName);
+
+            using (var stream = new System.IO.FileStream(filePath, System.IO.FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var attachement = new AttachementCore
+            {
+                Id = System.Guid.NewGuid().ToString(),
+                CheminFichier = $"/uploads/{fileName}",
+                TypeFichier = type,
+                TacheId = referenceId,
+                Actif = true
+            };
+
+            var result = await _attachementBusiness.AjouterOuModifierAsync(attachement);
+            return result.Success ? Ok(new { success = true, url = attachement.CheminFichier }) : BadRequest(result.Message);
+        }
     }
 }

@@ -109,7 +109,7 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
               @for (t of kanban.todo; track t.id) {
                 <div (click)="startTask(t)" class="kanban-item">
                   <div class="kanban-item-header">
-                    <span class="task-id">#{{t.id.slice(-4)}}</span>
+                    <span class="task-id">#{{(t.id?.toString() || '').slice(-4)}}</span>
                     <span class="task-priority">{{t.priorite}}</span>
                   </div>
                   <p class="task-name">{{t.nom || t.titre}}</p>
@@ -137,7 +137,7 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
               @for (t of kanban.inprogress; track t.id) {
                 <div class="kanban-item active">
                   <div class="kanban-item-header">
-                    <span class="task-id">#{{t.id.slice(-4)}}</span>
+                    <span class="task-id">#{{(t.id?.toString() || '').slice(-4)}}</span>
                     <span class="status-dot"></span>
                   </div>
                   <p class="task-name">{{t.nom || t.titre}}</p>
@@ -159,7 +159,7 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
               @for (t of kanban.done; track t.id) {
                 <div class="kanban-item done">
                   <div class="kanban-item-header">
-                    <span class="task-id">#{{t.id.slice(-4)}}</span>
+                    <span class="task-id">#{{(t.id?.toString() || '').slice(-4)}}</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
@@ -841,14 +841,14 @@ export class DevDashboardComponent implements OnInit {
           this.stats.progression = 50;
           this.progression = `${50 * 2.83} 283`;
           this.kanban.todo = [
-            { id: 1, titre: 'Fix header bug', priorite: 'High', deadline: '2024-01-20' },
-            { id: 2, titre: 'Implement login', priorite: 'Critical', deadline: '2024-01-18' }
+            { id: 'TAC001', titre: 'Fix header bug', priorite: 'High', deadline: '2024-01-20' },
+            { id: 'TAC002', titre: 'Implement login', priorite: 'Critical', deadline: '2024-01-18' }
           ];
           this.kanban.inprogress = [
-            { id: 3, titre: 'Update dashboard', priorite: 'Medium', deadline: '2024-01-22' }
+            { id: 'TAC003', titre: 'Update dashboard', priorite: 'Medium', deadline: '2024-01-22' }
           ];
           this.kanban.done = [
-            { id: 4, titre: 'Setup project', priorite: 'Low', deadline: '2024-01-15' }
+            { id: 'TAC004', titre: 'Setup project', priorite: 'Low', deadline: '2024-01-15' }
           ];
           this.priorityTasks = this.kanban.todo.concat(this.kanban.inprogress).slice(0, 4);
         }
@@ -861,13 +861,13 @@ export class DevDashboardComponent implements OnInit {
         this.stats.progression = 50;
         this.progression = `${50 * 2.83} 283`;
         this.kanban.todo = [
-          { id: 1, titre: 'Fix header bug', priorite: 'High', deadline: '2024-01-20' }
+          { id: 'TAC001', titre: 'Fix header bug', priorite: 'High', deadline: '2024-01-20' }
         ];
         this.kanban.inprogress = [
-          { id: 2, titre: 'Update dashboard', priorite: 'Medium', deadline: '2024-01-22' }
+          { id: 'TAC002', titre: 'Update dashboard', priorite: 'Medium', deadline: '2024-01-22' }
         ];
         this.kanban.done = [
-          { id: 3, titre: 'Setup project', priorite: 'Low', deadline: '2024-01-15' }
+          { id: 'TAC003', titre: 'Setup project', priorite: 'Low', deadline: '2024-01-15' }
         ];
       }
     });
@@ -940,20 +940,53 @@ export class DevDashboardComponent implements OnInit {
       this.snackBar.open('Terminez votre tâche actuelle d\'abord.', 'Fermer', { duration: 3000 });
       return;
     }
-    this.isTimerActive = true;
-    this.seconds = 0;
-    this.timerInterval = setInterval(() => {
-      this.seconds++;
-      this.updateFormattedTime();
-    }, 1000);
-    this.snackBar.open(`Session démarrée: ${(task as any).nom || (task as any).titre}`, 'Fermer', { duration: 3000 });
+
+    const user = this.api.getCurrentUser();
+    const uid = user?.id || user?.utilisateurId;
+    const sid = user?.societeId;
+
+    if (!uid || !sid) {
+      this.snackBar.open('Erreur: Session utilisateur incomplète.', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    this.api.clockIn(uid, sid, 'NORMAL', `Démarrage tâche: ${task.nom || task.titre}`).subscribe({
+      next: () => {
+        this.isTimerActive = true;
+        this.seconds = 0;
+        this.timerInterval = setInterval(() => {
+          this.seconds++;
+          this.updateFormattedTime();
+        }, 1000);
+        this.snackBar.open(`Session démarrée: ${task.nom || task.titre}`, 'Fermer', { duration: 3000 });
+        this.loadData();
+      },
+      error: () => {
+        this.snackBar.open('Erreur lors du démarrage du pointage.', 'Fermer', { duration: 3000 });
+      }
+    });
   }
 
   stopTimer() {
-    clearInterval(this.timerInterval);
-    this.isTimerActive = false;
-    this.snackBar.open(`Session terminée! Temps total: ${this.formattedTime}`, 'Fermer', { duration: 3000 });
-    this.formattedTime = '00:00:00';
+    const user = this.api.getCurrentUser();
+    const uid = user?.id || user?.utilisateurId;
+    const sid = user?.societeId;
+
+    this.api.clockOut(uid, sid).subscribe({
+      next: () => {
+        clearInterval(this.timerInterval);
+        this.isTimerActive = false;
+        this.snackBar.open(`Session terminée! Temps enregistré.`, 'Fermer', { duration: 3000 });
+        this.formattedTime = '00:00:00';
+        this.loadData();
+      },
+      error: () => {
+        this.snackBar.open('Erreur lors de la clôture du pointage.', 'Fermer', { duration: 3000 });
+        // En cas d'erreur on arrête quand même le timer visuel pour ne pas bloquer l'utilisateur
+        clearInterval(this.timerInterval);
+        this.isTimerActive = false;
+      }
+    });
   }
 
   private updateFormattedTime() {

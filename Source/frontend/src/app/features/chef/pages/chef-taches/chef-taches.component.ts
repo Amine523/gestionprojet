@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ApiService } from '@core/services/api.service';
+import { NotificationService } from '@core/services/notification.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
@@ -645,6 +646,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 export class ChefTachesComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
+  private notificationService = inject(NotificationService);
   
   societeId = '';
   societeNom = 'Votre société';
@@ -658,28 +660,9 @@ export class ChefTachesComponent implements OnInit {
 
   connectedLists = ['todo', 'inprogress', 'done'];
 
-  taches: any[] = [
-    { id: 1, titre: 'Créer la page d\'accueil', description: 'Design et implémentation de la page d\'accueil', priorite: 'High', statut: 'todo', assignee: 'Ahmed Ben Ali', dateLimite: '2026-04-10', projet: 'Application Mobile', commentaires: [{id: 1, auteur: 'Chef', texte: 'Priorité absolue'}] },
-    { id: 2, titre: 'Intégrer API REST', description: 'Connexion avec le backend', priorite: 'High', statut: 'inprogress', assignee: 'Mohamed Salah', dateLimite: '2026-04-15', projet: 'API REST', commentaires: [] },
-    { id: 3, titre: 'Tests unitaires', description: 'Écrire les tests pour le module auth', priorite: 'Medium', statut: 'todo', assignee: 'Leila Amiri', dateLimite: '2026-04-20', projet: 'API REST', commentaires: [] },
-    { id: 4, titre: 'Design dashboard', description: 'Mockups pour le dashboard admin', priorite: 'Medium', statut: 'done', assignee: 'Sofia Karoui', dateLimite: '2026-04-05', projet: 'Dashboard', commentaires: [{id: 1, auteur: 'Chef', texte: 'Bien reçu!'}] },
-    { id: 5, titre: 'Correction bugs login', description: 'Bug sur la validation du mot de passe', priorite: 'High', statut: 'inprogress', assignee: 'Youssef Mejri', dateLimite: '2026-04-08', projet: 'Application Mobile', commentaires: [] },
-    { id: 6, titre: 'Documentation API', description: 'Rédiger la doc Swagger', priorite: 'Low', statut: 'todo', assignee: 'Ahmed Ben Ali', dateLimite: '2026-04-30', projet: 'API REST', commentaires: [] }
-  ];
-
-  membres = [
-    { id: 1, nom: 'Ahmed Ben Ali' },
-    { id: 2, nom: 'Sofia Karoui' },
-    { id: 3, nom: 'Mohamed Salah' },
-    { id: 4, nom: 'Leila Amiri' },
-    { id: 5, nom: 'Youssef Mejri' }
-  ];
-
-  projets = [
-    { id: 1, nom: 'Application Mobile' },
-    { id: 2, nom: 'API REST' },
-    { id: 3, nom: 'Dashboard' }
-  ];
+  taches: any[] = [];
+  membres: any[] = [];
+  projets: any[] = [];
 
   showTacheForm = false;
   editingTache: any = null;
@@ -694,71 +677,75 @@ export class ChefTachesComponent implements OnInit {
   }
   
   loadData() {
-    this.api.getTaches().subscribe({
-      next: (taches) => {
-        this.taches = (taches || []).filter((t: any) => {
-          const sId = t.societeId || t.SocieteId;
-          const matchesSociete = sId === this.societeId;
-          if (!matchesSociete) return false;
+    // Load projets for this societe first, then filter tasks by matching projetId
+    this.api.getProjetsBySociete(this.societeId).subscribe({
+      next: (projets) => {
+        // Load ALL projets for this societe (chef sees all projects)
+        this.projets = (projets || [])
+          .map((p: any) => ({ id: p.id || p.Id, nom: p.nom || p.Nom || p.titre || p.Titre }));
 
-          if (this.selectedProjet) {
-            const pId = t.projetId || t.ProjetId;
-            return pId === this.selectedProjet;
-          }
-          return true;
-        }).map((t: any) => {
-          // Normalisation pour le Kanban
-          const rawStatus = (t.statut || t.Statut || t.status || t.Status || 'To Do').toLowerCase();
-          let normalizedStatus = 'To Do';
-          if (rawStatus === 'done' || rawStatus === 'terminé') normalizedStatus = 'Done';
-          else if (rawStatus === 'in progress' || rawStatus === 'en cours') normalizedStatus = 'In Progress';
+        // After loading projets, fetch all tasks and filter by projetId
+        const projetIds = new Set(this.projets.map((p: any) => p.id));
+        this.api.getTaches().subscribe({
+          next: (taches) => {
+            this.taches = (taches || [])
+              .filter((t: any) => {
+                const pId = t.projetId || t.ProjetId;
+                return projetIds.has(pId) || projetIds.size === 0;
+              })
+              .map((t: any) => {
+                const rawStatus = (t.statut || t.Statut || t.status || t.Status || '').toLowerCase().trim();
+                let normalizedStatus = 'todo';
+                if (rawStatus === 'done' || rawStatus === 'terminé' || rawStatus === 'terminee' || rawStatus === 'terminée') normalizedStatus = 'done';
+                else if (rawStatus === 'in progress' || rawStatus === 'en cours' || rawStatus === 'inprogress') normalizedStatus = 'inprogress';
 
-          const mappedTask = {
-            ...t,
-            id: t.id || t.Id,
-            titre: t.titre || t.Titre,
-            description: t.description || t.Description,
-            statut: normalizedStatus,
-            priorite: t.priorite || t.Priorite || 'Medium',
-            dateLimite: t.dateLimite || t.DateLimite || t.dateFin || t.DateFin,
-            projetId: t.projetId || t.ProjetId,
-            assignees: t.assignees || []
-          };
+                const mappedTask = {
+                  ...t,
+                  id: t.id || t.Id,
+                  titre: t.titre || t.Titre,
+                  description: t.description || t.Description,
+                  statut: normalizedStatus,
+                  priorite: t.priorite || t.Priorite || 'Medium',
+                  dateLimite: t.dateLimite || t.DateLimite || t.dateFin || t.DateFin,
+                  projetId: t.projetId || t.ProjetId,
+                  assignees: t.assignees || []
+                };
 
-          if (t.tacheAssignees && (!mappedTask.assignees || mappedTask.assignees.length === 0)) {
-            mappedTask.assignees = t.tacheAssignees
-              .filter((ta: any) => ta.utilisateur)
-              .map((ta: any) => ta.utilisateur);
-          } else if ((t.utilisateur || t.Utilisateur) && mappedTask.assignees.length === 0) {
-             mappedTask.assignees = [t.utilisateur || t.Utilisateur];
-          }
-          
-          return mappedTask;
+                if (t.tacheAssignees && (!mappedTask.assignees || mappedTask.assignees.length === 0)) {
+                  mappedTask.assignees = t.tacheAssignees
+                    .filter((ta: any) => ta.utilisateur)
+                    .map((ta: any) => ta.utilisateur);
+                } else if ((t.utilisateur || t.Utilisateur) && mappedTask.assignees.length === 0) {
+                  mappedTask.assignees = [t.utilisateur || t.Utilisateur];
+                }
+
+                return mappedTask;
+              });
+          },
+          error: () => {}
         });
       },
       error: () => {}
     });
-    
+
     this.api.getEmployesBySociete(this.societeId).subscribe({
       next: (employes) => {
-        this.membres = employes.map((e: any) => ({ id: e.id, nom: e.nom }));
-      },
-      error: () => {}
-    });
-    
-    this.api.getProjetsBySociete(this.societeId).subscribe({
-      next: (projets) => {
-        const user = this.api.getCurrentUser();
-        this.projets = (projets || [])
-          .filter((p: any) => p.utilisateurId === user?.id)
-          .map((p: any) => ({ id: p.id, nom: p.nom }));
+        this.membres = employes.map((e: any) => ({ id: e.id || e.Id, nom: e.nom || e.Nom }));
       },
       error: () => {}
     });
   }
 
-  getColumnTasks(statut: string): any[] {
-    return this.taches.filter(t => (t.statut || t.status) === statut);
+  getColumnTasks(columnId: string): any[] {
+    return this.taches.filter(t => {
+      const s = (t.statut || t.status || '').toLowerCase().trim().replace(/ /g, '');
+      switch (columnId) {
+        case 'todo':       return s === 'todo' || s === 'todo' || s === 'todo';
+        case 'inprogress': return s === 'inprogress' || s === 'encours';
+        case 'done':       return s === 'done' || s === 'termin\u00e9' || s === 'terminee';
+        default:           return s === columnId;
+      }
+    });
   }
 
   drop(event: CdkDragDrop<any[]>) {
@@ -787,8 +774,13 @@ export class ChefTachesComponent implements OnInit {
   }
   deleteTache(t: any) {
     if (confirm('Supprimer cette tâche?')) {
-      this.taches = this.taches.filter((x: any) => x.id !== t.id);
-      this.snackBar.open('Tâche supprimée', 'Fermer', { duration: 3000 });
+      this.api.saveTache({ ...t, Actif: false, Id: t.id }).subscribe({
+        next: () => {
+          this.taches = this.taches.filter((x: any) => x.id !== t.id);
+          this.snackBar.open('Tâche supprimée', 'Fermer', { duration: 3000 });
+        },
+        error: () => this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 })
+      });
     }
   }
 
@@ -832,19 +824,42 @@ export class ChefTachesComponent implements OnInit {
 
     this.api.saveTache(taskData).subscribe({
       next: () => {
-        // Trigger notification for assignee
-        if (this.formData.assigneeId) {
-          this.api.createNotification(
-            this.societeId, 
-            'task', 
-            'Nouvelle Tâche Assignée', 
-            `Vous avez été assigné à la tâche: ${this.formData.titre}`,
-            this.formData.assigneeId
+        // Notifier le collaborateur (Liaison Chef-Dev)
+        if (taskData.utilisateurId) {
+          this.notificationService.notifyUser(
+            taskData.utilisateurId,
+            'Nouvelle Tâche Assignée',
+            `Le Chef de Projet vous a assigné la tâche: ${taskData.titre}`,
+            'info'
           );
         }
+
+        if (this.editingTache) {
+          // Update task in local list
+          const idx = this.taches.findIndex((t: any) => t.id === this.editingTache.id);
+          if (idx !== -1) {
+            const rawStatus = (taskData.statut || 'To Do').toLowerCase();
+            let normalizedStatus = 'To Do';
+            if (rawStatus === 'done' || rawStatus === 'terminé') normalizedStatus = 'Done';
+            else if (rawStatus === 'in progress' || rawStatus === 'en cours') normalizedStatus = 'In Progress';
+            this.taches[idx] = { ...this.taches[idx], ...taskData, statut: normalizedStatus };
+          }
+        } else {
+          // Immediately add the new task to local list (optimistic update)
+          const assignee = this.membres.find((m: any) => m.id === taskData.utilisateurId);
+          const newTask = {
+            ...taskData,
+            id: 'temp-' + Date.now(),
+            statut: 'todo',
+            assignees: assignee ? [assignee] : []
+          };
+          this.taches = [...this.taches, newTask];
+        }
+
         this.snackBar.open('Tâche enregistrée avec succès', 'Fermer', { duration: 3000 });
-        this.loadData();
         this.closeForm();
+        // Reload to get server-assigned ID and fresh data
+        setTimeout(() => this.loadData(), 500);
       },
       error: (err) => {
         console.error('Error saving task:', err);

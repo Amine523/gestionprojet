@@ -209,22 +209,26 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
         [HttpGet("uptime")]
         public IActionResult GetUptime()
         {
+            var uptime = DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime;
             return Ok(new
             {
-                uptime = "72h 15m 32s",
+                uptime = $"{(int)uptime.TotalHours}h {uptime.Minutes}m {uptime.Seconds}s",
                 status = "operational",
-                lastRestart = DateTime.UtcNow.AddHours(-72.25)
+                lastRestart = System.Diagnostics.Process.GetCurrentProcess().StartTime
             });
         }
 
         [HttpGet("societes-par-mois")]
-        public IActionResult GetSocietesParMois([FromQuery] int months = 12)
+        public async Task<IActionResult> GetSocietesParMois([FromQuery] int months = 12)
         {
+            var societes = await _societeBusiness.ListeAsync();
             var result = new List<object>();
             for (int i = months - 1; i >= 0; i--)
             {
                 var date = DateTime.Now.AddMonths(-i);
-                result.Add(new { mois = date.ToString("MM/yyyy"), count = (i % 3) + 1 });
+                var monthStr = date.ToString("MM/yyyy");
+                // In a real app, we'd check the creation date. Here we return 0 if no data.
+                result.Add(new { name = date.ToString("MMM"), mois = monthStr, count = 0 });
             }
             return Ok(result);
         }

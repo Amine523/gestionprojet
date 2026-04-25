@@ -52,14 +52,26 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
             {
                 using (var connection = _context.CreateConnection())
                 {
-                    var response = await connection.QueryFirstOrDefaultAsync<int>
-                        (Constants.Ps_Pointage_u, PointageCoreMapper.GetParameters(PointageCore), commandType: CommandType.StoredProcedure);
+                    var sql = @"
+                        UPDATE [dbo].[Pointage]
+                        SET [UtilisateurId] = @UtilisateurId,
+                            [TypeId] = @TypeId,
+                            [Date] = @Date,
+                            [HeureEntree] = @HeureEntree,
+                            [HeureSortie] = @HeureSortie,
+                            [Duree] = @Duree,
+                            [Note] = @Note,
+                            [Actif] = @Actif
+                        WHERE [Id] = @Id;
+                    ";
+                    var response = await connection.ExecuteAsync(sql, PointageCoreMapper.GetParameters(PointageCore));
                     return response > 0;
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Probl�me de modification : {ex.Message}");
+                Console.WriteLine($"DEBUG Pointage Update Error: {ex.Message}");
+                throw new Exception($"Problème de modification : {ex.Message}");
             }
         }
 
@@ -76,7 +88,7 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
             }
             catch (Exception ex)
             {
-                throw new Exception($"Probl�me de suppression : {ex.Message}");
+                throw new Exception($"Problme de suppression : {ex.Message}");
             }
         }
 
@@ -94,7 +106,7 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
             }
             catch (Exception ex)
             {
-                throw new Exception($"Probl�me de suppression par condition : {ex.Message}");
+                throw new Exception($"Problme de suppression par condition : {ex.Message}");
             }
         }
 
@@ -104,13 +116,13 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
             {
                 using (var connection = _context.CreateConnection())
                 {
-                    return await connection.QueryFirstOrDefaultAsync<PointageCore>
-                        (Constants.Ps_Pointage_s_ParId, new { id }, commandType: CommandType.StoredProcedure);
+                    var sql = "SELECT * FROM [dbo].[Pointage] WHERE [Id] = @id";
+                    return await connection.QueryFirstOrDefaultAsync<PointageCore>(sql, new { id });
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Probl�me de r�cup�ration : {ex.Message}");
+                throw new Exception($"Problème de récupération : {ex.Message}");
             }
         }
 
@@ -120,14 +132,14 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
             {
                 using (var connection = _context.CreateConnection())
                 {
-                    var result = await connection.QueryAsync<PointageCore>
-                        (Constants.Ps_Pointage_s_Liste, commandType: CommandType.StoredProcedure);
+                    var sql = "SELECT * FROM [dbo].[Pointage] ORDER BY [Date] DESC, [HeureEntree] DESC";
+                    var result = await connection.QueryAsync<PointageCore>(sql);
                     return result.AsList();
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Probl�me de r�cup�ration de la liste : {ex.Message}");
+                throw new Exception($"Problème de récupération de la liste : {ex.Message}");
             }
         }
 
@@ -138,8 +150,14 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
                 string condition = SoftProExtensions.ToSqlCondition(critereRecherche);
                 using (var connection = _context.CreateConnection())
                 {
-                    var result = await connection.QueryAsync<PointageCore>
-                        (Constants.Ps_Pointage_s_Liste_ParCondition, new { condition }, commandType: CommandType.StoredProcedure);
+                    string sql = "SELECT * FROM [dbo].[Pointage]";
+                    if (!string.IsNullOrWhiteSpace(condition))
+                    {
+                        sql += " WHERE " + condition;
+                    }
+                    sql += " ORDER BY [Date] DESC, [HeureEntree] DESC";
+                    
+                    var result = await connection.QueryAsync<PointageCore>(sql);
                     return result.AsList();
                 }
             }

@@ -1,528 +1,469 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
-
-interface TestInfo {
-  name: string;
-  role: string;
-  description: string;
-}
 
 @Component({
   selector: 'app-rh-tests-interface',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
-
-    <div class="tests-container">
-      <div class="page-header">
-        <h1 class="page-title">Interface des Tests</h1>
-        <p class="page-subtitle">Tests unitaires disponibles pour RH</p>
-      </div>
-
-      <div class="action-bar">
-        <button class="btn btn-primary" (click)="runAllTests()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="5 3 19 12 5 21 5 3"/>
+    <div class="test-interface" [class.dark]="isDark">
+      <!-- Minimalist Header -->
+      <header class="test-header">
+        <div class="test-logo">
+          <div class="logo-box">N</div>
+          <span class="logo-text">Nadhemni <span class="text-indigo-500">Eval</span></span>
+        </div>
+        <div class="test-timer" [class.urgent]="timeLeft < 60">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
-          Exécuter tous les tests
-        </button>
-        <button class="btn btn-secondary" (click)="refreshResults()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M23 4v6h-6"/>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-          </svg>
-          Actualiser
-        </button>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card stat-success">
-          <div class="stat-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ passedTests }}</span>
-            <span class="stat-label">Tests réussis</span>
+          <span>{{formatTime(timeLeft)}}</span>
+        </div>
+        <div class="test-progress">
+          <span class="progress-text">Question {{currentQuestionIndex + 1}} sur {{questions.length}}</span>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="(currentQuestionIndex + 1) * 100 / questions.length"></div>
           </div>
         </div>
+      </header>
 
-        <div class="stat-card stat-danger">
-          <div class="stat-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ failedTests }}</span>
-            <span class="stat-label">Tests échoués</span>
-          </div>
-        </div>
-
-        <div class="stat-card stat-primary">
-          <div class="stat-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ totalTests }}</span>
-            <span class="stat-label">Total tests</span>
-          </div>
-        </div>
-
-        <div class="stat-card stat-purple">
-          <div class="stat-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
-              <path d="M22 12A10 10 0 0 0 12 2v10z"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ coverage }}%</span>
-            <span class="stat-label">Couverture</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Tests Disponibles</h3>
-        </div>
-        <div class="card-body">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Nom du Test</th>
-                <th>Rôle</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (test of availableTests; track test.name) {
-                <tr>
-                  <td>{{ test.name }}</td>
-                  <td><span class="badge badge-warning">{{ test.role }}</span></td>
-                  <td>{{ test.description }}</td>
-                </tr>
+      <!-- Main Test Content -->
+      <main class="test-main">
+        @if (!testFinished) {
+          <div class="question-container animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 class="question-title">{{questions[currentQuestionIndex].q}}</h2>
+            
+            <div class="options-list">
+              @for (opt of questions[currentQuestionIndex].options; track opt; let i = $index) {
+                <label class="option-card" [class.selected]="selectedAnswers[currentQuestionIndex] === i">
+                  <input type="radio" 
+                         [name]="'q' + currentQuestionIndex" 
+                         [value]="i" 
+                         [(ngModel)]="selectedAnswers[currentQuestionIndex]"
+                         class="hidden">
+                  <div class="option-index">{{getOptionLabel(i)}}</div>
+                  <div class="option-text">{{opt}}</div>
+                </label>
               }
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      @if (testResults.length > 0) {
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Résultats d'Exécution</h3>
-          </div>
-          <div class="card-body">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Nom du Test</th>
-                  <th>Statut</th>
-                  <th>Durée</th>
-                  <th>Rôle</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (r of testResults; track r.name) {
-                  <tr>
-                    <td>{{ r.name }}</td>
-                    <td><span class="badge" [class.badge-success]="r.status === 'pass'" [class.badge-danger]="r.status !== 'pass'">{{ r.status === 'pass' ? 'Réussi' : 'Échoué' }}</span></td>
-                    <td>{{ r.duration }}ms</td>
-                    <td>{{ r.role }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      }
-
-      @if (isRunning) {
-        <div class="card">
-          <div class="card-body">
-            <div class="progress-header">
-              <span class="progress-label">Exécution en cours...</span>
-              <span class="progress-value">{{ progress }}%</span>
-            </div>
-            <div class="progress-bar-container">
-              <div class="progress-bar-fill" [style.width.%]="progress"></div>
             </div>
           </div>
-        </div>
-      }
+
+          <footer class="test-footer">
+            <button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0" class="btn-nav">
+              Précédent
+            </button>
+            
+            @if (currentQuestionIndex < questions.length - 1) {
+              <button (click)="nextQuestion()" [disabled]="selectedAnswers[currentQuestionIndex] === undefined" class="btn-primary">
+                Suivant
+              </button>
+            } @else {
+              <button (click)="finishTest()" [disabled]="selectedAnswers[currentQuestionIndex] === undefined" class="btn-finish">
+                Terminer le test
+              </button>
+            }
+          </footer>
+        } @else {
+          <div class="finish-container animate-in zoom-in duration-500">
+            <div class="success-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <h1>Félicitations !</h1>
+            <p>Vous avez terminé l'évaluation technique. Vos résultats ont été transmis au département RH.</p>
+            <div class="score-card">
+              <span class="score-label">Votre Score</span>
+              <span class="score-value">{{finalScore}}%</span>
+            </div>
+            <button (click)="exit()" class="btn-primary">Retour à l'accueil</button>
+          </div>
+        }
+      </main>
     </div>
   `,
   styles: [`
-    .tests-container {
-      padding: var(--space-xl);
-      background: var(--color-bg);
-      min-height: 100vh;
-    }
-
-    .page-header {
-      margin-bottom: var(--space-xl);
-    }
-
-    .page-title {
-      font-size: 28px;
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0 0 var(--space-xs);
-    }
-
-    .page-subtitle {
-      color: var(--color-text-muted);
-      font-size: var(--font-size-base);
-      margin: 0;
-    }
-
-    .action-bar {
+    .test-interface {
+      position: fixed;
+      inset: 0;
+      background: #f8fafc;
+      z-index: 9999;
       display: flex;
-      gap: var(--space-md);
-      margin-bottom: var(--space-xl);
+      flex-direction: column;
+      font-family: 'Inter', sans-serif;
     }
 
-    .btn {
-      display: inline-flex;
+    .test-header {
+      height: 80px;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
       align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: var(--radius-md);
-      font-weight: var(--font-weight-semibold);
-      font-size: var(--font-size-sm);
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-base);
+      justify-content: space-between;
+      padding: 0 40px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
 
-    .btn-primary {
-      background: #6366f1;
-      color: white;
+    .test-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .btn-primary:hover {
+    .logo-box {
+      width: 36px;
+      height: 36px;
       background: #4f46e5;
-    }
-
-    .btn-secondary {
-      background: white;
-      color: var(--color-text);
-      border: 1px solid var(--color-border);
-    }
-
-    .btn-secondary:hover {
-      background: var(--color-bg);
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: var(--space-lg);
-      margin-bottom: var(--space-xl);
-    }
-
-    .stat-card {
-      background: white;
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg);
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--color-border);
-    }
-
-    .stat-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: var(--radius-md);
+      color: white;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      font-weight: 900;
+      font-size: 20px;
     }
 
-    .stat-card.stat-success .stat-icon {
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
+    .logo-text {
+      font-weight: 800;
+      font-size: 18px;
+      color: #1e293b;
     }
 
-    .stat-card.stat-danger .stat-icon {
-      background: rgba(239, 68, 68, 0.15);
-      color: #ef4444;
-    }
-
-    .stat-card.stat-primary .stat-icon {
-      background: rgba(59, 130, 246, 0.15);
-      color: #3b82f6;
-    }
-
-    .stat-card.stat-purple .stat-icon {
-      background: rgba(139, 92, 246, 0.15);
-      color: #8b5cf6;
-    }
-
-    .stat-info {
+    .test-timer {
       display: flex;
-      flex-direction: column;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: 14px;
-      color: var(--color-text-muted);
-      margin-top: var(--space-xs);
-    }
-
-    .card {
-      background: white;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--color-border);
-      margin-bottom: var(--space-xl);
-    }
-
-    .card-header {
-      padding: var(--space-lg);
-      border-bottom: 1px solid var(--color-border);
-      background: var(--color-bg);
-    }
-
-    .card-title {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0;
-    }
-
-    .card-body {
-      padding: var(--space-lg);
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .data-table th {
-      text-align: left;
-      padding: var(--space-md);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--color-border);
-      background: var(--color-bg);
-    }
-
-    .data-table td {
-      padding: var(--space-md);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .data-table tr:hover {
-      background: var(--color-bg);
-    }
-
-    .badge {
-      display: inline-flex;
       align-items: center;
-      padding: var(--space-xs) var(--space-md);
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
+      gap: 10px;
+      padding: 8px 16px;
+      background: #f1f5f9;
+      border-radius: 12px;
+      font-weight: 700;
+      color: #475569;
+      font-variant-numeric: tabular-nums;
     }
 
-    .badge-warning {
-      background: #fef3c7;
-      color: #d97706;
-    }
-
-    .badge-success {
-      background: #d1fae5;
-      color: #059669;
-    }
-
-    .badge-danger {
+    .test-timer.urgent {
       background: #fee2e2;
       color: #dc2626;
+      animation: pulse 1s infinite;
     }
 
-    .progress-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: var(--space-md);
+    .test-progress {
+      width: 240px;
     }
 
-    .progress-label,
-    .progress-value {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-muted);
-      font-weight: var(--font-weight-semibold);
+    .progress-text {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      text-align: right;
     }
 
-    .progress-bar-container {
-      height: 10px;
-      background: var(--color-bg);
-      border-radius: var(--radius-full);
+    .progress-track {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
       overflow: hidden;
     }
 
-    .progress-bar-fill {
+    .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6);
-      border-radius: var(--radius-full);
-      transition: width 0.3s ease;
-      animation: progress-shimmer 2s infinite;
+      background: #4f46e5;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    @keyframes progress-shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
+    .test-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
     }
 
-    /* Dark mode */
-    :host-context(.dark) .tests-container {
-      background: var(--color-surface);
+    .question-container {
+      max-width: 800px;
+      width: 100%;
     }
 
-    :host-context(.dark) .page-title,
-    :host-context(.dark) .stat-value,
-    :host-context(.dark) .card-title {
-      color: var(--color-text);
+    .question-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 40px;
+      line-height: 1.3;
     }
 
-    :host-context(.dark) .stat-card,
-    :host-context(.dark) .card {
-      background: var(--color-surface);
-      border-color: var(--color-border);
+    .options-list {
+      display: grid;
+      gap: 16px;
     }
 
-    :host-context(.dark) .card-header {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-border);
+    .option-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 24px;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
-    :host-context(.dark) .data-table th {
-      background: rgba(255, 255, 255, 0.02);
+    .option-card:hover {
+      border-color: #cbd5e1;
+      background: #fdfdfd;
     }
 
-    :host-context(.dark) .data-table tr:hover {
-      background: rgba(255, 255, 255, 0.05);
+    .option-card.selected {
+      border-color: #4f46e5;
+      background: #f5f3ff;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
     }
 
-    :host-context(.dark) .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-border);
-      color: var(--color-text);
+    .option-index {
+      width: 32px;
+      height: 32px;
+      background: #f1f5f9;
+      color: #64748b;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s;
     }
 
-    :host-context(.dark) .progress-bar-container {
-      background: rgba(255, 255, 255, 0.1);
+    .option-card.selected .option-index {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .option-text {
+      font-size: 18px;
+      font-weight: 500;
+      color: #334155;
+    }
+
+    .test-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 100px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .btn-primary, .btn-finish, .btn-nav {
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: white;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: #4338ca;
+      transform: translateY(-2px);
+    }
+
+    .btn-finish {
+      background: #10b981;
+      color: white;
+      border: none;
+    }
+
+    .btn-finish:hover {
+      background: #059669;
+      transform: translateY(-2px);
+    }
+
+    .btn-nav {
+      background: white;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-nav:hover:not(:disabled) {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .btn-nav:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .finish-container {
+      text-align: center;
+      max-width: 500px;
+    }
+
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      background: #d1fae5;
+      color: #10b981;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 32px;
+    }
+
+    .finish-container h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 16px;
+    }
+
+    .finish-container p {
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    .score-card {
+      background: #f1f5f9;
+      padding: 24px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    .score-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .score-value {
+      font-size: 48px;
+      font-weight: 900;
+      color: #4f46e5;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
     }
   `]
 })
-export class RhTestsInterfaceComponent implements OnInit {
+export class RhTestsInterfaceComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
+  private router = inject(Router);
 
-  availableTests: TestInfo[] = [];
-  testResults: any[] = [];
-  
-  passedTests = 0;
-  failedTests = 0;
-  totalTests = 0;
-  coverage = 0;
-  isRunning = false;
-  progress = 0;
+  isDark = false;
+  currentQuestionIndex = 0;
+  timeLeft = 900; // 15 minutes
+  timerInterval: any;
+  testFinished = false;
+  finalScore = 0;
+
+  questions = [
+    {
+      q: "Lequel de ces langages est principalement utilisé pour le développement d'interfaces web réactives ?",
+      options: ["Python", "Java", "TypeScript / JavaScript", "C++"],
+      correct: 2
+    },
+    {
+      q: "Dans une architecture microservices, quel est le rôle principal d'une passerelle API (API Gateway) ?",
+      options: ["Stocker les données", "Point d'entrée unique et routage", "Compiler le code", "Générer de la documentation"],
+      correct: 1
+    },
+    {
+      q: "Quelle commande Git permet de récupérer les changements du dépôt distant et de les fusionner ?",
+      options: ["git push", "git commit", "git pull", "git status"],
+      correct: 2
+    },
+    {
+      q: "Quel est l'avantage principal de l'utilisation de Docker dans un projet ?",
+      options: ["Réduire la taille des images", "Isolation et portabilité de l'environnement", "Accélérer la connexion internet", "Remplacer la base de données"],
+      correct: 1
+    }
+  ];
+
+  selectedAnswers: number[] = [];
 
   ngOnInit() {
-    this.loadTests();
-    this.calculateStats();
+    this.startTimer();
+    this.isDark = document.body.classList.contains('dark');
   }
 
-  loadTests() {
-    this.availableTests = [
-      { name: "devrait s'authentifier", role: 'Admin Société', description: "Test d'authentification Admin Société" },
-      { name: 'devrait gérer les employés', role: 'Admin Société', description: 'Gestion des employés' },
-      { name: 'devrait créer un abonnement', role: 'Admin Société', description: 'Création abonnement' },
-      { name: 'devrait gérer les utilisateurs', role: 'RH', description: 'Gestion des utilisateurs RH' },
-      { name: 'devrait créer une demande de congé', role: 'RH', description: 'Création demande congé' },
-      { name: 'devrait approuver les demandes', role: 'RH', description: 'Approbation demandes' },
-      { name: "devrait ajouter un candidat", role: 'RH', description: 'Ajout candidat recrutement' },
-      { name: 'devrait avoir accès aux projets', role: 'Chef Projet', description: 'Accès aux projets' },
-      { name: 'devrait gérer les tâches', role: 'Chef Projet', description: 'Gestion des tâches' },
-      { name: 'devrait suivre le temps', role: 'Développeur', description: 'Time tracking' },
-      { name: 'devrait soumettre une tâche', role: 'Développeur', description: 'Soumission tâche' },
-      { name: 'devrait exécuter les tests', role: 'Testeur QA', description: 'Exécution tests QA' },
-      { name: 'devrait signaler un bug', role: 'Testeur QA', description: 'Signalement bug' },
-      { name: 'devrait postuler à un emploi', role: 'Candidat', description: 'Candidature emploi' },
-      { name: 'devrait voir les offres', role: 'Candidat', description: 'Voir offres emploi' }
-    ];
+  ngOnDestroy() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
   }
 
-  calculateStats() {
-    this.totalTests = this.availableTests.length;
-    this.passedTests = this.totalTests;
-    this.failedTests = 0;
-    this.coverage = 100;
-  }
-
-  runAllTests() {
-    this.isRunning = true;
-    this.progress = 0;
-    this.testResults = [];
-    
-    const totalTests = this.availableTests.length;
-    let currentTest = 0;
-    
-    const interval = setInterval(() => {
-      const test = this.availableTests[currentTest];
-      const passed = Math.random() > 0.2;
-      
-      this.testResults.push({
-        name: test.name,
-        status: passed ? 'pass' : 'fail',
-        duration: Math.floor(Math.random() * 50) + 20,
-        role: test.role
-      });
-      
-      currentTest++;
-      this.progress = Math.round((currentTest / totalTests) * 100);
-      
-      if (currentTest >= totalTests) {
-        clearInterval(interval);
-        this.isRunning = false;
-        this.calculateStats();
-        this.saveTestResults();
+  startTimer() {
+    this.timerInterval = setInterval(() => {
+      if (this.timeLeft > 0) {
+        this.timeLeft--;
+      } else {
+        this.finishTest();
       }
-    }, 150);
+    }, 1000);
   }
 
-  saveTestResults() {
-    const stored = this.api.getRawStorage();
-    stored['testResults'] = this.testResults;
-    localStorage.setItem('app_data', JSON.stringify(stored));
+  formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  refreshResults() {
-    this.loadTests();
-    this.calculateStats();
+  getOptionLabel(index: number): string {
+    return String.fromCharCode(65 + index);
+  }
+
+  nextQuestion() {
+    if (this.currentQuestionIndex < this.questions.length - 1) {
+      this.currentQuestionIndex++;
+    }
+  }
+
+  previousQuestion() {
+    if (this.currentQuestionIndex > 0) {
+      this.currentQuestionIndex--;
+    }
+  }
+
+  finishTest() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    
+    let score = 0;
+    this.questions.forEach((q, i) => {
+      if (this.selectedAnswers[i] === q.correct) {
+        score++;
+      }
+    });
+
+    this.finalScore = Math.round((score / this.questions.length) * 100);
+    this.testFinished = true;
+  }
+
+  exit() {
+    this.router.navigate(['/applicant/home']);
   }
 }
-

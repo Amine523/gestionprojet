@@ -217,6 +217,34 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
           </div>
         </div>
 
+        <!-- Financial Insights -->
+        <div class="card card-finance">
+          <div class="card-header">
+            <h3>Flux Financiers</h3>
+            <span class="badge badge-success">Dernières 24h</span>
+          </div>
+          <div class="finance-list">
+            @for (f of factures.slice(0, 5); track f.id) {
+              <div class="finance-item">
+                <div class="finance-info">
+                  <p class="finance-societe">{{f.societeNom}}</p>
+                  <p class="finance-date">{{f.date}}</p>
+                </div>
+                <div class="finance-amount">
+                  +{{f.montant}} DT
+                </div>
+              </div>
+            } @empty {
+              <div class="empty-state">Aucun flux récent</div>
+            }
+          </div>
+          <div class="card-footer-action">
+            <button class="btn btn-ghost" routerLink="/superadmin/abonnements">Voir tout le registre</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
         <!-- Global Activity Log -->
         <div class="card card-activity">
           <div class="card-header">
@@ -246,6 +274,36 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
                   <span class="status-dot"></span>
                   <span>Vérifié</span>
                 </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Demandes de création de société -->
+        <div class="card card-requests">
+          <div class="card-header">
+            <h3>Demandes de création de société</h3>
+            <span class="badge badge-warning">{{demandes.length}} En attente</span>
+          </div>
+          <div class="requests-list">
+            @for (d of demandes; track d.id) {
+              <div class="request-item">
+                <div class="request-info">
+                  <h4>{{d.titre || d.Titre || 'Sans titre'}}</h4>
+                  <p>{{d.statut || d.Statut}} - {{d.type || d.Type}}</p>
+                </div>
+                <div class="request-actions">
+                  <button (click)="traiterDemande(d.id || d.Id, true)" class="btn-action approve" title="Approuver">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button (click)="traiterDemande(d.id || d.Id, false)" class="btn-action reject" title="Refuser">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="empty-state">
+                <p>Aucune demande en attente</p>
               </div>
             }
           </div>
@@ -769,6 +827,58 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
       color: #8b5cf6;
     }
 
+    .card-finance {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .finance-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .finance-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .finance-societe {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .finance-date {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin: 0;
+    }
+
+    .finance-amount {
+      font-weight: 800;
+      color: #10b981;
+      font-size: 0.9rem;
+    }
+
+    .card-footer-action {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 1rem;
+      text-align: center;
+    }
+
+    .card-footer-action .btn {
+      width: 100%;
+      color: #6366f1;
+    }
+
     .activity-icon.activity-projet {
       background: rgba(16, 185, 129, 0.1);
       color: #10b981;
@@ -841,6 +951,82 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
       background: rgba(255, 255, 255, 0.05);
     }
 
+    .card-requests {
+      border-left: 4px solid #f59e0b;
+    }
+
+    .requests-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .request-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md);
+      background: var(--color-bg);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+    }
+
+    .request-info h4 {
+      margin: 0;
+      font-size: var(--font-size-sm);
+      color: var(--color-text);
+    }
+
+    .request-info p {
+      margin: 0;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+    }
+
+    .request-actions {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .btn-action {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action.approve {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+
+    .btn-action.approve:hover {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-action.reject {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+
+    .btn-action.reject:hover {
+      background: #ef4444;
+      color: white;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--space-xl);
+      color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
+    }
+
     @media (max-width: 1024px) {
       .dashboard-grid {
         grid-template-columns: 1fr;
@@ -876,39 +1062,26 @@ export class SuperAdminDashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('societiesChart') societiesChartRef!: ElementRef<HTMLCanvasElement>;
 
   stats: StatCard[] = [
-    { title: 'Sociétés', value: 156, icon: 'building', color: '#3b82f6', change: '14 actives', changeUp: true },
-    { title: 'Utilisateurs', value: 1248, icon: 'people', color: '#10b981', change: '48 actifs', changeUp: true },
-    { title: 'Abonnements', value: 89, icon: 'credit-card', color: '#f59e0b', change: '0 DT', changeUp: true },
-    { title: 'Alertes', value: 5, icon: 'exclamation-triangle', color: '#ef4444', change: 'À traiter', changeUp: false }
+    { title: 'Sociétés', value: 0, icon: 'building', color: '#3b82f6', change: '0 actives', changeUp: true },
+    { title: 'Utilisateurs', value: 0, icon: 'people', color: '#10b981', change: '0 actifs', changeUp: true },
+    { title: 'Abonnements', value: 0, icon: 'credit-card', color: '#f59e0b', change: '0 DT', changeUp: true },
+    { title: 'Alertes', value: 0, icon: 'exclamation-triangle', color: '#ef4444', change: 'À traiter', changeUp: false }
   ];
   revenue = 0;
   currentFilter = 'month';
 
-  uptimeData: any = { percent: 99.9, nodes: ['DB', 'API', 'Frontend', 'Worker'], lastOccurrence: 'Aucune panne détectée' };
+  uptimeData: any = null;
 
-  revenueByMonth = [
-    { name: 'Jan', percent: 65, color: '#e53935' },
-    { name: 'Fév', percent: 80, color: '#d32f2f' },
-    { name: 'Mar', percent: 72, color: '#c62828' },
-    { name: 'Avr', percent: 90, color: '#b71c1c' }
-  ];
-  alerts: AlertItem[] = [
-    { id: 1, title: 'Abonnement expiré', message: 'Société XYZ - Abonnement expiré', type: 'warning', time: '2024-01-20', date: '2024-01-20' },
-    { title: 'Latence élevée', message: 'Serveur DB - Latence élevée', type: 'error', time: '2024-01-19', date: '2024-01-19' }
-  ];
-  societies: any[] = [
-    { id: 1, Nom: 'Tech Solutions SARL', Actif: true, Adresse: 'Tunis' },
-    { id: 2, Nom: 'Digital Services', Actif: true, Adresse: 'Sfax' },
-    { id: 3, Nom: 'Cloud Corp', Actif: false, Adresse: 'Sousse' }
-  ];
-  activities: any[] = [
-    { id: 1, action: 'Nouvelle société inscrite', utilisateur: 'System', date: '2024-01-20T10:30:00' },
-    { id: 2, action: 'Abonnement renouvelé', utilisateur: 'Admin', date: '2024-01-20T09:15:00' },
-    { id: 3, action: 'Utilisateur supprimé', utilisateur: 'SuperAdmin', date: '2024-01-19T16:45:00' }
-  ];
+  revenueByMonth: any[] = [];
+  alerts: AlertItem[] = [];
+  societies: any[] = [];
+  demandes: any[] = [];
+  activities: any[] = [];
+  factures: any[] = [];
 
   ngOnInit() {
     this.loadData();
+    this.loadFactures();
   }
 
   ngAfterViewInit() {
@@ -984,151 +1157,133 @@ export class SuperAdminDashboardComponent implements OnInit, AfterViewInit {
   loadData() {
     this.api.getDashboardStats().subscribe({
       next: (data: any) => {
-        let hasData = false;
-        if (data?.societes) {
-          this.stats[0].value = data.societes.total || 156;
-          this.stats[0].change = `${data.societes.actives || 142} actives`;
-          this.stats[0].changeUp = (data.societes.actives || 0) >= (data.societes.total || 0) / 2;
-          hasData = true;
-        }
-        if (data?.utilisateurs) {
-          this.stats[1].value = data.utilisateurs.total || 1248;
-          this.stats[1].change = `${data.utilisateurs.actifs || 1156} actifs`;
-          this.stats[1].changeUp = (data.utilisateurs.actifs || 0) >= (data.utilisateurs.total || 0) / 2;
-          hasData = true;
-        }
-        if (data?.abonnements) {
-          this.stats[2].value = data.abonnements.total || 89;
-          this.stats[2].change = `${data.abonnements.revenus || 45600} DT`;
-          this.stats[2].changeUp = true;
-          hasData = true;
-        }
-
-        // Appliquer les données par défaut si aucune donnée n'est retournée
-        if (!hasData) {
-          this.stats[0].value = 156;
-          this.stats[0].change = '142 actives';
-          this.stats[0].changeUp = true;
-          this.stats[1].value = 1248;
-          this.stats[1].change = '1156 actifs';
-          this.stats[1].changeUp = true;
-          this.stats[2].value = 89;
-          this.stats[2].change = '45600 DT';
-          this.stats[2].changeUp = true;
-          this.stats[3].value = 5;
-          this.stats[3].change = 'À traiter';
-          this.stats[3].changeUp = false;
+        if (data) {
+          // Mapping according to backend keys: TotalSocietes, TotalUtilisateurs, etc.
+          this.stats[0].value = data.totalSocietes || data.TotalSocietes || 0;
+          const actives = data.societesActives || data.SocietesActives || 0;
+          this.stats[0].change = `${actives} actives`;
+          
+          this.stats[1].value = data.totalUtilisateurs || data.TotalUtilisateurs || 0;
+          this.stats[1].change = `Tous les noeuds`;
+          
+          this.stats[2].value = data.totalProjets || data.TotalProjets || 0;
+          this.stats[2].change = `${data.revenusMensuels || data.RevenusMensuels || 0} DT / mois`;
         }
       },
       error: () => {
-        // Données par défaut si l'API échoue
-        this.stats[0].value = 156;
-        this.stats[0].change = '142 actives';
-        this.stats[0].changeUp = true;
-        this.stats[1].value = 1248;
-        this.stats[1].change = '1156 actifs';
-        this.stats[1].changeUp = true;
-        this.stats[2].value = 89;
-        this.stats[2].change = '45600 DT';
-        this.stats[2].changeUp = true;
-        this.stats[3].value = 5;
-        this.stats[3].change = 'À traiter';
-        this.stats[3].changeUp = false;
+        this.snackBar.open('Erreur lors du chargement des statistiques globales', 'Fermer', { duration: 3000 });
       }
     });
 
     this.api.getSocietesRecentes(5).subscribe({
       next: (data: any[]) => {
         this.societies = data || [];
-        if (this.societies.length === 0) {
-          this.societies = [
-            { id: 1, Nom: 'Tech Solutions SARL', Actif: true, Adresse: 'Tunis' },
-            { id: 2, Nom: 'Digital Services', Actif: true, Adresse: 'Sfax' },
-            { id: 3, Nom: 'Cloud Corp', Actif: false, Adresse: 'Sousse' }
-          ];
-        }
       },
       error: () => {
-        this.societies = [
-          { id: 1, Nom: 'Tech Solutions SARL', Actif: true, Adresse: 'Tunis' },
-          { id: 2, Nom: 'Digital Services', Actif: true, Adresse: 'Sfax' }
-        ];
+        this.societies = [];
       }
     });
 
     this.api.getRevenus(this.currentFilter).subscribe({
       next: (data: any) => {
-        this.revenue = data?.total || 0;
+        this.revenue = data?.revenus || data?.Revenus || 0;
         this.revenueByMonth = data?.byMonth || [];
-        if (this.revenue === 0 || this.revenueByMonth.length === 0) {
-          this.revenue = 45600;
-          this.revenueByMonth = [
-            { name: 'Jan', percent: 65, color: '#e53935' },
-            { name: 'Fév', percent: 80, color: '#d32f2f' },
-            { name: 'Mar', percent: 72, color: '#c62828' },
-            { name: 'Avr', percent: 90, color: '#b71c1c' }
-          ];
-        }
       },
       error: () => {
         this.revenue = 0;
-        this.revenueByMonth = [
-          { name: 'Jan', percent: 65, color: '#e53935' },
-          { name: 'Fév', percent: 80, color: '#d32f2f' },
-          { name: 'Mar', percent: 72, color: '#c62828' }
-        ];
+        this.revenueByMonth = [];
       }
     });
 
     this.api.getAlertes().subscribe({
       next: (data: any[]) => {
-        this.alerts = data || [];
-        if (this.stats[3]) this.stats[3].value = this.alerts.length || 5;
-        if (this.alerts.length === 0) {
-          this.alerts = [
-            { id: 1, title: 'Abonnement expiré', message: 'Société XYZ - Abonnement expiré', type: 'warning', time: '2024-01-20', date: '2024-01-20' },
-            { id: 2, title: 'Latence élevée', message: 'Serveur DB - Latence élevée', type: 'error', time: '2024-01-19', date: '2024-01-19' }
-          ];
-          if (this.stats[3]) this.stats[3].value = 2;
-        }
+        this.alerts = (data || []).map((a: any) => ({
+          title: a.type || 'Alerte',
+          message: a.message || 'Action requise',
+          type: (a.type?.toLowerCase().includes('error') ? 'error' : 'warning') as 'error' | 'warning' | 'info',
+          time: 'Récent'
+        }));
+        if (this.stats[3]) this.stats[3].value = this.alerts.length;
       },
       error: () => {
-        this.alerts = [
-          { id: 1, title: 'Abonnement expiré', message: 'Société XYZ - Abonnement expiré', type: 'warning', time: '2024-01-20', date: '2024-01-20' }
-        ];
-        if (this.stats[3]) this.stats[3].value = 1;
+        this.alerts = [];
+        if (this.stats[3]) this.stats[3].value = 0;
       }
     });
 
     this.api.getActiviteRecente(10).subscribe({
       next: (data: any[]) => {
-        this.activities = data || [];
-        if (this.activities.length === 0) {
-          this.activities = [
-            { id: 1, action: 'Nouvelle société inscrite', utilisateur: 'System', date: '2024-01-20T10:30:00' },
-            { id: 2, action: 'Abonnement renouvelé', utilisateur: 'Admin', date: '2024-01-20T09:15:00' },
-            { id: 3, action: 'Utilisateur supprimé', utilisateur: 'SuperAdmin', date: '2024-01-19T16:45:00' }
-          ];
-        }
+        this.activities = (data || []).map((a: any) => ({
+          title: a.action || 'Événement',
+          user: a.nom || 'Système',
+          time: a.date ? new Date(a.date).toLocaleString() : 'Récemment',
+          type: a.type || 'info',
+          icon: a.type === 'utilisateur' ? 'person' : (a.type === 'societe' ? 'building' : 'activity')
+        }));
       },
       error: () => {
-        this.activities = [
-          { id: 1, action: 'Nouvelle société inscrite', utilisateur: 'System', date: '2024-01-20T10:30:00' },
-          { id: 2, action: 'Abonnement renouvelé', utilisateur: 'Admin', date: '2024-01-20T09:15:00' }
-        ];
+        this.activities = [];
       }
     });
 
     this.api.getUptime().subscribe({
       next: (data: any) => {
-        this.uptimeData = data;
-        if (!this.uptimeData || !this.uptimeData.percent) {
-          this.uptimeData = { percent: 99.9, nodes: ['DB', 'API', 'Frontend', 'Worker'], lastOccurrence: 'Aucune panne détectée' };
+        if (data) {
+          this.uptimeData = {
+            percent: 100, // Assuming 100% if operational
+            nodes: ['API', 'DB', 'WEB'],
+            lastOccurrence: data.uptime || 'Système stable'
+          };
         }
       },
       error: () => {
-        this.uptimeData = { percent: 99.9, nodes: ['DB', 'API', 'Frontend', 'Worker'], lastOccurrence: 'Aucune panne détectée' };
+        this.uptimeData = null;
       }
+    });
+
+    this.api.getDemandesSociete().subscribe({
+      next: (data) => {
+        this.demandes = (data || []).filter(d => {
+          const s = (d.statut || d.Statut || '').toString().toLowerCase();
+          return s === 'en_attente' || s === 'en attente' || s === 'pending';
+        });
+      }
+    });
+  }
+
+  traiterDemande(id: string, approuver: boolean) {
+    this.api.traiterDemandeSociete(id, approuver).subscribe({
+      next: (res) => {
+        this.snackBar.open(res.message || 'Demande traitée', 'Fermer', { duration: 3000 });
+        this.loadData();
+        this.loadFactures();
+        this.loadSocietes();
+      },
+      error: (err) => { 
+        this.snackBar.open('Erreur lors du traitement : ' + (err.error || err.message || 'Serveur indisponible'), 'Fermer', { duration: 5000 });
+        this.loadData();
+      }
+    });
+  }
+
+  loadFactures() {
+    this.api.getPaiements().subscribe({
+      next: (paiements) => {
+        const societesMap = new Map((this.societies || []).map((s: any) => [s.id, s.Nom]));
+        this.factures = (paiements || []).map((p: any) => ({
+          id: p.id,
+          societeNom: societesMap.get(p.societeId) || 'Société',
+          montant: p.montant,
+          date: p.date ? new Date(p.date).toLocaleDateString('fr-FR') : '-',
+          statut: p.statut || 'Payé'
+        })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      }
+    });
+  }
+
+  loadSocietes() {
+    this.api.getSocietesRecentes(5).subscribe({
+      next: (data: any[]) => this.societies = data || []
     });
   }
 

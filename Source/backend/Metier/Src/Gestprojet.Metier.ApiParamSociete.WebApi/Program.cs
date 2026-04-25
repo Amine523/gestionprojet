@@ -315,7 +315,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi
 
             // === Pipeline HTTP ===
             app.UseStaticFiles();
-            app.UseCors("AllowAllWithCredentials");
+            app.UseCors("AllowAll");
             app.UseMiddleware<Gestprojet.Metier.ApiParamSociete.WebApi.Middleware.ExceptionMiddleware>();
             app.UseAuthentication();
             app.UseAuthorization();

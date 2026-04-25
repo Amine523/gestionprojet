@@ -74,6 +74,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Models.DTOs
     {
         public int TotalEmployes { get; set; }
         public int EmployesActifs { get; set; }
+        public int EmployesPresents { get; set; }
         public int EmployesAbsents { get; set; }
         public decimal TotalHeuresAujourdhui { get; set; }
         public int DemandesCongesEnAttente { get; set; }
@@ -143,6 +144,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Models.DTOs
         [Required(ErrorMessage = "SocieteId est requis")]
         public string SocieteId { get; set; } = string.Empty;
         
+        public string? PointageId { get; set; }
         public string? Note { get; set; }
     }
 

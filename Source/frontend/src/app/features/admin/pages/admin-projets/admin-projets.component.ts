@@ -86,81 +86,101 @@ interface Projet {
         </div>
       </div>
 
-      <!-- Projects Grid -->
-      <div class="projects-grid">
-        @for (p of projetsSignal(); track p.id) {
-          <div class="card project-card">
-            <div class="project-header">
-              <div>
-                <h3 class="project-name">{{p.nom}}</h3>
-                <p class="project-client">{{p.nomClient || 'Unité Interne'}}</p>
-              </div>
-              <span class="badge" [class]="getStatusClass(p.status)">{{p.status}}</span>
-            </div>
-            <div class="project-details">
-              <div class="detail-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span>{{p.chef}}</span>
-              </div>
-              <div class="detail-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                <span>{{p.membres}} Unités</span>
-              </div>
-            </div>
-            <div class="project-progress">
-              <div class="progress-header">
-                <span>Avancement</span>
-                <span>{{p.avancee}}%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" [style.width.%]="p.avancee"></div>
-              </div>
-            </div>
-            <div class="project-dates">
-              <div class="date-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                {{p.startDate | date:'dd MMM'}}
-              </div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
-              <div class="date-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                {{p.endDate | date:'dd MMM, yyyy'}}
-              </div>
-            </div>
-            <div class="project-actions">
-              <button (click)="editProjet(p)" class="btn btn-action">
-                Configurer Mission
-              </button>
-              <button (click)="deleteProjet(p)" class="btn-icon btn-danger">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  <line x1="10" y1="11" x2="10" y2="17"/>
-                  <line x1="14" y1="11" x2="14" y2="17"/>
-                </svg>
-              </button>
-            </div>
+      <!-- Projects Table -->
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mission</th>
+              <th>Client / Type</th>
+              <th>Statut</th>
+              <th>Commandant</th>
+              <th>Unité</th>
+              <th>Progression</th>
+              <th>Échéance</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of projetsSignal(); track p.id) {
+              <tr>
+                <td>
+                  <div class="project-info">
+                    <span class="project-name">{{p.nom}}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="project-client">{{p.nomClient || 'Unité Interne'}}</span>
+                </td>
+                <td>
+                  <span class="badge" [class]="getStatusClass(p.status)">{{p.status}}</span>
+                </td>
+                <td>
+                  <div class="detail-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>{{p.chef}}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="detail-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>{{p.membres}} Unités</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="project-progress">
+                    <div class="progress-header">
+                      <span>{{p.avancee}}%</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" [style.width.%]="p.avancee"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="date-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/>
+                      <line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    {{p.endDate | date:'dd MMM yyyy'}}
+                  </div>
+                </td>
+                <td class="text-right">
+                  <div class="project-actions">
+                    <button (click)="editProjet(p)" class="btn-icon" title="Configurer Mission">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button (click)="deleteProjet(p)" class="btn-icon btn-danger" title="Supprimer">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/>
+                        <line x1="14" y1="11" x2="14" y2="17"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (projetsSignal().length === 0) {
+          <div class="empty-state">
+            <p>Aucune mission trouvée.</p>
           </div>
         }
       </div>
@@ -502,41 +522,53 @@ interface Projet {
       border-color: rgba(139, 92, 246, 0.3);
     }
 
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: var(--space-lg);
-    }
-
-    .card {
+    .table-wrapper {
+      position: relative;
       background: white;
       border-radius: var(--radius-xl);
+      overflow-x: auto;
       border: 1px solid var(--color-border);
       box-shadow: var(--shadow-sm);
-      transition: all var(--transition-base);
     }
 
-    .card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
     }
 
-    .project-card {
-      padding: var(--space-lg);
+    .data-table th {
+      padding: var(--space-md) var(--space-lg);
+      background: var(--color-bg);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-border);
     }
 
-    .project-header {
+    .data-table td {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
+    }
+
+    .data-table tr:hover {
+      background: var(--color-bg);
+    }
+
+    .project-info {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: var(--space-lg);
+      flex-direction: column;
+      gap: 4px;
     }
 
     .project-name {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
       color: var(--color-text);
-      margin: 0 0 var(--space-xs);
+      margin: 0;
     }
 
     .project-client {
@@ -545,13 +577,6 @@ interface Projet {
       font-weight: var(--font-weight-semibold);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin: 0;
-    }
-
-    .project-details {
-      display: flex;
-      gap: var(--space-lg);
-      margin-bottom: var(--space-lg);
     }
 
     .detail-item {
@@ -559,58 +584,46 @@ interface Projet {
       align-items: center;
       gap: var(--space-sm);
       color: var(--color-text-muted);
-      font-size: var(--font-size-sm);
+      font-size: var(--font-size-xs);
     }
 
     .detail-item svg {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
     }
 
     .project-progress {
-      margin-bottom: var(--space-lg);
+      width: 100%;
+      min-width: 100px;
     }
 
     .progress-header {
-      display: flex;
-      justify-content: space-between;
       font-size: var(--font-size-xs);
       font-weight: var(--font-weight-semibold);
       color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: var(--space-xs);
+      margin-bottom: 4px;
     }
 
     .progress-bar {
-      height: 8px;
-      background: var(--color-bg);
-      border-radius: 4px;
+      height: 6px;
+      background: var(--color-border);
+      border-radius: 3px;
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, #8b5cf6, #7c3aed);
-      border-radius: 4px;
+      border-radius: 3px;
       transition: width var(--transition-base);
-    }
-
-    .project-dates {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      padding: var(--space-md) 0;
-      border-top: 1px solid var(--color-border);
-      margin-bottom: var(--space-lg);
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
     }
 
     .date-item {
       display: flex;
       align-items: center;
       gap: var(--space-xs);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
     }
 
     .date-item svg {
@@ -618,9 +631,20 @@ interface Projet {
       height: 14px;
     }
 
+    .text-right {
+      text-align: right;
+    }
+
     .project-actions {
       display: flex;
-      gap: var(--space-sm);
+      gap: var(--space-xs);
+      justify-content: flex-end;
+    }
+
+    .empty-state {
+      padding: var(--space-3xl);
+      text-align: center;
+      color: var(--color-text-muted);
     }
 
     .pagination-footer {

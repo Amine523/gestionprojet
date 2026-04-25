@@ -100,6 +100,7 @@ import { ApiService } from '@core/services/api.service';
         
         <div class="login-footer">
           <p class="footer-text">Vous êtes candidat ? <a routerLink="/applicant" class="footer-link">Postulez ici</a></p>
+          <p class="footer-text" style="margin-top: 8px;">Vous voulez utiliser GestProjet ? <a routerLink="/register-company" class="footer-link">Enregistrez votre société</a></p>
         </div>
       </div>
     </div>

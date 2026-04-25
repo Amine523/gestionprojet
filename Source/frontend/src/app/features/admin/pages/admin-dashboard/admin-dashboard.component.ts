@@ -754,7 +754,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     });
 
     // Charger les activités récentes depuis la base de données
-    this.api.getActiviteRecente(10).subscribe({
+    this.api.getActiviteRecente(10, this.societeId).subscribe({
       next: (data) => {
         this.activites = data.map((act: any) => ({
           id: act.id || Math.random(),

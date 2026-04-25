@@ -52,43 +52,65 @@ import { RouterModule } from '@angular/router';
         </select>
       </div>
 
-      <!-- Projects Grid -->
-      <div class="projects-grid">
-        @for (p of filteredProjets; track p.id) {
-          <div (click)="selectProjet(p)" class="project-card">
-            <div class="project-header">
-              <div class="project-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-              </div>
-              <span class="project-status" [class.status-done]="p.statut === 'Terminé'">{{p.statut}}</span>
-            </div>
-            <h3 class="project-title">{{p.nom}}</h3>
-            <p class="project-description">{{p.description}}</p>
-            <div class="project-progress">
-              <div class="progress-labels">
-                <span>Progression Code</span>
-                <span class="progress-value">{{p.avancement || 0}}%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" [style.width.%]="p.avancement || 0"></div>
-              </div>
-            </div>
-            <div class="project-footer">
-              <div class="team-avatars">
-                @for (i of [1,2,3]; track i) {
-                  <div class="avatar">{{i}}</div>
-                }
-              </div>
-              <span class="task-count">+{{p.taches}} Tâches</span>
-              <button class="btn-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                  <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-              </button>
-            </div>
+      <!-- Projects Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Projet</th>
+              <th>Statut</th>
+              <th>Membres</th>
+              <th>Tâches</th>
+              <th>Progression</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filteredProjets; track p.id) {
+              <tr class="clickable-row" (click)="selectProjet(p)">
+                <td>
+                  <div class="project-info">
+                    <span class="project-name">{{p.nom}}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="project-status" [class.status-done]="p.statut === 'Terminé'">{{p.statut}}</span>
+                </td>
+                <td>
+                  <div class="team-avatars">
+                    @for (i of [1,2,3]; track i) {
+                      <div class="avatar">{{i}}</div>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="task-count">{{p.taches}} Tâches</span>
+                </td>
+                <td>
+                  <div class="project-progress">
+                    <div class="progress-labels">
+                      <span class="progress-value">{{p.avancement || 0}}%</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" [style.width.%]="p.avancement || 0"></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <button class="btn-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (filteredProjets.length === 0) {
+          <div class="empty-state">
+            <p>Aucun projet trouvé.</p>
           </div>
         }
       </div>
@@ -338,46 +360,57 @@ import { RouterModule } from '@angular/router';
       min-width: 200px;
     }
 
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: var(--space-lg);
-    }
-
-    .project-card {
+    .table-container {
       background: white;
-      border-radius: var(--radius-xl);
       border: 1px solid var(--color-border);
-      padding: var(--space-lg);
+      border-radius: var(--radius-xl);
+      overflow-x: auto;
       box-shadow: var(--shadow-sm);
-      cursor: pointer;
-      transition: all var(--transition-base);
-      position: relative;
-      overflow: hidden;
     }
 
-    .project-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-4px);
-      border-color: rgba(16, 185, 129, 0.2);
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
     }
 
-    .project-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--space-md);
-    }
-
-    .project-icon {
-      width: 64px;
-      height: 64px;
-      border-radius: var(--radius-lg);
+    .data-table th {
+      padding: var(--space-md) var(--space-lg);
       background: var(--color-bg);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .data-table td {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
+    }
+
+    .clickable-row {
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .clickable-row:hover {
+      background: var(--color-bg);
+    }
+
+    .project-info {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #10b981;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .project-name {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin: 0;
     }
 
     .project-status {
@@ -396,18 +429,8 @@ import { RouterModule } from '@angular/router';
       color: #10b981;
     }
 
-    .project-title {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0 0 var(--space-sm);
-    }
-
-    .project-description {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-muted);
-      margin: 0 0 var(--space-md);
-      line-height: var(--line-height-relaxed);
+    .text-right {
+      text-align: right;
     }
 
     .project-progress {

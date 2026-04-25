@@ -56,6 +56,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         }
 
         [HttpGet]
+        [HttpGet("liste")]
         public async Task<IActionResult> GetAll()
             => Ok(await _tacheBusiness.ListeAsync());
 
@@ -72,6 +73,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             => Ok(await _tacheBusiness.ListeDetailleAsync());
 
         [HttpPost("ListeParCritere")]
+        [HttpPost("liste-par-condition")]
         public async Task<IActionResult> ListeParCritere([FromBody] ConditionRecherche critere)
         {
             if (critere == null) return BadRequest("Critère manquant");
@@ -115,7 +117,8 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             => Ok(await _tacheBusiness.ListeParPageAsync(pageNumero, pageTaille));
 
         [HttpPost("ListeParConditionParPage")]
-        public async Task<IActionResult> ListeParConditionParPage([FromBody] ConditionRecherche critere, [FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 20)
+        [HttpPost("liste-par-condition-par-page/{pageNumero}/{pageTaille}")]
+        public async Task<IActionResult> ListeParConditionParPage([FromBody] ConditionRecherche critere, [FromRoute] int pageNumero = 1, [FromRoute] int pageTaille = 20)
         {
             if (critere == null) return BadRequest("Critère manquant");
             return Ok(await _tacheBusiness.ListeParConditionParPageAsync(critere, pageNumero, pageTaille));

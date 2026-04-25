@@ -5,7 +5,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 
 @Component({
-  selector: 'app-chef-pointage',
+  selector: 'app-qa-pointage',
   standalone: true,
   imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
@@ -21,7 +21,7 @@ import { ApiService } from '@core/services/api.service';
             </svg>
           </div>
           <div>
-            <h1 class="header-title">Monitoring Présence (Chef)</h1>
+            <h1 class="header-title">Monitoring Présence (QA)</h1>
             <p class="header-subtitle">Équipe {{societeNom}} • {{currentDateDisplay}}</p>
           </div>
         </div>
@@ -144,7 +144,7 @@ import { ApiService } from '@core/services/api.service';
   `,
   styles: [`
     .pointage-container { padding: 24px; max-width: 1400px; margin: 0 auto; background: #f8fafc; min-height: 100vh; }
-    .page-header { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border-radius: 20px; padding: 32px; display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3); }
+    .page-header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 20px; padding: 32px; display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3); }
     .header-content { display: flex; align-items: center; gap: 16px; }
     .header-icon { width: 56px; height: 56px; background: rgba(255, 255, 255, 0.2); border-radius: 16px; display: flex; align-items: center; justify-content: center; }
     .header-title { font-size: 28px; font-weight: 800; margin: 0; }
@@ -200,7 +200,7 @@ import { ApiService } from '@core/services/api.service';
     .empty-state p { margin: 0; font-size: 14px; }
   `]
 })
-export class ChefPointageComponent implements OnInit {
+export class QaPointageComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
 

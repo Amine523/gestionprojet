@@ -389,3 +389,47 @@ small, .text-small {
 .tableCheckbox:checked ~ span {
   @apply border-brand-500 bg-brand-500;
 }
+
+/* ===== Material Design Dark Mode Overrides ===== */
+.cdk-overlay-container {
+  .mat-mdc-dialog-container .mdc-dialog__content,
+  .mat-mdc-dialog-container .mdc-dialog__title {
+    color: var(--color-text);
+  }
+  
+  .mat-mdc-dialog-surface {
+    background-color: var(--color-surface) !important;
+    border: 1px solid var(--color-border);
+  }
+  
+  .mat-mdc-menu-panel {
+    background-color: var(--color-surface) !important;
+    border: 1px solid var(--color-border);
+  }
+
+  .mat-mdc-select-panel {
+    background-color: var(--color-surface) !important;
+  }
+}
+
+/* ===== Skeleton Loading Screens ===== */
+.skeleton {
+  @apply relative overflow-hidden bg-gray-200 dark:bg-gray-800 rounded;
+  
+  &::after {
+    @apply absolute inset-0;
+    content: '';
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: skeleton-shimmer 1.5s infinite;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.skeleton-text { height: 1em; margin-bottom: 0.5em; width: 100%; }
+.skeleton-title { height: 2em; margin-bottom: 1em; width: 60%; }
+.skeleton-avatar { height: 40px; width: 40px; @apply rounded-full; }
+.skeleton-button { height: 40px; width: 120px; }

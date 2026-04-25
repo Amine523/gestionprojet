@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
@@ -9,21 +8,19 @@ interface Plan {
   id: string;
   nom: string;
   prix: number;
+  description: string;
   utilisateurs: string;
   features: string[];
-  periods?: { monthly: number; quarterly: number; yearly: number };
+  popular?: boolean;
 }
 
-interface PaymentMethod {
+interface Transaction {
   id: string;
-  type: 'card' | 'virement';
-  nom: string;
-  details: string;
-  defaut: boolean;
-  numero?: string;
-  expiration?: string;
-  cvv?: string;
-  iban?: string;
+  date: string;
+  description: string;
+  montant: number;
+  statut: string;
+  type: string;
 }
 
 @Component({
@@ -31,328 +28,203 @@ interface PaymentMethod {
   standalone: true,
   imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
-
-    <div class="dashboard-container">
+    <div class="billing-container">
       <!-- Header -->
-      <header class="dashboard-header">
-        <div class="header-content">
-          <div class="header-badges">
-            <span class="badge badge-primary">Finance</span>
-          </div>
-          <h1 class="header-title">
-            Billing <span class="gradient-text">Matrix.</span>
-          </h1>
-          <p class="header-subtitle">
-            Subscription Assets & Transaction Infrastructure for {{societeNom}}.
-          </p>
+      <header class="billing-header">
+        <div class="header-info">
+          <span class="badge">Billing & Subscription</span>
+          <h1>Gestion des <span class="text-gradient">Finances</span></h1>
+          <p>Gérez vos abonnements, méthodes de paiement et historique de transactions pour {{societeNom}}.</p>
         </div>
-        <div class="header-status">
-          <p>Current Status</p>
-          <div class="status-indicator">
-            <div class="status-dot" [class.active]="abonnement"></div>
-            <span>{{abonnement ? 'Premium Account' : 'Standby Mode'}}</span>
+        <div class="header-card">
+          <div class="plan-status">
+            <div class="status-icon" [class.active]="currentAbonnement">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="status-details">
+              <span class="label">Statut Actuel</span>
+              <span class="value">{{currentAbonnement ? currentAbonnement.typeAbonnement : 'Aucun Abonnement'}}</span>
+            </div>
           </div>
         </div>
       </header>
 
-      @if (!abonnement) {
-        <!-- Plan Selection -->
-        <div class="plan-selection">
-           <div class="section-header">
-              <h2>Select Your Resource Tier</h2>
-              <p>Powering Enterprise Scaling</p>
-           </div>
+      @if (!currentAbonnement) {
+        <!-- Pricing Table -->
+        <section class="pricing-section">
+          <div class="section-title">
+            <h2>Choisissez votre Plan</h2>
+            <p>Des solutions adaptées à la taille de votre entreprise.</p>
+          </div>
 
-           <div class="plans-grid">
-              @for (plan of plans; track plan.id) {
-                <div (click)="selectPlan(plan)"
-                  class="plan-card"
-                  [class.selected]="selectedPlan?.id === plan.id">
-                  
-                  @if (selectedPlan?.id === plan.id) {
-                    <div class="plan-check">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    </div>
-                  }
-
-                  <div class="plan-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
+          <div class="pricing-grid">
+            @for (plan of plans; track plan.id) {
+              <div class="pricing-card" [class.popular]="plan.popular">
+                @if (plan.popular) { <span class="popular-tag">Recommandé</span> }
+                <div class="card-header">
+                  <h3>{{plan.nom}}</h3>
+                  <div class="price">
+                    <span class="currency">DT</span>
+                    <span class="amount">{{plan.prix}}</span>
+                    <span class="period">/mois</span>
                   </div>
-                     
-                  <div class="plan-info">
-                     <h3>{{plan.nom}}</h3>
-                     <div class="plan-price">
-                        <span>{{plan.prix}}</span>
-                        <span>DT / Cycles</span>
-                     </div>
-                  </div>
-
-                  <div class="plan-features">
-                     @for (f of plan.features; track f) {
-                       <div class="feature-item">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                          <span>{{f}}</span>
-                       </div>
-                     }
-                  </div>
-
-                  <div class="plan-periods">
-                     <button class="period-btn">Monthly</button>
-                     <button class="period-btn period-btn-highlight">Yearly (-15%)</button>
-                  </div>
+                  <p class="description">{{plan.description}}</p>
                 </div>
-              }
-           </div>
-
-           @if (selectedPlan) {
-             <div class="checkout-section">
-                <button (click)="goToPaymentMethod()" class="btn btn-primary btn-large">
-                  Initialize Checkout
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                    <polyline points="12 5 19 12 12 19"/>
-                  </svg>
+                <ul class="features">
+                  @for (feat of plan.features; track feat) {
+                    <li>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      {{feat}}
+                    </li>
+                  }
+                </ul>
+                <button class="btn btn-primary" (click)="selectPlan(plan)">
+                  Sélectionner
                 </button>
-             </div>
-           }
-        </div>
-      }
-
-      @if (abonnement) {
-        <div class="billing-grid">
-           <!-- Active Asset -->
-           <div class="billing-main">
-              <div class="card subscription-card">
-                 <div class="subscription-badge">Mission-Critical Asset</div>
-                 
-                 <div class="subscription-header">
-                    <div>
-                       <h2>{{abonnement.plan}}</h2>
-                       <div class="subscription-meta">
-                          <div class="meta-item">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                              <circle cx="9" cy="7" r="4"/>
-                            </svg>
-                            <span>{{abonnement.utilisateurs}} Nodes</span>
-                          </div>
-                          <div class="meta-item">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                            </svg>
-                            <span>Active Ops</span>
-                          </div>
-                       </div>
-                    </div>
-                    <div class="subscription-price">
-                       <p>Cycle Contribution</p>
-                       <p>{{abonnement.prix}} <span>DT</span></p>
-                    </div>
-                 </div>
-
-                 <div class="subscription-dates">
-                    <div class="date-card">
-                       <p>Initialization Date</p>
-                       <p>{{abonnement.dateDebut}}</p>
-                    </div>
-                    <div class="date-card date-card-warning">
-                       <p>Next Sync Cycle</p>
-                       <p>{{abonnement.prochainRenouvellement}}</p>
-                    </div>
-                 </div>
-
-                 <div class="subscription-actions">
-                    <button (click)="processPayment()" class="btn btn-primary">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"/>
-                        <polyline points="1 20 1 14 7 14"/>
-                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                      </svg>
-                      Instant Cycle Sync
-                    </button>
-                    <button class="btn btn-secondary">
-                      Upgrade Tier
-                    </button>
-                 </div>
               </div>
-
-              <!-- Transaction Ledger -->
-              <div class="transactions-section">
-                 <div class="section-header">
-                    <h3>Transaction Ledger</h3>
-                    <button class="link-btn">Export Cryptographic Receipts</button>
-                 </div>
-
-                 <div class="card transactions-card">
-                    <table class="transactions-table">
-                       <thead>
-                          <tr>
-                             <th>Timestamp</th>
-                             <th>Asset Description</th>
-                             <th>Contribution</th>
-                             <th>Status</th>
-                          </tr>
-                       </thead>
-                       <tbody>
-                          @for (t of transactions; track t.id) {
-                            <tr>
-                               <td>
-                                  <div class="timestamp-cell">
-                                     <span>{{t.date}}</span>
-                                     <span>HASH: {{t.id.slice(0,12)}}</span>
-                                  </div>
-                               </td>
-                               <td>{{t.description}}</td>
-                               <td class="amount-cell">{{t.montant}} DT</td>
-                               <td class="status-cell">
-                                  <span class="badge badge-success">Verified</span>
-                               </td>
-                            </tr>
-                          }
-                       </tbody>
-                    </table>
-                 </div>
+            }
+          </div>
+        </section>
+      } @else {
+        <!-- Billing Dashboard -->
+        <div class="billing-dashboard">
+          <div class="main-content">
+            <!-- Active Subscription -->
+            <div class="card sub-card">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Abonnement Actif
               </div>
-           </div>
-
-           <!-- Payment Infrastructure -->
-           <div class="billing-sidebar">
-              <section class="card card-dark wallet-card">
-                 <div class="card-header">
-                    <h3>Wallet</h3>
-                    <button class="btn-icon">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"/>
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                      </svg>
-                    </button>
-                 </div>
-
-                 <div class="payment-methods">
-                    @for (m of paymentMethods; track m.id) {
-                      <div class="payment-method">
-                         <div class="payment-icon">
-                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                             <rect x="2" y="5" width="20" height="14" rx="2"/>
-                             <line x1="2" y1="10" x2="22" y2="10"/>
-                           </svg>
-                         </div>
-                         <div>
-                            <p>{{m.nom}}</p>
-                            <span>{{m.details}}</span>
-                         </div>
-                      </div>
-                    }
-                 </div>
-
-                 <button class="btn btn-white w-full">
-                   Link New Asset
-                 </button>
-              </section>
-
-              <section class="card security-card">
-                 <div class="security-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                 </div>
-                 <h4>Military Grade Security</h4>
-                 <p>All financial signals are encrypted via 4096-bit SHA protocols. Zero-knowledge architecture ensures your private keys remain localized on your secure node.</p>
-                 <button class="link-btn">
-                    Audit Security Specs
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                      <polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                 </button>
-              </section>
-           </div>
-        </div>
-      }
-
-      <!-- Payment Modal -->
-      @if (showPaymentModal) {
-        <div class="modal-backdrop" (click)="showPaymentModal = false">
-          <div class="modal-container payment-modal" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <div class="header-icon-small">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="5" width="20" height="14" rx="2"/>
-                  <line x1="2" y1="10" x2="22" y2="10"/>
-                </svg>
+              <div class="sub-details">
+                <div class="detail-item">
+                  <span class="label">Plan</span>
+                  <span class="value">{{currentAbonnement.typeAbonnement}}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Date de début</span>
+                  <span class="value">{{currentAbonnement.dateDebut | date:'mediumDate'}}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Prochain Renouvellement</span>
+                  <span class="value">{{currentAbonnement.dateFin | date:'mediumDate'}}</span>
+                </div>
               </div>
-              <div>
-                <h3>Secure Gateway</h3>
-                <p>Authorized Financial Node</p>
+              <div class="sub-actions">
+                <button class="btn btn-outline" (click)="currentAbonnement = null">Changer de Plan</button>
+                <button class="btn btn-danger-outline">Résilier</button>
               </div>
-              <button (click)="showPaymentModal = false" class="btn-close">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
             </div>
 
-            <div class="modal-body">
-              <div class="payment-summary">
-                <p>Plan: <span>{{selectedPlan?.nom || abonnement?.plan}}</span></p>
-                <p>Amount: <span>{{selectedPlan?.prix || abonnement?.prix}} DT</span></p>
+            <!-- Transaction History -->
+            <div class="card transaction-card">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Historique des Transactions
               </div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Description</th>
+                      <th>Montant</th>
+                      <th>Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (t of transactions; track t.id) {
+                      <tr>
+                        <td>{{t.date | date:'shortDate'}}</td>
+                        <td>{{t.description}}</td>
+                        <td class="amount">{{t.montant}} DT</td>
+                        <td><span class="status-pill success">Payé</span></td>
+                      </tr>
+                    }
+                    @if (transactions.length === 0) {
+                      <tr>
+                        <td colspan="4" class="empty">Aucune transaction enregistrée.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
 
-              <form #payForm="ngForm" (ngSubmit)="confirmPayment()" class="payment-form">
-                <div class="form-group">
-                  <label>Cardholder Signal</label>
-                  <input type="text" [(ngModel)]="paymentData.cardName" name="cardName" class="form-input" placeholder="FULL NAME" required>
+          <div class="sidebar">
+            <!-- Payment Methods -->
+            <div class="card methods-card">
+              <div class="card-title">Méthodes de Paiement</div>
+              <div class="method-item">
+                <div class="method-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                 </div>
+                <div class="method-info">
+                  <span class="name">Visa ending in 4242</span>
+                  <span class="expiry">Expires 12/26</span>
+                </div>
+              </div>
+              <button class="btn btn-text">+ Ajouter une méthode</button>
+            </div>
 
+            <!-- Security Assurance -->
+            <div class="card security-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <h4>Paiement Sécurisé</h4>
+              <p>Vos données bancaires sont cryptées selon les normes PCI-DSS v4.0.</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Checkout Modal -->
+      @if (showCheckout) {
+        <div class="modal-overlay" (click)="showCheckout = false">
+          <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Checkout Sécurisé</h3>
+              <button (click)="showCheckout = false" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="order-summary">
+                <span>Total à payer:</span>
+                <span class="total">{{selectedPlan?.prix}} DT / mois</span>
+              </div>
+              
+              <form class="checkout-form" (ngSubmit)="processCheckout()">
                 <div class="form-group">
-                  <label>Card Identity (Primary Number)</label>
-                  <div class="input-with-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="2" y="5" width="20" height="14" rx="2"/>
-                      <line x1="2" y1="10" x2="22" y2="10"/>
-                    </svg>
-                    <input type="text" [(ngModel)]="paymentData.cardNumber" name="cardNumber" class="form-input" placeholder="0000 0000 0000 0000" required>
+                  <label>Titulaire de la carte</label>
+                  <input type="text" placeholder="Nom complet" required>
+                </div>
+                <div class="form-group">
+                  <label>Numéro de carte</label>
+                  <div class="card-input-wrapper">
+                    <input type="text" placeholder="0000 0000 0000 0000" required>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                   </div>
                 </div>
-
                 <div class="form-row">
                   <div class="form-group">
                     <label>Expiration</label>
-                    <input type="text" [(ngModel)]="paymentData.expiry" name="expiry" class="form-input" placeholder="MM/YY" required>
+                    <input type="text" placeholder="MM/YY" required>
                   </div>
                   <div class="form-group">
-                    <label>CVC (Shield Key)</label>
-                    <input type="password" [(ngModel)]="paymentData.cvc" name="cvc" class="form-input" placeholder="•••" required>
+                    <label>CVC</label>
+                    <input type="password" placeholder="•••" required>
                   </div>
                 </div>
-
-                <div class="security-assurance">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  </svg>
-                  <span>Encrypted via AES-256 Protocol</span>
-                </div>
-
-            <div class="modal-footer">
-              <button type="button" (click)="showPaymentModal = false" class="btn btn-ghost">Abort</button>
-              <button type="submit" [disabled]="isLoading || payForm.invalid" class="btn btn-primary btn-full">
-                @if (isLoading) {
-                  <div class="spinner-small"></div>
-                  <span>Synchronizing...</span>
-                } @else {
-                  <span>Authorize Contribution</span>
-                }
-              </button>
-            </div>
+                <button type="submit" class="btn btn-primary btn-block" [disabled]="loading">
+                  @if (loading) {
+                    <span class="spinner"></span> Traitement...
+                  } @else {
+                    Payer maintenant
+                  }
+                </button>
               </form>
+              <p class="security-text">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Cryptage SSL 256 bits
+              </p>
             </div>
           </div>
         </div>
@@ -360,1475 +232,563 @@ interface PaymentMethod {
     </div>
   `,
   styles: [`
-    .dashboard-container {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xl);
-      padding-bottom: var(--space-2xl);
+    .billing-container {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 12px;
+      
+      padding: 2rem;
+      background: var(--bg);
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
     }
 
-    .dashboard-header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-radius: var(--radius-xl);
-      padding: var(--space-2xl);
+    /* Header */
+    .billing-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--space-lg);
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow-xl);
+      align-items: flex-end;
+      margin-bottom: 3rem;
     }
 
-    .dashboard-header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
-      border-radius: 50%;
+    .header-info h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text);
+      margin: 0.5rem 0;
     }
 
-    .header-content {
-      position: relative;
-      z-index: 1;
-    }
-
-    .header-badges {
-      display: flex;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-md);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .badge-primary {
-      background: rgba(99, 102, 241, 0.1);
-      color: #6366f1;
-      border: 1px solid rgba(99, 102, 241, 0.2);
-    }
-
-    .badge-success {
-      background: rgba(16, 185, 129, 0.1);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .header-title {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      color: white;
-      margin: 0 0 var(--space-sm);
-      letter-spacing: -0.02em;
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, #818cf8, #6366f1, #4f46e5);
+    .text-gradient {
+      background: linear-gradient(135deg, var(--primary), #a855f7);
       -webkit-background-clip: text;
-      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .header-subtitle {
-      color: #94a3b8;
-      font-size: var(--font-size-base);
-      max-width: 600px;
-      line-height: var(--line-height-relaxed);
-      margin: 0;
-    }
-
-    .header-status {
-      position: relative;
-      z-index: 1;
-      background: rgba(255, 255, 255, 0.05);
-      padding: var(--space-md);
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-    }
-
-    .header-status p {
-      font-size: var(--font-size-xs);
-      color: #6366f1;
-      font-weight: var(--font-weight-semibold);
+    .badge {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin: 0 0 var(--space-sm);
     }
 
-    .status-indicator {
+    .header-card {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border);
+    }
+
+    .plan-status {
       display: flex;
       align-items: center;
-      gap: var(--space-sm);
+      gap: 1rem;
     }
 
-    .status-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #d1d5db;
-    }
-
-    .status-dot.active {
-      background: #10b981;
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    .status-indicator span {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: white;
-      font-style: italic;
-    }
-
-    .plan-selection {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xl);
-    }
-
-    .section-header {
-      text-align: center;
-    }
-
-    .section-header h2 {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0 0 var(--space-sm);
-      text-transform: uppercase;
-      font-style: italic;
-    }
-
-    .section-header p {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin: 0;
-    }
-
-    .plans-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: var(--space-lg);
-    }
-
-    .plan-card {
-      background: white;
-      border-radius: var(--radius-xl);
-      border: 2px solid var(--color-border);
-      padding: var(--space-lg);
-      cursor: pointer;
-      transition: all var(--transition-base);
-      position: relative;
-    }
-
-    .plan-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-4px);
-    }
-
-    .plan-card.selected {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-    }
-
-    .plan-check {
-      position: absolute;
-      top: var(--space-md);
-      right: var(--space-md);
-      width: 48px;
-      height: 48px;
-      background: #6366f1;
-      border-radius: var(--radius-md);
+    .status-icon {
+      width: 40px;
+      height: 40px;
+      background: #f1f5f9;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
-      box-shadow: var(--shadow-md);
+      color: var(--text-muted);
     }
 
-    .plan-icon {
-      width: 64px;
-      height: 64px;
-      border-radius: var(--radius-lg);
-      background: var(--color-bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #6366f1;
-      margin-bottom: var(--space-lg);
-    }
-
-    .plan-info h3 {
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0 0 var(--space-sm);
-      text-transform: uppercase;
-      font-style: italic;
-    }
-
-    .plan-price {
-      display: flex;
-      align-items: baseline;
-      gap: var(--space-sm);
-    }
-
-    .plan-price span:first-child {
-      font-size: var(--font-size-4xl);
-      font-weight: var(--font-weight-bold);
-      color: #6366f1;
-    }
-
-    .plan-price span:last-child {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-    }
-
-    .plan-features {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-sm);
-      padding: var(--space-md) 0;
-      border-top: 1px solid var(--color-border);
-      border-bottom: 1px solid var(--color-border);
-      margin: var(--space-lg) 0;
-    }
-
-    .feature-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      color: var(--color-text-muted);
-      font-size: var(--font-size-sm);
-    }
-
-    .feature-item svg {
-      width: 20px;
-      height: 20px;
+    .status-icon.active {
+      background: rgba(16, 185, 129, 0.1);
       color: #10b981;
     }
 
-    .plan-periods {
-      display: flex;
-      gap: var(--space-sm);
+    .status-details .label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
     }
 
-    .period-btn {
-      flex: 1;
-      padding: var(--space-sm);
-      background: var(--color-bg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all var(--transition-base);
+    .status-details .value {
+      font-weight: 700;
+      color: var(--text);
     }
 
-    .period-btn:hover {
-      background: rgba(99, 102, 241, 0.1);
-      color: #6366f1;
+    /* Pricing */
+    .pricing-section {
+      margin-top: 2rem;
     }
 
-    .period-btn-highlight {
-      font-style: italic;
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
     }
 
-    .checkout-section {
-      display: flex;
-      justify-content: center;
-      padding-top: var(--space-lg);
+    .section-title h2 {
+      font-size: 2rem;
+      font-weight: 700;
     }
 
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: var(--radius-md);
-      font-weight: var(--font-weight-semibold);
-      font-size: var(--font-size-sm);
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-base);
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    .btn-primary {
-      background: #6366f1;
+    .pricing-card {
+      background: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .pricing-card.popular {
+      border: 2px solid var(--primary);
+    }
+
+    .popular-tag {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--primary);
       color: white;
-      box-shadow: var(--shadow-md);
+      font-size: 0.7rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
+    .card-header h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
     }
 
-    .btn-large {
-      padding: var(--space-md) var(--space-xl);
-      font-size: var(--font-size-base);
+    .price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 1rem;
     }
 
-    .btn-secondary {
-      background: var(--color-bg);
-      color: var(--color-text);
-      border: 1px solid var(--color-border);
+    .price .amount {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--text);
     }
 
-    .btn-secondary:hover {
-      background: var(--color-surface);
+    .price .currency, .price .period {
+      color: var(--text-muted);
+      font-weight: 600;
     }
 
-    .btn-white {
-      background: white;
-      color: var(--color-text);
+    .features {
+      list-style: none;
+      padding: 0;
+      margin: 2rem 0;
     }
 
-    .btn-white:hover {
-      transform: scale(1.02);
+    .features li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
     }
 
-    .billing-grid {
+    .features li svg {
+      width: 16px;
+      height: 16px;
+      color: #10b981;
+    }
+
+    /* Billing Dashboard */
+    .billing-dashboard {
       display: grid;
       grid-template-columns: 2fr 1fr;
-      gap: var(--space-lg);
-    }
-
-    .billing-main {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-lg);
-    }
-
-    .billing-sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-lg);
+      gap: 2rem;
     }
 
     .card {
-      background: white;
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--color-border);
-      box-shadow: var(--shadow-sm);
-      padding: var(--space-lg);
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
     }
 
-    .card-dark {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-color: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
-
-    .subscription-card {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .subscription-badge {
-      display: inline-block;
-      padding: var(--space-xs) var(--space-sm);
-      background: rgba(99, 102, 241, 0.1);
-      color: #6366f1;
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: var(--space-lg);
-    }
-
-    .subscription-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--space-lg);
-      margin-bottom: var(--space-lg);
-    }
-
-    .subscription-header h2 {
-      font-size: var(--font-size-4xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0 0 var(--space-md);
-      font-style: italic;
-    }
-
-    .subscription-meta {
-      display: flex;
-      gap: var(--space-md);
-      color: var(--color-text-muted);
-    }
-
-    .meta-item {
+    .card-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
-      gap: var(--space-xs);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
+      gap: 0.75rem;
     }
 
-    .meta-item svg {
-      width: 16px;
-      height: 16px;
+    .card-title svg {
+      width: 20px;
+      height: 20px;
+      color: var(--primary);
     }
 
-    .subscription-price p:first-child {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-      margin: 0 0 var(--space-xs);
-    }
-
-    .subscription-price p:last-child {
-      font-size: var(--font-size-4xl);
-      font-weight: var(--font-weight-bold);
-      color: #6366f1;
-      margin: 0;
-      font-style: italic;
-    }
-
-    .subscription-price p:last-child span {
-      font-size: var(--font-size-2xl);
-    }
-
-    .subscription-dates {
+    .sub-details {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-md);
-      padding: var(--space-lg) 0;
-      border-top: 1px solid var(--color-border);
-      border-bottom: 1px solid var(--color-border);
-      margin: var(--space-lg) 0;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
 
-    .date-card {
-      padding: var(--space-md);
-      background: var(--color-bg);
-      border-radius: var(--radius-lg);
+    .detail-item .label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
     }
 
-    .date-card p:first-child {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-      margin: 0 0 var(--space-xs);
+    .detail-item .value {
+      font-weight: 600;
+      color: var(--text);
     }
 
-    .date-card p:last-child {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0;
-    }
-
-    .date-card-warning p:first-child {
-      color: #f59e0b;
-    }
-
-    .date-card-warning p:last-child {
-      color: #f59e0b;
-    }
-
-    .subscription-actions {
+    .sub-actions {
       display: flex;
-      gap: var(--space-sm);
-      flex-wrap: wrap;
+      gap: 1rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
     }
 
-    .transactions-section {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-md);
+    /* Transactions Table */
+    .table-container {
+      overflow-x: auto;
     }
 
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .section-header h3 {
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0;
-      text-transform: uppercase;
-      font-style: italic;
-    }
-
-    .link-btn {
-      background: transparent;
-      border: none;
-      color: #6366f1;
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      transition: all var(--transition-base);
-    }
-
-    .link-btn:hover {
-      text-decoration: underline;
-    }
-
-    .transactions-card {
-      overflow: hidden;
-    }
-
-    .transactions-table {
+    table {
       width: 100%;
       border-collapse: collapse;
     }
 
-    .transactions-table thead {
-      background: var(--color-bg);
-    }
-
-    .transactions-table th {
-      padding: var(--space-md);
+    th {
       text-align: left;
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-muted);
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 1px solid var(--color-border);
+      color: var(--text-muted);
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
     }
 
-    .transactions-table td {
-      padding: var(--space-md);
-      border-bottom: 1px solid var(--color-border);
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
     }
 
-    .timestamp-cell {
-      display: flex;
-      flex-direction: column;
+    .amount {
+      font-weight: 700;
+      color: var(--text);
     }
 
-    .timestamp-cell span:first-child {
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
+    .status-pill {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
     }
 
-    .timestamp-cell span:last-child {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
+    .status-pill.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
     }
 
-    .amount-cell {
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-bold);
-      color: #6366f1;
-      font-style: italic;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--space-lg);
-      padding-bottom: var(--space-md);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .card-header h3 {
-      margin: 0;
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-semibold);
-      text-decoration: underline;
-      text-decoration-color: #6366f1;
-      text-decoration-thickness: 4px;
-      text-underline-offset: 8px;
-    }
-
-    .payment-methods {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-md);
-    }
-
-    .payment-method {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      padding: var(--space-md);
-      background: rgba(255, 255, 255, 0.05);
-      border: 2px solid rgba(255, 255, 255, 0.05);
-      border-radius: var(--radius-lg);
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
       cursor: pointer;
-      transition: all var(--transition-base);
-    }
-
-    .payment-method:hover {
-      border-color: rgba(99, 102, 241, 0.3);
-    }
-
-    .payment-icon {
-      width: 64px;
-      height: 64px;
-      border-radius: var(--radius-lg);
-      background: rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #818cf8;
-    }
-
-    .payment-method p {
-      margin: 0;
-      font-size: var(--font-size-base);
-      font-weight: var(--font-weight-bold);
-      font-style: italic;
-    }
-
-    .payment-method span {
-      font-size: var(--font-size-xs);
-      color: #94a3b8;
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-    }
-
-    .btn-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.05);
-      color: white;
+      transition: all 0.2s;
+      border: none;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      transition: all var(--transition-base);
     }
 
-    .btn-icon:hover {
-      background: rgba(255, 255, 255, 0.1);
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      width: 100%;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-danger-outline {
+      background: transparent;
+      border: 1px solid #fee2e2;
+      color: #ef4444;
+    }
+
+    .btn-text {
+      background: transparent;
+      color: var(--primary);
+      padding: 0;
+      font-size: 0.85rem;
+    }
+
+    /* Sidebar Items */
+    .method-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .method-icon {
+      color: var(--text-muted);
+    }
+
+    .method-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .method-info .name {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .method-info .expiry {
+      font-size: 0.75rem;
+      color: var(--text-muted);
     }
 
     .security-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       text-align: center;
-      gap: var(--space-md);
+      background: linear-gradient(to bottom right, #ffffff, #f0fdf4);
     }
 
-    .security-icon {
-      width: 64px;
-      height: 64px;
-      border-radius: var(--radius-lg);
-      background: #6366f1;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: var(--shadow-md);
+    .security-card svg {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 1rem;
     }
 
     .security-card h4 {
-      margin: 0;
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      text-transform: uppercase;
-      font-style: italic;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
     }
 
     .security-card p {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-muted);
-      line-height: var(--line-height-relaxed);
-      margin: 0;
-      font-style: italic;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
     }
 
-    /* Dark mode */
-    :host-context(.dark) .card {
-      background: var(--color-surface);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .plan-card {
-      background: var(--color-surface);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .plan-icon {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    :host-context(.dark) .period-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .transactions-table thead {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    :host-context(.dark) .date-card {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-
-
-    /* Modal Styling */
-    .modal-backdrop {
+    /* Modal */
+    .modal-overlay {
       position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(8px);
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      animation: fadeIn 0.3s ease-out;
     }
 
-    .modal-container {
+    .modal-content {
       background: white;
-      border-radius: var(--radius-2xl);
       width: 100%;
       max-width: 450px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      overflow: hidden;
-      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .payment-modal {
-      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
 
     .modal-header {
-      padding: var(--space-xl);
-      background: var(--color-bg);
-      border-bottom: 1px solid var(--color-border);
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      position: relative;
-    }
-
-    .header-icon-small {
-      width: 40px;
-      height: 40px;
-      background: #6366f1;
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-
-    .modal-header h3 {
-      margin: 0;
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .modal-header p {
-      margin: 0;
-      font-size: var(--font-size-xs);
-      color: #6366f1;
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-    }
-
-    .btn-close {
-      position: absolute;
-      top: var(--space-lg);
-      right: var(--space-lg);
-      background: transparent;
-      border: none;
-      color: var(--color-text-muted);
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .btn-close:hover {
-      color: #ef4444;
-    }
-
-    .modal-body {
-      padding: var(--space-xl);
-    }
-
-    .payment-summary {
-      background: #f8fafc;
-      padding: var(--space-md);
-      border-radius: var(--radius-lg);
-      margin-bottom: var(--space-xl);
-      border-left: 4px solid #6366f1;
-    }
-
-    .payment-summary p {
-      margin: var(--space-xs) 0;
-      font-size: var(--font-size-sm);
-      color: var(--color-text-muted);
       display: flex;
       justify-content: space-between;
+      margin-bottom: 1.5rem;
     }
 
-    .payment-summary p span {
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
+    .close-btn {
+      background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);
     }
 
-    .payment-form {
+    .order-summary {
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 10px;
       display: flex;
-      flex-direction: column;
-      gap: var(--space-lg);
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      font-weight: 700;
     }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xs);
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted); }
+    .form-group input { 
+      width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: var(--primary); }
+    
+    .card-input-wrapper { position: relative; }
+    .card-input-wrapper svg { position: absolute; right: 12px; top: 12px; width: 20px; color: var(--text-muted); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    
+    .security-text {
+      text-align: center; font-size: 0.7rem; color: var(--text-muted); margin-top: 1.5rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
     }
 
-    .form-group label {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+      border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px;
     }
-
-    .form-input {
-      width: 100%;
-      padding: var(--space-md);
-      background: white;
-      border: 2px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      font-size: var(--font-size-sm);
-      color: var(--color-text);
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    .form-input:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-    }
-
-    .input-with-icon {
-      position: relative;
-    }
-
-    .input-with-icon svg {
-      position: absolute;
-      left: var(--space-md);
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--color-text-muted);
-    }
-
-    .input-with-icon .form-input {
-      padding-left: calc(var(--space-md) * 2.5);
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-md);
-    }
-
-    .security-assurance {
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
-      font-size: var(--font-size-xs);
-      color: #10b981;
-      font-weight: var(--font-weight-semibold);
-      margin-top: var(--space-md);
-    }
-
-    .modal-footer {
-      padding: var(--space-xl);
-      background: var(--color-bg);
-      border-top: 1px solid var(--color-border);
-      display: flex;
-      gap: var(--space-md);
-    }
-
-    .btn-full {
-      flex: 1;
-      height: 54px;
-      justify-content: center;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--color-text-muted);
-    }
-
-    .btn-ghost:hover {
-      background: rgba(239, 68, 68, 0.05);
-      color: #ef4444;
-    }
-
-    .spinner-small {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Dark mode */
-    :host-context(.dark) .modal-container {
-      background: var(--color-surface);
-    }
-
-    :host-context(.dark) .modal-header,
-    :host-context(.dark) .modal-footer {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    :host-context(.dark) .payment-summary {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    :host-context(.dark) .form-input {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-border);
-    }
-
-    @media (max-width: 1024px) {
-      .billing-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .subscription-dates {
-        grid-template-columns: 1fr;
-      }
-
-      .plans-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   `]
 })
 export class AdminPaiementsComponent implements OnInit {
-  private api = inject(ApiService);
-  private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
+  private api: ApiService = inject(ApiService);
+  private snack = inject(MatSnackBar);
 
-  societeId: string = '';
   societeNom: string = '';
-  currentUser: any = null;
-  abonnement: any = null;
-  transactions: any[] = [];
-  paymentMethods: any[] = [];
+  societeId: string = '';
+  currentAbonnement: any = null;
+  transactions: Transaction[] = [];
+  loading = false;
+  showCheckout = false;
   selectedPlan: Plan | null = null;
-  selectedPeriod: 'monthly' | 'quarterly' | 'yearly' = 'monthly';
-  
-  showPaymentModal: boolean = false;
-  isLoading: boolean = false;
-  paymentData = { cardName: '', cardNumber: '', expiry: '', cvc: '' };
-  selectedPaymentMethod: PaymentMethod | null = null;
-  paymentMethodSaved = false;
-  paymentCompleted = false;
-  newPayment: any = { type: 'card', numero: '', expiration: '', cvv: '', iban: '' };
 
   plans: Plan[] = [
-    { id: 'starter', nom: 'Starter Node', prix: 99, utilisateurs: '5', features: ['Task Management', '1 Core Project', 'Email Support', '5 User Seats'], periods: { monthly: 99, quarterly: 279, yearly: 990 } },
-    { id: 'pro', nom: 'Pro Ecosystem', prix: 299, utilisateurs: '20', features: ['Full Access', 'Unlimited Projects', 'AI Assistant', '20 User Seats', 'Analytics'], periods: { monthly: 299, quarterly: 797, yearly: 2691 } },
-    { id: 'enterprise', nom: 'Omni Enterprise', prix: 599, utilisateurs: 'Unlimited', features: ['All Premium', '24/7 Priority', 'Custom API', 'Dedicated Success Manager'], periods: { monthly: 599, quarterly: 1597, yearly: 5391 } }
+    {
+      id: 'starter',
+      nom: 'Starter',
+      prix: 99,
+      description: 'Idéal pour les petites équipes en démarrage.',
+      utilisateurs: 'Jusqu\'à 10 users',
+      features: ['Gestion de Projets basique', 'RH Essentials', '5 Go de Stockage', 'Support par Email']
+    },
+    {
+      id: 'professional',
+      nom: 'Professional',
+      prix: 299,
+      description: 'Pour les entreprises en pleine croissance.',
+      utilisateurs: 'Jusqu\'à 50 users',
+      features: ['Tout dans Starter', 'Analyses IA avancées', 'Gestion RH complète', '50 Go de Stockage', 'Support Prioritaire'],
+      popular: true
+    },
+    {
+      id: 'enterprise',
+      nom: 'Enterprise',
+      prix: 899,
+      description: 'Puissance maximale pour grandes structures.',
+      utilisateurs: 'Illimité',
+      features: ['Tout dans Pro', 'Custom Branding', 'API Access', 'Stockage Illimité', 'Account Manager dédié']
+    }
   ];
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.currentUser = user;
     this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
-    this.loadData();
-    this.checkExpiringSubscriptions();
+    this.loadSocieteInfo();
+    this.loadAbonnement();
+    this.loadTransactions();
   }
 
-  loadData() {
-    const storage = this.api.getRawStorage();
-    const abos = storage.abonnements || [];
-    const abo = abos.find((a: any) => a.societeId === this.societeId);
-    if (abo) {
-      this.abonnement = {
-        plan: abo.type || 'Pro Ecosystem',
-        statut: abo.actif ? 'Active' : 'Standby',
-        dateDebut: new Date(abo.dateDebut).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
-        prochainRenouvellement: new Date(abo.dateFin).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
-        prix: abo.prix || 0,
-        utilisateurs: abo.nbUsers || '20'
-      };
-    }
-    const paiements = storage.paiements || [];
-    this.transactions = paiements.filter((p: any) => p.societeId === this.societeId)
-      .map((t: any) => ({ ...t, id: t.id || Math.random().toString(36).substr(2, 20), date: new Date(t.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) }));
-    
-    this.paymentMethods = storage.paymentMethods || [
-      { id: '1', nom: 'Mastercard Node', details: '•••• •••• •••• 4492', defaut: true, type: 'card' },
-      { id: '2', nom: 'Visa Network', details: '•••• •••• •••• 9901', defaut: false, type: 'card' }
-    ];
+  loadSocieteInfo() {
+    if (!this.societeId) return;
+    this.api.get(`api/societe/obtenir/id/${this.societeId}`).subscribe((res: any) => {
+      this.societeNom = res?.nom || 'Votre Société';
+    });
   }
 
-  getPlanIcon(id: string): string {
-    const icons: any = { starter: 'rocket-takeoff', pro: 'lightning-charge-fill', enterprise: 'shield-shaded' };
-    return icons[id] || 'star';
+  loadAbonnement() {
+    this.api.get(`api/abonnements`).subscribe((res: any) => {
+      // Filtrer pour la société actuelle
+      const mine = res.find((a: any) => a.societeId === this.societeId && a.actif);
+      this.currentAbonnement = mine;
+    });
   }
 
-  selectPlan(p: Plan) { this.selectedPlan = p; }
-  
-  goToPaymentMethod() {
+  loadTransactions() {
+    this.api.get(`api/paiements`).subscribe((res: any) => {
+      this.transactions = (res || [])
+        .filter((t: any) => t.societeId === this.societeId)
+        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    });
+  }
+
+  selectPlan(plan: Plan) {
+    this.selectedPlan = plan;
+    this.showCheckout = true;
+  }
+
+  processCheckout() {
     if (!this.selectedPlan) return;
-    this.showPaymentModal = true;
-    this.paymentData = { cardName: '', cardNumber: '', expiry: '', cvc: '' };
-  }
+    this.loading = true;
 
-  processPayment() {
-    this.showPaymentModal = true;
-    this.paymentData = { cardName: '', cardNumber: '', expiry: '', cvc: '' };
-  }
+    // Simuler un délai de traitement bancaire
+    setTimeout(() => {
+      const payloadPaiement = {
+        Id: 'PAY' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+        SocieteId: this.societeId,
+        SocieteNom: this.societeNom,
+        Description: `Abonnement Plan ${this.selectedPlan?.nom}`,
+        Montant: this.selectedPlan?.prix,
+        Date: new Date().toISOString(),
+        Statut: 'Success',
+        Type: 'Carte Bancaire'
+      };
 
-  confirmPayment() {
-    this.isLoading = true;
-    
-    const currentPrice = this.getCurrentPrice();
-    const periodLabel = this.getPeriodLabel();
-    
-    // 1. Create Payment record
-    const paiementDto = {
-      id: crypto.randomUUID(),
-      societeId: this.societeId,
-      societeNom: this.societeNom,
-      montant: currentPrice,
-      date: new Date().toISOString(),
-      description: `Subscription Sync: ${this.selectedPlan?.nom || this.abonnement?.plan} - ${periodLabel}`,
-      methode: 'Card',
-      statut: 'Success',
-      type: 'NEW_SUBSCRIPTION',
-      periode: this.selectedPeriod
-    };
+      const payloadAbonnement = {
+        Id: 'SUB' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+        SocieteId: this.societeId,
+        TypeAbonnement: this.selectedPlan?.nom,
+        DateDebut: new Date().toISOString(),
+        DateFin: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+        Actif: true
+      };
 
-    this.api.createPaiement(paiementDto).subscribe({
-      next: () => {
-        this.saveTransactionToStorage(paiementDto);
-        
-        // 2. Create/Update Subscription
-        const aboDto = {
-          id: this.abonnement?.id || crypto.randomUUID(),
-          societeId: this.societeId,
-          societeNom: this.societeNom,
-          adminId: this.currentUser?.id,
-          adminNom: this.currentUser?.nom,
-          adminEmail: this.currentUser?.email,
-          type: this.selectedPlan?.nom || this.abonnement?.plan,
-          periode: this.selectedPeriod,
-          dateDebut: new Date().toISOString(),
-          dateFin: this.getNextDate(),
-          actif: true,
-          prix: currentPrice,
-          nbUsers: this.getPlanUsers() ? parseInt(this.getPlanUsers()) : 20
-        };
-
-        this.api.createAbonnement(aboDto).subscribe({
-          next: () => {
-            this.saveAbonnementToStorage(aboDto);
-            this.sendPaymentNotificationToSuperAdmin(this.societeNom, this.selectedPlan?.nom || this.abonnement?.plan, currentPrice, this.selectedPlan?.utilisateurs || this.abonnement?.utilisateurs);
-            this.isLoading = false;
-            this.showPaymentModal = false;
-            this.paymentCompleted = true;
-            this.snackBar.open('Payment verified. Subscription ecosystem synchronized.', 'OK', { duration: 5000 });
-            this.loadData();
-          },
-          error: (err) => {
-            this.isLoading = false;
-            this.snackBar.open('Ecosystem sync failed. Please check your secure node.', 'Retry');
-          }
+      // 1. Enregistrer le paiement
+      this.api.post('api/paiements', payloadPaiement).subscribe(() => {
+        // 2. Créer l'abonnement
+        this.api.post('api/abonnements', payloadAbonnement).subscribe(() => {
+          this.loading = false;
+          this.showCheckout = false;
+          this.snack.open('Paiement réussi ! Votre abonnement est actif.', 'OK', { duration: 5000 });
+          this.loadAbonnement();
+          this.loadTransactions();
         });
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.snackBar.open('Financial authorization failed. Security breach prevented.', 'Retry');
-      }
-    });
-  }
-
-  getCurrentPrice(): number {
-    if (!this.selectedPlan) return this.abonnement?.prix || 0;
-    const periods = this.selectedPlan.periods;
-    if (!periods) return this.selectedPlan.prix;
-    return periods[this.selectedPeriod] || this.selectedPlan.prix;
-  }
-
-  getPeriodLabel(): string {
-    const labels: any = { monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' };
-    return labels[this.selectedPeriod] || 'Monthly';
-  }
-
-  getDiscount(): number {
-    if (!this.selectedPlan) return 0;
-    const periods = this.selectedPlan.periods;
-    if (!periods) return 0;
-    const monthlyTotal = periods.monthly * 12;
-    const yearlyPrice = periods.yearly;
-    return Math.round(((monthlyTotal - yearlyPrice) / monthlyTotal) * 100);
-  }
-
-  getPlanUsers(): string {
-    if (!this.selectedPlan) return '';
-    const users = this.selectedPlan.utilisateurs;
-    if (users === 'Unlimited') return '9999';
-    const num = users.match(/\d+/);
-    return num ? num[0] : '20';
-  }
-
-  getNextDate(): string {
-    const date = new Date();
-    switch (this.selectedPeriod) {
-      case 'quarterly':
-        date.setMonth(date.getMonth() + 3);
-        break;
-      case 'yearly':
-        date.setFullYear(date.getFullYear() + 1);
-        break;
-      default:
-        date.setMonth(date.getMonth() + 1);
-    }
-    return date.toISOString();
-  }
-
-  selectPaymentMethod(method: PaymentMethod) {
-    this.selectedPaymentMethod = method;
-    this.paymentMethodSaved = true;
-  }
-
-  isPaymentMethodValid(): boolean {
-    if (this.newPayment.type === 'card') {
-      return !!(this.newPayment.numero && this.newPayment.expiration && this.newPayment.cvv);
-    } else {
-      return !!(this.newPayment.iban && this.newPayment.iban.length >= 20);
-    }
-  }
-
-  savePaymentMethod() {
-    const storage = this.api.getRawStorage();
-    
-    if (this.newPayment.type === 'card') {
-      const method: PaymentMethod = {
-        id: Date.now().toString(),
-        type: 'card',
-        nom: 'Visa ****' + this.newPayment.numero.slice(-4),
-        details: 'Expire ' + this.newPayment.expiration,
-        defaut: true,
-        numero: this.newPayment.numero,
-        expiration: this.newPayment.expiration,
-        cvv: this.newPayment.cvv
-      };
-      this.paymentMethods.push(method);
-      storage.paymentMethods = storage.paymentMethods || [];
-      storage.paymentMethods.push(method);
-    } else if (this.newPayment.type === 'virement' && this.newPayment.iban) {
-      const method: PaymentMethod = {
-        id: Date.now().toString(),
-        type: 'virement',
-        nom: 'Bank Transfer',
-        details: 'RIB: ' + this.newPayment.iban,
-        defaut: false,
-        iban: this.newPayment.iban
-      };
-      this.paymentMethods.push(method);
-      storage.paymentMethods = storage.paymentMethods || [];
-      storage.paymentMethods.push(method);
-    }
-    
-    localStorage.setItem('app_data', JSON.stringify(storage));
-    this.paymentMethodSaved = true;
-    this.selectedPaymentMethod = this.paymentMethods[this.paymentMethods.length - 1];
-    this.snackBar.open('Payment method registered successfully', 'OK', { duration: 3000 });
-  }
-
-  setDefault(method: PaymentMethod) {
-    this.paymentMethods.forEach(m => m.defaut = m.id === method.id);
-    const storage = this.api.getRawStorage();
-    storage.paymentMethods = this.paymentMethods;
-    localStorage.setItem('app_data', JSON.stringify(storage));
-    this.snackBar.open('Default payment method updated', 'OK', { duration: 3000 });
-  }
-
-  supprimerMoyen(method: PaymentMethod) {
-    this.paymentMethods = this.paymentMethods.filter(m => m.id !== method.id);
-    const storage = this.api.getRawStorage();
-    storage.paymentMethods = this.paymentMethods;
-    localStorage.setItem('app_data', JSON.stringify(storage));
-    this.snackBar.open('Payment method removed', 'OK', { duration: 3000 });
-  }
-
-  saveTransactionToStorage(transaction: any) {
-    const storage = this.api.getRawStorage();
-    if (!storage.paiements) storage.paiements = [];
-    storage.paiements.push(transaction);
-    localStorage.setItem('app_data', JSON.stringify(storage));
-  }
-
-  saveAbonnementToStorage(abo: any) {
-    const storage = this.api.getRawStorage();
-    if (!storage.abonnements) storage.abonnements = [];
-    const existingIndex = storage.abonnements.findIndex((a: any) => a.societeId === this.societeId);
-    if (existingIndex >= 0) {
-      storage.abonnements[existingIndex] = abo;
-    } else {
-      storage.abonnements.push(abo);
-    }
-    localStorage.setItem('app_data', JSON.stringify(storage));
-  }
-
-  telechargerRecu(transaction: any) {
-    const content = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Payment Receipt - ${transaction.id}</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
-    .header { text-align: center; margin-bottom: 30px; }
-    .logo { font-size: 24px; font-weight: bold; color: #6366f1; }
-    .title { font-size: 18px; margin: 20px 0; }
-    .info { margin: 15px 0; }
-    .label { font-weight: bold; color: #555; }
-    .total { font-size: 20px; font-weight: bold; color: #10b981; margin-top: 20px; }
-    .footer { margin-top: 40px; text-align: center; color: #777; font-size: 12px; }
-    .status { display: inline-block; padding: 5px 15px; background: #10b981; color: white; border-radius: 4px; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="logo">NADHEMNI</div>
-    <div>Payment Receipt</div>
-  </div>
-  
-  <div class="title"><strong>Receipt Nº:</strong> ${transaction.id}</div>
-  
-  <div class="info">
-    <span class="label">Company:</span> ${this.societeNom}
-  </div>
-  <div class="info">
-    <span class="label">Date:</span> ${transaction.date}
-  </div>
-  <div class="info">
-    <span class="label">Description:</span> ${transaction.description}
-  </div>
-  <div class="info">
-    <span class="label">Status:</span> <span class="status">${transaction.statut}</span>
-  </div>
-  
-  <div class="total">
-    Amount: ${transaction.montant} DT
-  </div>
-  
-  <div class="footer">
-    <p>Thank you for your trust!</p>
-    <p>Generated on ${new Date().toLocaleString('fr-FR')}</p>
-  </div>
-</body>
-</html>`;
-
-    const blob = new Blob([content], { type: 'text/html' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `receipt_${transaction.id}.html`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-    this.snackBar.open('Receipt downloaded', 'OK', { duration: 3000 });
-  }
-
-  voirHistorique() {
-    const content = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Transaction History - ${this.societeNom}</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-    th { background: #6366f1; color: white; }
-    tr:nth-child(even) { background: #f9f9f9; }
-    .total { font-weight: bold; }
-  </style>
-</head>
-<body>
-  <h1>Transaction History</h1>
-  <p><strong>Company:</strong> ${this.societeNom}</p>
-  <p><strong>Generated on:</strong> ${new Date().toLocaleString('fr-FR')}</p>
-  
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Description</th>
-        <th>Amount</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${this.transactions.map(t => `
-      <tr>
-        <td>${t.date}</td>
-        <td>${t.description}</td>
-        <td>${t.montant} DT</td>
-        <td>${t.statut}</td>
-      </tr>
-      `).join('')}
-    </tbody>
-  </table>
-  
-  <p style="margin-top: 20px;"><strong>Total:</strong> ${this.transactions.reduce((sum, t) => sum + (parseFloat(t.montant) || 0), 0)} DT</p>
-</body>
-</html>`;
-
-    const blob = new Blob([content], { type: 'text/html' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `history_${this.societeNom.replace(/\s+/g, '_')}.html`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-    this.snackBar.open('History downloaded', 'OK', { duration: 3000 });
-  }
-
-  contacterSupport() {
-    const initialMessage = `Hello, I would like to activate a subscription for our company ${this.societeNom}.`;
-    this.initiateChatWithSuperAdmin(initialMessage);
-    this.snackBar.open('You can contact support via chat', 'OK', { duration: 3000 });
-  }
-
-  initiateChatWithSuperAdmin(message: string) {
-    const storage = this.api.getRawStorage();
-    if (!storage.conversations) storage.conversations = {};
-
-    const key = this.societeId || 'SUPER';
-    if (!storage.conversations[key]) storage.conversations[key] = [];
-
-    const user = this.api.getCurrentUser();
-    storage.conversations[key].push({
-      id: Date.now().toString(),
-      text: message,
-      from: user?.id || this.societeId,
-      fromName: user?.nom || this.societeNom,
-      fromRole: user?.typeUtilisateurId || 'Company Admin',
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      date: new Date().toISOString()
-    });
-
-    localStorage.setItem('app_data', JSON.stringify(storage));
-  }
-
-  checkExpiringSubscriptions() {
-    const storage = this.api.getRawStorage();
-    const abos = storage.abonnements || [];
-    const today = new Date();
-    const warningDays = 7;
-
-    const myAbo = abos.find((a: any) => a.societeId === this.societeId);
-    if (!myAbo || !myAbo.dateFin) return;
-
-    const endDate = new Date(myAbo.dateFin);
-    const daysUntilExpiry = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (daysUntilExpiry <= warningDays && daysUntilExpiry > 0 && !myAbo.notified) {
-      this.sendPaymentNotificationToSuperAdmin(
-        this.societeNom,
-        myAbo.type || 'Plan',
-        myAbo.prix || 0,
-        myAbo.nbUsers ? `${myAbo.nbUsers} users` : 'N/A',
-        'RENEWAL'
-      );
-      
-      myAbo.notified = true;
-      localStorage.setItem('app_data', JSON.stringify(storage));
-    }
-  }
-
-  sendPaymentNotificationToSuperAdmin(societeNom: string, planNom: string, prix: number, utilisateurs: any, type: string = 'NEW') {
-    const storage = this.api.getRawStorage();
-    if (!storage.conversations) storage.conversations = {};
-    
-    const superAdminKey = 'SUPER_ADMIN';
-    if (!storage.conversations[superAdminKey]) {
-      storage.conversations[superAdminKey] = [];
-    }
-
-    const isRenewal = type === 'RENEWAL';
-    const emoji = isRenewal ? '🔄' : '📢';
-    const title = isRenewal ? 'Subscription Renewal' : 'New Payment Processed';
-
-    const notificationMessage = {
-      id: Date.now().toString(),
-      text: `${emoji} ${title}!\n\nCompany: ${societeNom}\nPlan: ${planNom}\nAmount: ${prix} DT\nUsers: ${utilisateurs}\nDate: ${new Date().toLocaleDateString('fr-FR')}`,
-      from: this.currentUser?.id,
-      fromName: this.currentUser?.nom || societeNom,
-      fromRole: 'Company Admin',
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      date: new Date().toISOString(),
-      type: type
-    };
-
-    storage.conversations[superAdminKey].push(notificationMessage);
-    localStorage.setItem('app_data', JSON.stringify(storage));
-    console.log(`Notification of ${type === 'RENEWAL' ? 'renewal' : 'payment'} sent to Super Admin`);
+      });
+    }, 2000);
   }
 }

@@ -582,27 +582,52 @@ export class DevTimeTrackingComponent implements OnInit, OnDestroy {
 
   loadTodayStatus() {
     const user = this.api.getCurrentUser();
-    this.api.getPointages(user.id).subscribe(data => {
-      const today = new Date().toISOString().split('T')[0];
-      const todayEntry = data.find((p: any) => p.date?.split('T')[0] === today);
+    if (!user) return;
+    const uid = user.id || user.utilisateurId;
+    
+    this.api.getPointages(uid).subscribe(data => {
+      console.log('Pointages reçus:', data);
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      
+      // Trouver l'entrée d'aujourd'hui (flexible sur le format de date et le casing)
+      const todayEntry = data.find((p: any) => {
+        const rawDate = p.date || p.Date;
+        if (!rawDate) return false;
+        const pDate = typeof rawDate === 'string' ? rawDate.split('T')[0] : new Date(rawDate).toISOString().split('T')[0];
+        return pDate === today;
+      });
       
       if (todayEntry) {
+        console.log('Entrée du jour trouvée:', todayEntry);
         this.clockInData = todayEntry;
-        this.isClockedIn = !todayEntry.heureSortie;
+        const hs = todayEntry.heureSortie || todayEntry.HeureSortie;
+        // On est "clocked in" si on a une entrée mais pas encore de sortie
+        this.isClockedIn = !hs || hs === '00:00:00' || hs === '00:00';
         
-        if (todayEntry.heureEntree) {
-          this.api.getWorkedHoursReal(user.id).subscribe(res => {
-             this.workedHours = res.heuresTravaillees.toFixed(1);
+        if (todayEntry.heureEntree || todayEntry.HeureEntree) {
+          this.api.getWorkedHoursReal(uid).subscribe(res => {
+             this.workedHours = (res.hours || res.heuresTravaillees || 0).toFixed(1);
           });
         }
+      } else {
+        this.isClockedIn = false;
+        this.clockInData = null;
       }
     });
   }
 
   loadHistory() {
     const user = this.api.getCurrentUser();
-    this.api.getPointages(user.id).subscribe(data => {
-      this.history = data.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    if (!user) return;
+    const uid = user.id || user.utilisateurId;
+    
+    this.api.getPointages(uid).subscribe(data => {
+      this.history = data.sort((a: any, b: any) => {
+        const dateA = new Date(a.date || a.Date).getTime();
+        const dateB = new Date(b.date || b.Date).getTime();
+        return dateB - dateA;
+      }).slice(0, 10); // Limiter à 10 entrées
     });
   }
 
@@ -612,6 +637,7 @@ export class DevTimeTrackingComponent implements OnInit, OnDestroy {
     this.api.clockIn(uid, user.societeId).subscribe({
       next: (res) => {
         this.snackBar.open('Pointage d\'entrée validé. Bon travail !', 'Fermer', { duration: 4000 });
+        this.isClockedIn = true;
         this.loadTodayStatus();
         this.loadHistory();
       },
@@ -624,9 +650,11 @@ export class DevTimeTrackingComponent implements OnInit, OnDestroy {
   clockOut() {
     const user = this.api.getCurrentUser();
     const uid = user.id || user.utilisateurId;
-    this.api.clockOut(uid, user.societeId).subscribe({
+    const pointageId = this.clockInData?.id || this.clockInData?.Id;
+    this.api.clockOut(uid, user.societeId, '', pointageId).subscribe({
       next: () => {
         this.snackBar.open('Pointage de sortie validé. Bonne soirée !', 'Fermer', { duration: 4000 });
+        this.isClockedIn = false;
         this.loadTodayStatus();
         this.loadHistory();
       },

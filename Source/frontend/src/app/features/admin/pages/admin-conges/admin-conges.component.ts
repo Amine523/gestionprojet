@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
@@ -17,23 +18,22 @@ interface Conge {
 }
 
 @Component({
-  selector: 'app-rh-conges',
+  selector: 'app-admin-conges',
   standalone: true,
-  imports: [CommonModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
-
     <div class="dashboard-container">
       <!-- Header -->
       <header class="dashboard-header">
         <div class="header-content">
           <div class="header-badges">
-            <span class="badge badge-primary">RH</span>
+            <span class="badge badge-primary">Administration</span>
           </div>
           <h1 class="header-title">
-            Centre de <span class="gradient-text">Validation.</span>
+            Contrôle des <span class="gradient-text">Congés.</span>
           </h1>
           <p class="header-subtitle">
-            {{societeNom}} • Coordination de la disponibilité des équipes.
+            {{societeNom}} • Supervision globale des absences et validation des demandes collaborateurs.
           </p>
         </div>
         <div class="header-actions">
@@ -41,7 +41,7 @@ interface Conge {
               @if (enAttenteCount() > 0) {
                 <span class="pulse-dot"></span>
               }
-              {{enAttenteCount()}} requêtes à traiter
+              {{enAttenteCount()}} en attente
            </div>
            <button class="btn btn-secondary" (click)="loadData()">
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -82,36 +82,44 @@ interface Conge {
           </div>
           <div class="stat-info">
              <div class="stat-value">{{statsSignal().congesValidesCeMois}}</div>
-             <div class="stat-label">Approuvés ce mois</div>
+             <div class="stat-label">Approuvés (Mois)</div>
           </div>
         </div>
-        @if (enAttenteCount() > 0) {
-          <div class="card stat-card pulse-card">
-            <div class="stat-icon amber">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-            </div>
-            <div class="stat-info">
-               <div class="stat-value">{{enAttenteCount()}}</div>
-               <div class="stat-label">En attente</div>
-            </div>
+        <div class="card stat-card pulse-card" *ngIf="enAttenteCount() > 0">
+          <div class="stat-icon amber">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
           </div>
-        }
+          <div class="stat-info">
+             <div class="stat-value">{{enAttenteCount()}}</div>
+             <div class="stat-label">À Valider</div>
+          </div>
+        </div>
       </div>
 
       <!-- Main Content -->
       <div class="card main-content">
         <div class="content-header">
-            <h3>Registre des Demandes</h3>
+            <div class="header-left">
+              <h3>Registre Central des Absences</h3>
+              <div class="filter-tabs">
+                <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="activeTab = 'all'">Tous</button>
+                <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="activeTab = 'pending'">
+                  En attente
+                  <span class="count-badge" *ngIf="enAttenteCount() > 0">{{enAttenteCount()}}</span>
+                </button>
+                <button class="tab-btn" [class.active]="activeTab === 'approved'" (click)="activeTab = 'approved'">Validés</button>
+              </div>
+            </div>
             <div class="table-actions">
                <button class="btn-icon" title="Filtrer">
                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                  </svg>
                </button>
-               <button class="btn-icon" title="Exporter PDF">
+               <button class="btn-icon" title="Exporter Excel">
                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                    <polyline points="7 10 12 15 17 10"/>
@@ -125,7 +133,6 @@ interface Conge {
           <table class="data-table">
             <thead>
               <tr>
-                <th>Réf.</th>
                 <th>Collaborateur</th>
                 <th>Type</th>
                 <th>Période</th>
@@ -135,12 +142,11 @@ interface Conge {
               </tr>
             </thead>
             <tbody>
-              @for (c of congesSignal(); track c.id) {
+              @for (c of filteredConges(); track c.id) {
                 <tr>
-                  <td class="ref-cell">#{{c.id.substring(0,6)}}</td>
                   <td>
                      <div class="emp-cell">
-                        <div class="user-avatar" [style.background]="'hsl('+((c.utilisateurNom.length || 0) * 40)+', 60%, 55%)'">{{c.utilisateurNom.charAt(0) || '?'}}</div>
+                        <div class="user-avatar" [style.background]="'hsl('+((c.utilisateurNom.length || 0) * 40)+', 60%, 55%)'">{{c.utilisateurNom.charAt(0)}}</div>
                         <span class="emp-name">{{c.utilisateurNom}}</span>
                      </div>
                   </td>
@@ -150,7 +156,7 @@ interface Conge {
                   <td class="date-range">
                      <div class="date-display">
                        <span>{{c.dateDebut | date:'dd MMM'}}</span>
-                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                          <polyline points="9 18 15 12 9 6"/>
                        </svg>
                        <span>{{c.dateFin | date:'dd MMM'}}</span>
@@ -194,7 +200,7 @@ interface Conge {
             </tbody>
           </table>
 
-          @if (congesSignal().length === 0) {
+          @if (filteredConges().length === 0) {
             <div class="empty-state">
                <div class="empty-icon">
                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -202,8 +208,8 @@ interface Conge {
                    <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5"/>
                  </svg>
                </div>
-               <h3>Aucune demande en attente</h3>
-               <p>Votre équipe est à jour. Profitez-en pour consulter les rapports.</p>
+               <h3>Aucun enregistrement</h3>
+               <p>Le registre est vide pour ce filtre.</p>
             </div>
           }
         </div>
@@ -215,13 +221,14 @@ interface Conge {
       display: flex;
       flex-direction: column;
       gap: var(--space-xl);
+      padding: var(--space-lg);
       padding-bottom: var(--space-2xl);
     }
 
     .dashboard-header {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       border-radius: var(--radius-xl);
-      padding: var(--space-2xl);
+      padding: var(--space-xl);
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -238,7 +245,7 @@ interface Conge {
       right: -20%;
       width: 600px;
       height: 600px;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(244, 63, 94, 0.1) 0%, transparent 70%);
       border-radius: 50%;
     }
 
@@ -266,9 +273,9 @@ interface Conge {
     }
 
     .badge-primary {
-      background: rgba(99, 102, 241, 0.1);
-      color: #6366f1;
-      border: 1px solid rgba(99, 102, 241, 0.2);
+      background: rgba(244, 63, 94, 0.1);
+      color: #f43f5e;
+      border: 1px solid rgba(244, 63, 94, 0.2);
     }
 
     .header-title {
@@ -280,7 +287,7 @@ interface Conge {
     }
 
     .gradient-text {
-      background: linear-gradient(135deg, #818cf8, #6366f1, #4f46e5);
+      background: linear-gradient(135deg, #fb7185, #f43f5e, #e11d48);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -376,30 +383,15 @@ interface Conge {
 
     .btn-icon:hover {
       background: var(--color-surface);
-      border-color: rgba(99, 102, 241, 0.3);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: #f43f5e;
     }
 
-    .btn-check {
-      color: #059669;
-      background: #ecfdf5;
-    }
-
-    .btn-check:hover {
-      background: #059669;
-      color: white;
-      transform: scale(1.1);
-    }
-
-    .btn-cancel {
-      color: #dc2626;
-      background: #fef2f2;
-    }
-
-    .btn-cancel:hover {
-      background: #dc2626;
-      color: white;
-      transform: scale(1.1);
-    }
+    .btn-check { color: #059669; background: #ecfdf5; }
+    .btn-check:hover { background: #059669; color: white; transform: scale(1.1); }
+    
+    .btn-cancel { color: #dc2626; background: #fef2f2; }
+    .btn-cancel:hover { background: #dc2626; color: white; transform: scale(1.1); }
 
     .stats-grid {
       display: grid;
@@ -415,9 +407,7 @@ interface Conge {
       transition: transform var(--transition-base);
     }
 
-    .stat-card:hover {
-      transform: translateY(-4px);
-    }
+    .stat-card:hover { transform: translateY(-4px); }
 
     .stat-icon {
       width: 52px;
@@ -428,20 +418,9 @@ interface Conge {
       justify-content: center;
     }
 
-    .stat-icon.indigo {
-      background: #eef2ff;
-      color: #4f46e5;
-    }
-
-    .stat-icon.emerald {
-      background: #ecfdf5;
-      color: #10b981;
-    }
-
-    .stat-icon.amber {
-      background: #fffbeb;
-      color: #f59e0b;
-    }
+    .stat-icon.indigo { background: #eef2ff; color: #4f46e5; }
+    .stat-icon.emerald { background: #ecfdf5; color: #10b981; }
+    .stat-icon.amber { background: #fffbeb; color: #f59e0b; }
 
     .stat-value {
       font-size: 24px;
@@ -457,15 +436,6 @@ interface Conge {
       margin-top: var(--space-xs);
     }
 
-    .pulse-card {
-      animation: pulse-border 2s infinite;
-    }
-
-    @keyframes pulse-border {
-      0%, 100% { box-shadow: var(--shadow-sm); }
-      50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2); }
-    }
-
     .card {
       background: white;
       border-radius: var(--radius-xl);
@@ -473,10 +443,14 @@ interface Conge {
       box-shadow: var(--shadow-sm);
     }
 
-    .main-content {
-      padding: 0;
-      overflow: hidden;
+    .pulse-card { animation: pulse-border 2s infinite; }
+
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: var(--shadow-sm); }
+      50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2); }
     }
+
+    .main-content { padding: 0; overflow: hidden; }
 
     .content-header {
       padding: var(--space-lg);
@@ -487,31 +461,44 @@ interface Conge {
       background: white;
     }
 
-    .content-header h3 {
-      margin: 0;
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-    }
+    .header-left { display: flex; align-items: center; gap: var(--space-xl); }
 
-    .table-actions {
+    .content-header h3 { margin: 0; font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text); }
+
+    .filter-tabs {
       display: flex;
-      gap: var(--space-xs);
-    }
-
-    .table-container {
-      background: white;
-      overflow-x: auto;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .data-table thead {
       background: var(--color-bg);
+      padding: 4px;
+      border-radius: var(--radius-lg);
+      gap: 4px;
     }
+
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn.active { background: white; color: #f43f5e; box-shadow: var(--shadow-sm); }
+
+    .count-badge { background: #f43f5e; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; }
+
+    .table-actions { display: flex; gap: var(--space-xs); }
+
+    .table-container { background: white; overflow-x: auto; }
+
+    .data-table { width: 100%; border-collapse: collapse; }
+
+    .data-table thead { background: var(--color-bg); }
 
     .data-table th {
       padding: var(--space-md);
@@ -524,247 +511,77 @@ interface Conge {
       border-bottom: 1px solid var(--color-border);
     }
 
-    .data-table td {
-      padding: var(--space-md);
-      border-bottom: 1px solid var(--color-border);
-    }
+    .data-table td { padding: var(--space-md); border-bottom: 1px solid var(--color-border); }
 
-    .ref-cell {
-      font-family: 'Courier New', monospace;
-      font-weight: var(--font-weight-bold);
-      color: #3b82f6;
-      font-size: var(--font-size-xs);
-    }
-
-    .emp-cell {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-    }
+    .emp-cell { display: flex; align-items: center; gap: var(--space-md); }
 
     .user-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-md);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-bold);
+      width: 36px; height: 36px; border-radius: var(--radius-md); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--font-size-sm); font-weight: var(--font-weight-bold);
       box-shadow: var(--shadow-sm);
     }
 
-    .emp-name {
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-    }
+    .emp-name { font-weight: var(--font-weight-semibold); color: var(--color-text); }
 
-    .type-pill {
-      background: var(--color-bg);
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-    }
+    .type-pill { background: var(--color-bg); padding: 4px 10px; border-radius: var(--radius-md); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text); }
 
-    .type-maladie {
-      background: #fef2f2;
-      color: #ef4444;
-    }
+    .type-maladie { background: #fef2f2; color: #ef4444; }
 
-    .date-range {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xs);
-    }
+    .date-range { display: flex; flex-direction: column; gap: 4px; }
 
-    .date-display {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-    }
+    .date-display { display: flex; align-items: center; gap: 8px; font-weight: var(--font-weight-semibold); color: var(--color-text); font-size: 13px; }
 
-    .day-count {
-      font-weight: var(--font-weight-bold);
-      color: #3b82f6;
-      font-size: var(--font-size-xs);
-      background: #eff6ff;
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-sm);
-      width: fit-content;
-    }
+    .day-count { font-weight: var(--font-weight-bold); color: #f43f5e; font-size: var(--font-size-xs); background: #fff1f2; padding: 2px 8px; border-radius: var(--radius-sm); width: fit-content; }
 
-    .motif-cell {
-      color: var(--color-text-muted);
-      font-style: italic;
-      max-width: 250px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      cursor: pointer;
-    }
+    .motif-cell { color: var(--color-text-muted); font-style: italic; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
 
-    .status-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      padding: var(--space-xs) var(--space-md);
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-    }
+    .status-chip { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: var(--radius-full); font-size: 11px; font-weight: var(--font-weight-semibold); text-transform: uppercase; }
 
-    .status-chip .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
+    .status-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
 
-    .status-validée {
-      background: #ecfdf5;
-      color: #059669;
-    }
+    .status-validée { background: #ecfdf5; color: #059669; }
+    .status-validée .dot { background: #059669; box-shadow: 0 0 8px #059669; }
+    
+    .status-refusée { background: #fef2f2; color: #dc2626; }
+    .status-refusée .dot { background: #dc2626; }
+    
+    .status-en-attente { background: #fffbeb; color: #d97706; }
+    .status-en-attente .dot { background: #d97706; animation: blink 1.5s infinite; }
 
-    .status-validée .dot {
-      background: #059669;
-      box-shadow: 0 0 8px #059669;
-    }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-    .status-refusée {
-      background: #fef2f2;
-      color: #dc2626;
-    }
+    .action-group { display: flex; gap: 8px; }
 
-    .status-refusée .dot {
-      background: #dc2626;
-    }
+    .empty-state { padding: var(--space-3xl); text-align: center; color: var(--color-text-muted); }
 
-    .status-en-attente {
-      background: #fffbeb;
-      color: #d97706;
-    }
+    .empty-icon { width: 64px; height: 64px; background: var(--color-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg); }
 
-    .status-en-attente .dot {
-      background: #d97706;
-      animation: blink 1.5s infinite;
-    }
-
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0.3; }
-      100% { opacity: 1; }
-    }
-
-    .action-group {
-      display: flex;
-      gap: var(--space-xs);
-    }
-
-    .empty-state {
-      padding: var(--space-3xl);
-      text-align: center;
-      color: var(--color-text-muted);
-      background: white;
-    }
-
-    .empty-icon {
-      width: 80px;
-      height: 80px;
-      background: var(--color-bg);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto var(--space-lg);
-      color: var(--color-text-muted);
-    }
-
-    .empty-state h3 {
-      color: var(--color-text);
-      font-weight: var(--font-weight-bold);
-      margin-bottom: var(--space-xs);
-    }
-
-    /* Dark mode */
-    :host-context(.dark) .card {
-      background: var(--color-surface);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .content-header,
-    :host-context(.dark) .table-container {
-      background: var(--color-surface);
-    }
-
-    :host-context(.dark) .data-table thead {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    :host-context(.dark) .header-badge {
-      background: var(--color-surface);
-      border-color: var(--color-border);
-      color: var(--color-text);
-    }
-
-    :host-context(.dark) .btn-secondary {
-      background: var(--color-surface);
-      border-color: var(--color-border);
-      color: var(--color-text);
-    }
-
-    :host-context(.dark) .stat-icon.indigo {
-      background: rgba(79, 70, 229, 0.1);
-    }
-
-    :host-context(.dark) .stat-icon.emerald {
-      background: rgba(16, 185, 129, 0.1);
-    }
-
-    :host-context(.dark) .stat-icon.amber {
-      background: rgba(245, 158, 11, 0.1);
-    }
-
-    @media (max-width: 768px) {
-      .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .header-actions {
-        width: 100%;
-        flex-wrap: wrap;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .content-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--space-md);
-      }
-    }
+    @media (max-width: 768px) { .dashboard-header { flex-direction: column; } .header-left { flex-direction: column; align-items: flex-start; gap: var(--space-md); } }
   `]
 })
-export class RhCongesComponent implements OnInit {
-  private snackBar = inject(MatSnackBar);
+export class AdminCongesComponent implements OnInit {
   private api = inject(ApiService);
+  private snackBar = inject(MatSnackBar);
   private notificationService = inject(NotificationService);
-  
-  societeId: string = '';
-  societeNom: string = '';
-  currentUserId: string = '';
+
+  societeId = '';
+  societeNom = '';
+  currentUserId = '';
   
   congesSignal = signal<Conge[]>([]);
   statsSignal = signal({ totalEmployes: 0, congesValidesCeMois: 0, demandesCongesEnAttente: 0 });
+  activeTab = 'pending';
   employesMap: { [id: string]: string } = {};
 
   enAttenteCount = computed(() => this.congesSignal().filter(c => c.status === 'En attente').length);
+
+  filteredConges = computed(() => {
+    const list = this.congesSignal();
+    if (this.activeTab === 'pending') return list.filter(c => c.status === 'En attente');
+    if (this.activeTab === 'approved') return list.filter(c => c.status === 'Validée');
+    return list;
+  });
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
@@ -793,11 +610,20 @@ export class RhCongesComponent implements OnInit {
           this.employesMap[e.id || e.Id] = e.nom || e.Nom;
         });
 
-        this.api.getDemandesEnAttenteReal(this.societeId).subscribe({
+        this.api.getDemandesCongeBySociete(this.societeId).subscribe({
           next: (data) => {
             const list = data.map((d: any) => {
               const uId = d.utilisateurId || d.UtilisateurId;
               const uNom = d.utilisateurNom || d.UtilisateurNom || this.employesMap[uId] || 'Utilisateur ' + uId;
+              
+              let jours = d.jours || d.Jours || 0;
+              if (jours === 0 && d.dateDebut && d.dateFin) {
+                const start = new Date(d.dateDebut);
+                const end = new Date(d.dateFin);
+                const diffTime = Math.abs(end.getTime() - start.getTime());
+                jours = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+              }
+
               return {
                 id: d.id || d.Id,
                 utilisateurId: uId,
@@ -805,35 +631,38 @@ export class RhCongesComponent implements OnInit {
                 typeNom: d.typeNom || d.TypeNom || 'Congé',
                 dateDebut: d.dateDebut || d.DateDebut,
                 dateFin: d.dateFin || d.DateFin,
-                nombreJours: d.jours || d.Jours || 0,
+                nombreJours: jours,
                 motif: d.motif || d.Motif || '',
-                status: (d.status || d.Status || 'En attente').replace('_', ' ')
+                status: this.normalizeStatus(d.status || d.Status || 'En attente')
               };
             });
             this.congesSignal.set(list);
           },
-          error: () => this.congesSignal.set([])
+          error: () => {
+            this.snackBar.open('Erreur de chargement des demandes', 'Fermer', { duration: 3000 });
+          }
         });
-      },
-      error: () => this.congesSignal.set([])
+      }
     });
   }
 
   private normalizeStatus(status: string): string {
     if (!status) return 'En attente';
-    // Convert underscore to space for consistency
-    return status.replace('_', ' ');
+    const s = status.toLowerCase().replace('_', ' ');
+    if (s === 'en attente') return 'En attente';
+    if (s === 'validée' || s === 'valide' || s === 'approuvé' || s === 'validé') return 'Validée';
+    if (s === 'refusée' || s === 'refuse') return 'Refusée';
+    return status;
   }
 
   validerConge(conge: Conge, approuve: boolean) {
     const status = approuve ? 'Validée' : 'Refusée';
     const typeNotif = approuve ? 'success' : 'error';
-    
+
     this.api.validerDemandeCongeReal(conge.id, this.currentUserId, approuve).subscribe({
       next: (res) => {
         this.congesSignal.update(list => list.map(c => c.id === conge.id ? { ...c, status } : c));
         
-        // Notifier le collaborateur
         this.notificationService.notifyUser(
           conge.utilisateurId, 
           `Demande de congé ${status}`, 
@@ -841,18 +670,7 @@ export class RhCongesComponent implements OnInit {
           typeNotif
         );
 
-        // Notifier le Chef de Projet (Liaison Cross-Actor)
-        // Pour simplifier, on envoie une notification à la société si c'est une validation importante
-        if (approuve) {
-           this.notificationService.notifySociete(
-             this.societeId,
-             `Absence validée: ${conge.utilisateurNom}`,
-             `${conge.utilisateurNom} sera absent du ${new Date(conge.dateDebut).toLocaleDateString()} au ${new Date(conge.dateFin).toLocaleDateString()}.`,
-             'info'
-           );
-        }
-
-        this.snackBar.open(res.message, 'Fermer', { duration: 3000 });
+        this.snackBar.open(res.message || `Demande ${status.toLowerCase()} avec succès`, 'Fermer', { duration: 3000 });
         this.loadStats();
       },
       error: () => {
@@ -862,6 +680,6 @@ export class RhCongesComponent implements OnInit {
   }
 
   voirDetail(conge: Conge) {
-    this.snackBar.open(`Détails de la demande #${conge.id} - ${conge.utilisateurNom}`, 'Fermer', { duration: 5000 });
+    this.snackBar.open(`Détails: #${conge.id.substring(0,6)} - Motif: ${conge.motif || 'Aucun'}`, 'Fermer', { duration: 5000 });
   }
 }

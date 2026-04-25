@@ -137,7 +137,9 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
                 employesActifs = utilisateurs.Count(u => u.Actif == true);
                 var activeUserIds = utilisateurs.Where(u => u.Actif == true).Select(u => u.Id).ToList();
 
-                var pointages = await _pointageBusiness.ListeAsync();
+                var rawPointages = await _pointageBusiness.ListeAsync();
+                var pointages = rawPointages ?? new List<Gestprojet.Core.ApiParamSociete.Client.Model.PointageCore>();
+                
                 var societePointagesToday = pointages.Where(p => 
                     activeUserIds.Contains(p.UtilisateurId) &&
                     p.Date.HasValue &&
@@ -148,7 +150,10 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
                 totalHeuresAujourdhui = societePointagesToday.Sum(p => p.Duree ?? 0);
 
                 var demandes = await _demandeCongeBusiness.ListeParSocieteAsync(societeId);
-                demandesCongesEnAttente = demandes?.Count(d => d.Status == "En attente") ?? 0;
+                demandesCongesEnAttente = demandes?.Count(d => 
+                    d.Status == "En attente" || 
+                    d.Status == "En_attente" || 
+                    d.Status?.ToLower() == "pending") ?? 0;
                 congesValidesCeMois = demandes?.Count(d => 
                     d.Status == "Validée" && 
                     d.DateDebut.HasValue && 
@@ -166,6 +171,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
             {
                 TotalEmployes = totalEmployes,
                 EmployesActifs = employesActifs,
+                EmployesPresents = employesPresents,
                 EmployesAbsents = employesAbsents,
                 TotalHeuresAujourdhui = (decimal)Math.Round(totalHeuresAujourdhui, 2),
                 DemandesCongesEnAttente = demandesCongesEnAttente,
@@ -201,7 +207,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
                 UtilisateurId = request.UtilisateurId,
                 Date = request.Date.Date,
                 TypeId = request.TypeId,
-                HeureEntree = request.Date.ToString("HH:mm"),
+                HeureEntree = request.Date.ToString("HH:mm:ss"),
                 Actif = true
             };
 
@@ -211,14 +217,45 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
         public async Task<OperationResult> ClockOutAsync(ClockOutRequest request)
         {
             var today = DateTime.Today;
-            var pointages = await _pointageBusiness.ListeAsync();
-            var lastPointage = pointages
-                .Where(p => p.UtilisateurId == request.UtilisateurId && p.Date.HasValue && p.Date.Value.Date == today && string.IsNullOrEmpty(p.HeureSortie))
-                .OrderByDescending(p => p.HeureEntree)
-                .FirstOrDefault();
+            var rawPointages = await _pointageBusiness.ListeAsync();
+            var pointages = rawPointages ?? new List<Gestprojet.Core.ApiParamSociete.Client.Model.PointageCore>();
+            
+            _logger.LogInformation($"ClockOutAsync: Request for User:{request.UtilisateurId}, PointageId:{request.PointageId}");
+            _logger.LogInformation($"ClockOutAsync: Total pointages count: {pointages.Count()}");
+            _logger.LogInformation($"ClockOutAsync: Today's date: {today}");
+            
+            foreach (var p in pointages.Where(p => p.UtilisateurId == request.UtilisateurId))
+            {
+                _logger.LogInformation($"ClockOutAsync: Pointage for user - Id:{p.Id}, Date:{p.Date}, HeureEntree:{p.HeureEntree}, HeureSortie:{p.HeureSortie}");
+            }
+            
+            Gestprojet.Core.ApiParamSociete.Client.Model.PointageCore? lastPointage = null;
+
+            if (!string.IsNullOrEmpty(request.PointageId))
+            {
+                lastPointage = pointages.FirstOrDefault(p => p.Id == request.PointageId);
+                _logger.LogInformation($"ClockOutAsync: Search by Id '{request.PointageId}' found: {lastPointage != null}");
+            }
 
             if (lastPointage == null)
-                return OperationResult.Fail("Aucun pointage en cours trouvé pour aujourd'hui.");
+            {
+                lastPointage = pointages
+                    .Where(p => p.UtilisateurId == request.UtilisateurId && 
+                                p.Date.HasValue && 
+                                p.Date.Value.Date == today && 
+                                (string.IsNullOrEmpty(p.HeureSortie) || p.HeureSortie == "00:00:00" || p.HeureSortie == "00:00"))
+                    .OrderByDescending(p => p.HeureEntree)
+                    .FirstOrDefault();
+                _logger.LogInformation($"ClockOutAsync: Search by User/Today found: {lastPointage != null}");
+            }
+
+            if (lastPointage == null)
+            {
+                _logger.LogWarning($"ClockOutAsync: No active pointage found for user {request.UtilisateurId} today.");
+                return OperationResult.Fail("Aucun pointage en cours trouvé.");
+            }
+
+            _logger.LogInformation($"ClockOutAsync: Closing pointage {lastPointage.Id} for user {request.UtilisateurId}");
 
             lastPointage.HeureSortie = DateTime.Now.ToString("HH:mm");
             
@@ -233,7 +270,15 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
                 }
             }
 
-            return await _pointageBusiness.AjouterOuModifierAsync(lastPointage);
+            try 
+            {
+                return await _pointageBusiness.AjouterOuModifierAsync(lastPointage);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"ClockOutAsync: Error saving pointage {lastPointage.Id}");
+                throw;
+            }
         }
 
         public async Task<OperationResult> CreateDemandeCongeAsync(Gestprojet.Core.ApiParamSociete.Client.Model.DemandeCongeCore dto)
