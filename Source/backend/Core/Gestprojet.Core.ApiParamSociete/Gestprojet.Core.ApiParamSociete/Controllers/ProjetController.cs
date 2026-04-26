@@ -58,14 +58,17 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         [HttpGet("ParSociete/{societeId}")]
         public async Task<ActionResult> GetProjetsParSociete(string societeId)
         {
-            var critere = new CritereRecherche
+            try
             {
-                Propriete = "SocieteId",
-                Operateur = "=",
-                Valeur = societeId
-            };
-            var resultat = await _projetCoreBusiness.ListeProjetParConditionAsync(critere);
-            return Ok(resultat);
+                var critere = new CritereRecherche { SocieteId = societeId };
+                var resultat = await _projetCoreBusiness.ListeProjetParConditionAsync(critere);
+                return Ok(resultat ?? new List<ProjetCore>());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur GetProjetsParSociete({SocieteId}): {Message}", societeId, ex.Message);
+                return StatusCode(500, $"Erreur interne : {ex.Message}");
+            }
         }
 
         /// <summary>

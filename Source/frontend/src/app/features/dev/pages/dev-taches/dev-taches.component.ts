@@ -969,21 +969,40 @@ taches: any[] = [
   
   loadData() {
     const currentUser = this.api.getCurrentUser();
-    this.api.getTaches().subscribe({
-      next: (taches) => {
-        let societeTaches = (taches || []).filter((t: any) => t.societeId === this.societeId);
-        this.taches = societeTaches.filter((t: any) => t.assignee === currentUser?.nom || t.assignee === currentUser?.id);
-        if (this.taches.length === 0) {
-          this.initDefaultTasks();
-        }
+    const userId = currentUser?.id || currentUser?.Id || '';
+
+    if (!userId) {
+      this.taches = [];
+      return;
+    }
+
+    // Load tasks assigned to this user via TacheAssignation
+    this.api.getTachesParUtilisateur(userId).subscribe({
+      next: (taches: any[]) => {
+        this.taches = (taches || []).map((t: any) => {
+          const rawStatus = (t.statut || t.Statut || t.status || '').toLowerCase().trim().replace(/ /g, '');
+          let normalizedStatus = 'todo';
+          if (rawStatus === 'done' || rawStatus === 'terminé' || rawStatus === 'terminée') normalizedStatus = 'done';
+          else if (rawStatus === 'inprogress' || rawStatus === 'encours') normalizedStatus = 'inprogress';
+          return {
+            ...t,
+            id: t.id || t.Id,
+            titre: t.titre || t.Titre || t.nom || 'Sans titre',
+            description: t.description || t.Description || '',
+            priorite: t.priorite || t.Priorite || 'Medium',
+            statut: normalizedStatus,
+            projet: t.projetId || t.ProjetId || '',
+            deadline: t.dateLimite ? new Date(t.dateLimite).toLocaleDateString('fr-FR') : '',
+            tempsEstime: t.tempsEstime || t.TempsEstime || 0,
+            piecesJointes: [],
+            commentaires: []
+          };
+        });
       },
-      error: () => { this.initDefaultTasks(); }
+      error: () => { this.taches = []; }
     });
   }
-  
-  initDefaultTasks() {
-    this.taches = [];
-  }
+
 
   getColumnTasks(status: string): any[] {
     return this.taches.filter(t => t.statut === status);

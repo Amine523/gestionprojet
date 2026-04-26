@@ -99,9 +99,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       <!-- Tabs Card -->
       <div class="card">
         <div class="tabs">
-          <button class="tab active" (click)="activeTab = 'tableau'">Tableau de suivi</button>
-          <button class="tab" (click)="activeTab = 'graphiques'">Graphiques</button>
-          <button class="tab" (click)="activeTab = 'alertes'">Alertes</button>
+          <button class="tab" [class.active]="activeTab === 'tableau'" (click)="activeTab = 'tableau'">Tableau de suivi</button>
+          <button class="tab" [class.active]="activeTab === 'graphiques'" (click)="activeTab = 'graphiques'">Graphiques</button>
+          <button class="tab" [class.active]="activeTab === 'alertes'" (click)="activeTab = 'alertes'">Alertes</button>
+          <button class="tab" [class.active]="activeTab === 'feedbacks'" (click)="activeTab = 'feedbacks'">Feedbacks Client</button>
         </div>
 
         @if (activeTab === 'tableau') {
@@ -230,6 +231,32 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                   </div>
                   <button class="btn btn-sm btn-primary">Résoudre</button>
                 </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (activeTab === 'feedbacks') {
+          <div class="tab-content">
+            <h3 class="tab-title">Retours du client</h3>
+            <div class="alerts-list">
+              @for (fb of feedbacks; track fb.id) {
+                <div class="alert-item" style="background: rgba(59, 130, 246, 0.1);">
+                  <div class="alert-icon" style="color: #3b82f6;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div class="alert-content">
+                    <div class="alert-title">{{fb.projet}} - {{fb.type}}</div>
+                    <div class="alert-desc">{{fb.message}}</div>
+                    <div class="alert-date">{{fb.date}}</div>
+                  </div>
+                  <button class="btn btn-sm btn-primary">Répondre</button>
+                </div>
+              }
+              @if (feedbacks.length === 0) {
+                <p style="color: #94a3b8;">Aucun feedback récent pour ce projet.</p>
               }
             </div>
           </div>
@@ -740,6 +767,7 @@ export class ChefSuiviComponent implements OnInit {
   displayedColumns = ['tache', 'responsable', 'statut', 'temps', 'progression', 'alerte'];
 
   alertes: any[] = [];
+  feedbacks: any[] = [];
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
@@ -819,6 +847,11 @@ export class ChefSuiviComponent implements OnInit {
       this.tempsEstime = projet ? (projet.taches?.length || 10) * 8 : 80;
       this.tempsReel = Math.floor(this.tempsEstime * (1 + Math.random() * 0.3));
       this.tauxRetard = Math.round((this.tempsReel - this.tempsEstime) / this.tempsEstime * 100);
+      
+      this.feedbacks = [
+        { id: 1, projet: this.selectedProjet, type: 'Commentaire', message: 'Livrable reçu, merci de vérifier le design final.', date: 'Aujourd\'hui' },
+        { id: 2, projet: this.selectedProjet, type: 'Validation', message: 'L\'étape 1 est validée par notre équipe.', date: 'Hier' }
+      ];
     }
     this.snackBar.open('Données mises à jour pour: ' + this.selectedProjet, 'Fermer', { duration: 3000 });
   }

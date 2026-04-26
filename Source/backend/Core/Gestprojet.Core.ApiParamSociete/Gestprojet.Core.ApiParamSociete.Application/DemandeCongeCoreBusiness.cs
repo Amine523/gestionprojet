@@ -15,7 +15,13 @@ namespace Gestprojet.Core.ApiParamSociete.Application
         }
 
         public async Task<bool> AjouterDemandeCongeAsync(DemandeCongeCore entity)
-            => await _repository.AjouterDemandeCongeCoreAsync(entity);
+        {
+            if (string.IsNullOrEmpty(entity.Id))
+            {
+                entity.Id = $"CNG_{Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper()}";
+            }
+            return await _repository.AjouterDemandeCongeCoreAsync(entity);
+        }
 
         public async Task<bool> ModifierDemandeCongeAsync(DemandeCongeCore entity)
             => await _repository.ModifierDemandeCongeCoreAsync(entity);

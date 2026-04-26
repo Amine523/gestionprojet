@@ -696,8 +696,8 @@ export class RhDashboardComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = this.api.getCurrentSocieteId();
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.loadData();
     this.generateHeatmap();
   }

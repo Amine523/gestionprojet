@@ -52,10 +52,42 @@ export class ApiService {
     localStorage.removeItem('selectedOffre');
   }
   isLoggedIn(): boolean { return !!this.getToken(); }
-  getCurrentUser(): any { const user = localStorage.getItem('utilisateur'); return user ? JSON.parse(user) : null; }
-  getUserRole(): string { 
-    const user = this.getCurrentUser(); 
-    const role = (user?.typeUtilisateurId || user?.typeUtilisateur?.id || 'candidat').toLowerCase();
+  getCurrentUser(): any { 
+    const userJson = localStorage.getItem('utilisateur'); 
+    if (!userJson) return null;
+    try {
+      const user = JSON.parse(userJson);
+      // Normalisation globale pour éviter les problèmes de casse
+      if (user) {
+        if (user.Id && !user.id) user.id = user.Id;
+        if (user.id && !user.Id) user.Id = user.id;
+        if (user.SocieteId && !user.societeId) user.societeId = user.SocieteId;
+        if (user.societeId && !user.SocieteId) user.SocieteId = user.societeId;
+        if (user.TypeUtilisateurId && !user.typeUtilisateurId) user.typeUtilisateurId = user.TypeUtilisateurId;
+        if (user.typeUtilisateurId && !user.TypeUtilisateurId) user.TypeUtilisateurId = user.typeUtilisateurId;
+      }
+      return user;
+    } catch (e) {
+      console.error('ApiService - Erreur parsing utilisateur:', e);
+      return null;
+    }
+  }
+
+  getCurrentUserId(): string {
+    const user = this.getCurrentUser();
+    if (!user) return '';
+    return user.id || user.Id || user.utilisateurId || user.UtilisateurId || '';
+  }
+
+  getCurrentSocieteId(): string {
+    const user = this.getCurrentUser();
+    if (!user) return '';
+    return user.societeId || user.SocieteId || '';
+  }
+
+  getUserRole(): string {
+    const user = this.getCurrentUser();
+    const role = (user?.typeUtilisateurId || user?.TypeUtilisateurId || user?.typeUtilisateur?.id || 'candidat').toLowerCase();
     console.log('ApiService.getUserRole - Rôle détecté:', role, 'User:', user);
     return role;
   }
@@ -101,10 +133,10 @@ export class ApiService {
   getSocietesParMois(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/dashboard/societes-par-mois`, { headers: this.getHeaders() }); }
   getSocietesRecentes(limit = 5): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/dashboard/societes-recentes?limit=${limit}`, { headers: this.getHeaders() }); }
   getAbonnementsStats(): Observable<any> { return this.http.get(`${this.baseUrl}/dashboard/abonnements-stats`, { headers: this.getHeaders() }); }
-  getActiviteRecente(limit = 10, societeId?: string): Observable<any[]> { 
+  getActiviteRecente(limit = 10, societeId?: string): Observable<any[]> {
     let url = `${this.baseUrl}/dashboard/activite-recente?limit=${limit}`;
     if (societeId) url += `&societeId=${societeId}`;
-    return this.http.get<any[]>(url, { headers: this.getHeaders() }); 
+    return this.http.get<any[]>(url, { headers: this.getHeaders() });
   }
   getUptime(): Observable<any> { return this.http.get(`${this.baseUrl}/dashboard/uptime`, { headers: this.getHeaders() }); }
   getAlertes(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/dashboard/alertes`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
@@ -126,7 +158,7 @@ export class ApiService {
       PlanAbonnement: data.planAbonnement || data.PlanAbonnement || '',
       Actif: data.actif !== undefined ? data.actif : data.Actif
     };
-    return this.http.post(`${this.baseUrl}/societes/ajouter`, payload, { 
+    return this.http.post(`${this.baseUrl}/societes/ajouter`, payload, {
       headers: this.getHeaders(),
       responseType: 'text' as 'json'
     });
@@ -142,16 +174,16 @@ export class ApiService {
       PlanAbonnement: data.planAbonnement || data.PlanAbonnement || '',
       Actif: data.actif !== undefined ? data.actif : data.Actif
     };
-    return this.http.put(`${this.baseUrl}/societes/modifier`, payload, { 
+    return this.http.put(`${this.baseUrl}/societes/modifier`, payload, {
       headers: this.getHeaders(),
       responseType: 'text' as 'json'
     });
   }
-  deleteSociete(id: string): Observable<any> { 
-    return this.http.delete(`${this.baseUrl}/societes/supprimer/id/${id}`, { 
+  deleteSociete(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/societes/supprimer/id/${id}`, {
       headers: this.getHeaders(),
       responseType: 'text' as 'json'
-    }); 
+    });
   }
   updateSocieteModules(id: string, modules: string): Observable<any> { return this.http.put(`${this.baseUrl}/societes/${id}/modules`, { enabledModules: modules }, { headers: this.getHeaders() }); }
 
@@ -175,7 +207,7 @@ export class ApiService {
       RoleId: data.roleId || data.RoleId || 'R001',
       Actif: data.actif !== undefined ? data.actif : (data.Actif !== undefined ? data.Actif : true)
     };
-    return this.http.post(`${this.baseUrl}/utilisateurs/ajouter`, payload, { 
+    return this.http.post(`${this.baseUrl}/utilisateurs/ajouter`, payload, {
       headers: this.getHeaders(),
       responseType: 'text' as 'json'
     });
@@ -195,20 +227,21 @@ export class ApiService {
       Actif: data.actif !== undefined ? data.actif : (data.Actif !== undefined ? data.Actif : true),
       RoleId: data.roleId || data.RoleId || 'R001'
     };
-    return this.http.put(`${this.baseUrl}/utilisateurs/modifier`, payload, { 
+    return this.http.put(`${this.baseUrl}/utilisateurs/modifier`, payload, {
       headers: this.getHeaders(),
       responseType: 'text' as 'json'
     });
   }
-  deleteUtilisateur(id: string): Observable<any> { 
-    return this.http.delete(`${this.baseUrl}/utilisateurs/supprimer/id/${id}`, { 
+  deleteUtilisateur(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/utilisateurs/supprimer/id/${id}`, {
       headers: this.getHeaders(),
       responseType: 'text' as 'json'
-    }); 
+    });
   }
   getEmployesBySociete(societeId: string): Observable<any[]> {
-    const critere = { Criteres: { 'SocieteId': societeId } };
-    return this.http.post<any[]>(`${this.baseUrl}/utilisateurs/liste-par-condition`, critere, { headers: this.getHeaders() });
+    const critere = { Criteres: { 'SocieteId': societeId.toString() } };
+    return this.http.post<any>(`${this.baseUrl}/utilisateurs/liste-par-condition`, critere, { headers: this.getHeaders() })
+      .pipe(map(res => res?.value ? res.value : (Array.isArray(res) ? res : [])));
   }
 
   // Projets & Taches
@@ -224,7 +257,7 @@ export class ApiService {
       Id: data.id || data.Id || '',
       Nom: data.nom || data.Nom || '',
       Description: data.description || data.Description || '',
-      Status: data.status || data.Status || 'En attente',
+      Status: data.status || data.Status || data.statut || 'En attente',
       StartDate: data.startDate || data.StartDate || data.dateDebut || null,
       EndDate: data.endDate || data.EndDate || data.dateFin || null,
       SocieteId: data.societeId || data.SocieteId || '',
@@ -235,27 +268,27 @@ export class ApiService {
   }
   saveProjet(data: any): Observable<any> {
     const payload = this.normalizeProjet(data);
-    return payload.Id 
-      ? this.http.put(`${this.baseUrl}/projets/modifier`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' }) 
+    return payload.Id
+      ? this.http.put(`${this.baseUrl}/projets/modifier`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' })
       : this.http.post(`${this.baseUrl}/projets/ajouter`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' });
   }
-  createProjet(data: any): Observable<any> { 
-    return this.http.post(`${this.baseUrl}/projets/ajouter`, this.normalizeProjet(data), { 
-      headers: this.getHeaders(), 
-      responseType: 'text' as 'json' 
-    }); 
+  createProjet(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/projets/ajouter`, this.normalizeProjet(data), {
+      headers: this.getHeaders(),
+      responseType: 'text' as 'json'
+    });
   }
-  updateProjet(data: any): Observable<any> { 
-    return this.http.put(`${this.baseUrl}/projets/modifier`, this.normalizeProjet(data), { 
-      headers: this.getHeaders(), 
-      responseType: 'text' as 'json' 
-    }); 
+  updateProjet(data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/projets/modifier`, this.normalizeProjet(data), {
+      headers: this.getHeaders(),
+      responseType: 'text' as 'json'
+    });
   }
-  deleteProjet(id: string): Observable<any> { 
-    return this.http.delete(`${this.baseUrl}/projets/supprimer/id/${id}`, { 
-      headers: this.getHeaders(), 
-      responseType: 'text' as 'json' 
-    }); 
+  deleteProjet(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/projets/supprimer/id/${id}`, {
+      headers: this.getHeaders(),
+      responseType: 'text' as 'json'
+    });
   }
   addMembreAuProjet(data: any): Observable<any> { return this.http.post(`${this.baseUrl}/membresdeprojet`, data, { headers: this.getHeaders() }); }
   getBurndown(id: string): Observable<any> { return this.http.get(`${this.baseUrl}/projets/${id}/burndown`, { headers: this.getHeaders() }); }
@@ -270,18 +303,37 @@ export class ApiService {
       Id: data.id || data.Id || '',
       Titre: data.titre || data.Titre || data.nom || '',
       Description: data.description || data.Description || '',
-      Statut: data.statut || data.Statut || data.status || data.Status || 'En attente',
-      Status: data.statut || data.Statut || data.status || data.Status || 'En attente',
-      Priorite: data.priorite || data.Priorite || 'Normale',
+      Statut: data.statut || data.Statut || data.status || data.Status || 'To Do',
+      Priorite: data.priorite || data.Priorite || 'Medium',
       ProjetId: data.projetId || data.ProjetId || '',
-      SocieteId: data.societeId || data.SocieteId || '',
-      UtilisateurId: data.utilisateurId || data.UtilisateurId || '',
-      DateDebut: data.dateDebut || data.DateDebut || null,
-      DateFin: data.dateFin || data.DateFin || data.dateLimite || null
+      // UtilisateurId: handled separately via TacheAssignation — stored proc doesn't accept it
+      DevComment: data.devComment || data.DevComment || '',
+      TestComment: data.testComment || data.TestComment || '',
+      DateLimite: data.dateFin || data.DateFin || data.dateLimite || data.DateLimite || null,
+      TempsEstime: data.tempsEstime || data.TempsEstime || null,
+      TempsReel: data.tempsReel || data.TempsReel || null,
+      Actif: true
     };
-    return payload.Id 
-      ? this.http.put(`${this.baseUrl}/taches/modifier`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' }) 
+    const isUpdate = !!payload.Id;
+    return isUpdate
+      ? this.http.put(`${this.baseUrl}/taches/modifier`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' })
       : this.http.post(`${this.baseUrl}/taches/ajouter`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' });
+  }
+
+  /** Assigner une tâche à un utilisateur via la table TacheAssignation */
+  assignerTache(tacheId: string, utilisateurId: string): Observable<any> {
+    const payload = {
+      Id: '',
+      TacheId: tacheId,
+      UtilisateurId: utilisateurId,
+      Actif: true
+    };
+    return this.http.post(`${this.baseUrl}/taches/assigner`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' });
+  }
+
+  /** Récupérer les tâches assignées à un utilisateur spécifique */
+  getTachesParUtilisateur(utilisateurId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/taches/par-utilisateur/${utilisateurId}`, { headers: this.getHeaders() }).pipe(catchError(() => of([])));
   }
 
   // RH & Pointage
@@ -351,24 +403,22 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/Dashboard/rh-stats/${sId}?date=${date || ''}`, { headers: this.getHeaders() }).pipe(catchError(() => of({ totalEmployes: 0, employesActifs: 0, employesAbsents: 0, tauxPresence: 0, congesValidesCeMois: 0, demandesCongesEnAttente: 0 })));
   }
   getDemandesEnAttenteReal(sId: string): Observable<any[]> {
+    const targetSocieteId = (sId || this.getCurrentSocieteId() || '').toString();
+    
     return forkJoin({
       demandes: this.getDemandesConge(),
-      employes: this.getEmployesBySociete(sId)
+      employes: targetSocieteId ? this.getEmployesBySociete(targetSocieteId) : of([])
     }).pipe(
-      map(({demandes, employes}) => {
+      map(({ demandes, employes }) => {
         const employeMap = new Map(employes.map((e: any) => [e.id || e.Id, e]));
         return demandes.filter((d: any) => {
           const uId = d.utilisateurId || d.UtilisateurId;
+          const dSocieteId = (d.societeId || d.SocieteId || '').toString();
 
-          const status = (d.status || d.Status || '').toString().toLowerCase();
-          const matchesStatus = status === 'en attente' || status === 'en_attente' || status === 'pending';
-          
-          const dSocieteId = (d.societeId || d.SocieteId || '').toString().toLowerCase();
-          const targetSocieteId = (sId || '').toString().toLowerCase();
-          
-          const matchesSociete = (targetSocieteId && dSocieteId === targetSocieteId) || employeMap.has(uId);
-          
-          return matchesSociete && matchesStatus;
+          // Since SocieteId is missing from DemandeConge DB table, we rely on the employee list
+          const matchesSociete = !targetSocieteId || (dSocieteId === targetSocieteId) || (dSocieteId.toLowerCase() === targetSocieteId.toLowerCase()) || employeMap.has(uId);
+
+          return matchesSociete;
         }).map((d: any) => {
           const uId = d.utilisateurId || d.UtilisateurId;
           const emp = employeMap.get(uId);
@@ -383,6 +433,10 @@ export class ApiService {
           }
           return d;
         });
+      }),
+      catchError(err => {
+        console.error('ApiService - Erreur getDemandesEnAttenteReal:', err);
+        return of([]);
       })
     );
   }
@@ -392,14 +446,28 @@ export class ApiService {
   }
   getRapportPresenceUrl(sId: string, m: number, a: number, f: string = 'pdf'): string { return `${this.baseUrl}/pointage/rapport?societeId=${sId}&mois=${m}&annee=${a}&format=${f}`; }
   getRapportPresence(sId: string, m: number, a: number): Observable<Blob> { return this.http.get(`${this.baseUrl}/pointage/rapport-file?societeId=${sId}&mois=${m}&annee=${a}`, { responseType: 'blob', headers: this.getHeaders() }); }
-  getWorkedHoursReal(uId: string, date?: string): Observable<any> { 
-    return this.http.get(`${this.baseUrl}/rh/enhanced/utilisateur/${uId}/heures-travaillees?date=${date || ''}`, { headers: this.getHeaders() }); 
+  getWorkedHoursReal(uId: string, date?: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/rh/enhanced/utilisateur/${uId}/heures-travaillees?date=${date || ''}`, { headers: this.getHeaders() });
   }
   getSoldeConge(uId: string): Observable<any> { return this.http.get(`${this.baseUrl}/DemandesConge/solde/${uId}`, { headers: this.getHeaders() }); }
-  createDemandeCongeReal(dto: any): Observable<any> { return this.createDemandeConge(dto); }
+  createDemandeCongeReal(data: any): Observable<any> {
+    const payload = {
+      UtilisateurId: data.utilisateurId || data.UtilisateurId || this.getCurrentUserId(),
+      SocieteId: data.societeId || data.SocieteId || this.getCurrentSocieteId(),
+      TypePointageId: data.typePointageId || data.TypePointageId || 'NORMAL',
+      DateDebut: data.dateDebut || data.DateDebut,
+      DateFin: data.dateFin || data.DateFin,
+      Status: data.status || data.Status || 'En_attente',
+      Motif: data.motif || data.Motif || '',
+      AvecCertificat: data.avecCertificat || data.AvecCertificat || false,
+      Jours: data.jours || data.Jours || 0,
+      DateCreation: new Date().toISOString()
+    };
+    return this.http.post(`${this.baseUrl}/DemandesConge`, payload, { headers: this.getHeaders() });
+  }
   private getHeadersWithMultipart(): HttpHeaders {
     const token = localStorage.getItem(this.tokenKey);
-    const headers: { [key: string]: string } = { }; // No Content-Type for FormData
+    const headers: { [key: string]: string } = {}; // No Content-Type for FormData
     if (token && token.split('.').length === 3) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -415,8 +483,9 @@ export class ApiService {
   }
 
   // Demandes de Congé
-  getDemandesConge(): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/DemandesConge`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
-  getDemandesCongeBySociete(sId: string): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/DemandesConge/societe/${sId}`, { headers: this.getHeaders() }).pipe(catchError(() => of([]))); }
+  getDemandesConge(): Observable<any[]> { return this.http.get<any>(`${this.baseUrl}/DemandesConge`, { headers: this.getHeaders() }).pipe(map(res => res?.value ? res.value : (Array.isArray(res) ? res : [])), catchError(() => of([]))); }
+  getDemandesCongeBySociete(sId: string): Observable<any[]> { return this.http.get<any>(`${this.baseUrl}/DemandesConge/societe/${sId}`, { headers: this.getHeaders() }).pipe(map(res => res?.value ? res.value : (Array.isArray(res) ? res : [])), catchError(() => of([]))); }
+  getDemandesCongeByUtilisateur(uId: string): Observable<any[]> { return this.http.get<any>(`${this.baseUrl}/DemandesConge/utilisateur/${uId}`, { headers: this.getHeaders() }).pipe(map(res => res?.value ? res.value : (Array.isArray(res) ? res : [])), catchError(() => of([]))); }
   createDemandeConge(data: any): Observable<any> {
     const payload = {
       UtilisateurId: data.utilisateurId || data.UtilisateurId || '',
@@ -472,11 +541,11 @@ export class ApiService {
     }
     return this.http.put(`${this.baseUrl}/OffreEmploI/modifier`, payload, { headers: this.getHeaders() });
   }
-  deleteOffreEmploi(id: string): Observable<any> { 
-    return this.http.delete(`${this.baseUrl}/OffreEmploI/supprimer/id/${id}`, { 
+  deleteOffreEmploi(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/OffreEmploI/supprimer/id/${id}`, {
       headers: this.getHeaders(),
       responseType: 'text' as 'json'
-    }); 
+    });
   }
   getCandidatures(): Observable<any[]> {
     const critere = { Criteres: { 'Type': 'Candidature' } };
@@ -612,11 +681,11 @@ export class ApiService {
     };
     return payload.Id ? this.http.put(`${this.baseUrl}/module/modifier`, payload, { headers: this.getHeaders() }) : this.http.post(`${this.baseUrl}/module/ajouter`, payload, { headers: this.getHeaders() });
   }
-  deleteModule(id: string): Observable<any> { 
-    return this.http.delete(`${this.baseUrl}/module/supprimer/id/${id}`, { 
+  deleteModule(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/module/supprimer/id/${id}`, {
       headers: this.getHeaders(),
       responseType: 'text' as 'json'
-    }); 
+    });
   }
   sendTestAuthorizationEmail(data: any): Observable<any> {
     const config = this.getEmailJsConfig();

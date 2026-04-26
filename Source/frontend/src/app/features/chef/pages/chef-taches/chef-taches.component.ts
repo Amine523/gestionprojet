@@ -647,7 +647,7 @@ export class ChefTachesComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
   private notificationService = inject(NotificationService);
-  
+
   societeId = '';
   societeNom = 'Votre société';
   selectedProjet: number | null = null;
@@ -671,68 +671,95 @@ export class ChefTachesComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.loadData();
   }
-  
+
   loadData() {
     // Load projets for this societe first, then filter tasks by matching projetId
     this.api.getProjetsBySociete(this.societeId).subscribe({
       next: (projets) => {
-        // Load ALL projets for this societe (chef sees all projects)
         this.projets = (projets || [])
           .map((p: any) => ({ id: p.id || p.Id, nom: p.nom || p.Nom || p.titre || p.Titre }));
 
-        // After loading projets, fetch all tasks and filter by projetId
-        const projetIds = new Set(this.projets.map((p: any) => p.id));
-        this.api.getTaches().subscribe({
-          next: (taches) => {
-            this.taches = (taches || [])
-              .filter((t: any) => {
-                const pId = t.projetId || t.ProjetId;
-                return projetIds.has(pId) || projetIds.size === 0;
+        // Load members FIRST to have them available for task mapping
+        this.api.getEmployesBySociete(this.societeId).subscribe({
+          next: (res: any) => {
+            const list = Array.isArray(res) ? res : (res?.items || []);
+            this.membres = list
+              .filter((e: any) => {
+                const typeId = (e.typeUtilisateurId || e.TypeUtilisateurId || e.typeUtilisateur?.id || e.TypeUtilisateur?.Id || '').toString().toUpperCase();
+                const poste = (e.poste || e.Poste || '').toString().toUpperCase();
+                return typeId === 'T005' || typeId === 'T006' ||
+                  typeId.includes('DEV') || typeId.includes('TEST') || typeId.includes('QA') ||
+                  poste.includes('DEV') || poste.includes('TEST') || poste.includes('QA');
               })
-              .map((t: any) => {
-                const rawStatus = (t.statut || t.Statut || t.status || t.Status || '').toLowerCase().trim();
-                let normalizedStatus = 'todo';
-                if (rawStatus === 'done' || rawStatus === 'terminé' || rawStatus === 'terminee' || rawStatus === 'terminée') normalizedStatus = 'done';
-                else if (rawStatus === 'in progress' || rawStatus === 'en cours' || rawStatus === 'inprogress') normalizedStatus = 'inprogress';
+              .map((e: any) => ({ id: e.id || e.Id, nom: (e.nom || e.Nom || '') + ' ' + (e.prenom || e.Prenom || '') }));
 
-                const mappedTask = {
-                  ...t,
-                  id: t.id || t.Id,
-                  titre: t.titre || t.Titre,
-                  description: t.description || t.Description,
-                  statut: normalizedStatus,
-                  priorite: t.priorite || t.Priorite || 'Medium',
-                  dateLimite: t.dateLimite || t.DateLimite || t.dateFin || t.DateFin,
-                  projetId: t.projetId || t.ProjetId,
-                  assignees: t.assignees || []
-                };
+            // Now load tasks
+            const projetIds = new Set(this.projets.map((p: any) => String(p.id)));
+            this.api.getTaches().subscribe({
+              next: (taches) => {
+                const allTaches = (taches || [])
+                  .filter((t: any) => {
+                    const pId = t.projetId || t.ProjetId;
+                    return projetIds.has(String(pId)) || projetIds.size === 0;
+                  })
+                  .map((t: any) => {
+                    const rawStatus = (t.statut || t.Statut || t.status || t.Status || '').toLowerCase().trim();
+                    let normalizedStatus = 'todo';
+                    if (rawStatus === 'done' || rawStatus === 'terminé' || rawStatus === 'terminee' || rawStatus === 'terminée') normalizedStatus = 'done';
+                    else if (rawStatus === 'in progress' || rawStatus === 'en cours' || rawStatus === 'inprogress') normalizedStatus = 'inprogress';
+                    return {
+                      ...t,
+                      id: t.id || t.Id,
+                      titre: t.titre || t.Titre,
+                      description: t.description || t.Description,
+                      statut: normalizedStatus,
+                      priorite: t.priorite || t.Priorite || 'Medium',
+                      dateLimite: t.dateLimite || t.DateLimite || t.dateFin || t.DateFin,
+                      projetId: t.projetId || t.ProjetId,
+                      assignees: [] // will be filled below
+                    };
+                  });
 
-                if (t.tacheAssignees && (!mappedTask.assignees || mappedTask.assignees.length === 0)) {
-                  mappedTask.assignees = t.tacheAssignees
-                    .filter((ta: any) => ta.utilisateur)
-                    .map((ta: any) => ta.utilisateur);
-                } else if ((t.utilisateur || t.Utilisateur) && mappedTask.assignees.length === 0) {
-                  mappedTask.assignees = [t.utilisateur || t.Utilisateur];
-                }
+                this.taches = allTaches;
 
-                return mappedTask;
-              });
+                // Now enrich each task with its assignees from TacheAssignation
+                // We fetch all TacheAssignation records via a single call
+                this.api.get<any[]>('tacheassignation/liste-legacy-1').subscribe({
+                  next: (assignations: any[]) => {
+                    const assignationMap = new Map<string, string[]>();
+                    (assignations || []).forEach((a: any) => {
+                      const tid = a.tacheId || a.TacheId || '';
+                      const uid = a.utilisateurId || a.UtilisateurId || '';
+                      if (tid && uid) {
+                        if (!assignationMap.has(tid)) assignationMap.set(tid, []);
+                        assignationMap.get(tid)!.push(uid);
+                      }
+                    });
+
+                    this.taches = this.taches.map((t: any) => {
+                      const userIds = assignationMap.get(t.id) || [];
+                      const assignees = userIds.map((uid: string) => {
+                        const member = this.membres.find((m: any) => String(m.id) === String(uid));
+                        return member ? { id: member.id, nom: member.nom } : { id: uid, nom: 'Inconnu' };
+                      });
+                      return { ...t, assignees };
+                    });
+                  },
+                  error: () => { /* keep assignees empty if endpoint fails */ }
+                });
+              },
+              error: () => { }
+            });
+
           },
-          error: () => {}
+          error: () => { }
         });
       },
-      error: () => {}
-    });
-
-    this.api.getEmployesBySociete(this.societeId).subscribe({
-      next: (employes) => {
-        this.membres = employes.map((e: any) => ({ id: e.id || e.Id, nom: e.nom || e.Nom }));
-      },
-      error: () => {}
+      error: () => { }
     });
   }
 
@@ -740,10 +767,10 @@ export class ChefTachesComponent implements OnInit {
     return this.taches.filter(t => {
       const s = (t.statut || t.status || '').toLowerCase().trim().replace(/ /g, '');
       switch (columnId) {
-        case 'todo':       return s === 'todo' || s === 'todo' || s === 'todo';
+        case 'todo': return s === 'todo' || s === 'todo' || s === 'todo';
         case 'inprogress': return s === 'inprogress' || s === 'encours';
-        case 'done':       return s === 'done' || s === 'termin\u00e9' || s === 'terminee';
-        default:           return s === columnId;
+        case 'done': return s === 'done' || s === 'termin\u00e9' || s === 'terminee';
+        default: return s === columnId;
       }
     });
   }
@@ -761,16 +788,16 @@ export class ChefTachesComponent implements OnInit {
   }
 
   viewTache(t: any) { this.viewingTache = t; }
-  editTache(t: any) { 
-    this.editingTache = t; 
-    this.formData = { 
-      titre: t.titre || t.nom, 
-      description: t.description, 
-      priorite: t.priorite || 'Medium', 
-      assigneeId: t.assigneeIds && t.assigneeIds.length > 0 ? t.assigneeIds[0] : (t.tacheAssignees && t.tacheAssignees.length > 0 ? t.tacheAssignees[0].utilisateurId : ''), 
-      dateEcheance: (t.dateLimite || t.dateEcheance) ? new Date(t.dateLimite || t.dateEcheance).toISOString().split('T')[0] : '', 
-      projetId: t.projetId 
-    }; 
+  editTache(t: any) {
+    this.editingTache = t;
+    this.formData = {
+      titre: t.titre || t.nom,
+      description: t.description,
+      priorite: t.priorite || 'Medium',
+      assigneeId: t.assignees && t.assignees.length > 0 ? t.assignees[0].id : '',
+      dateEcheance: (t.dateLimite || t.dateEcheance) ? new Date(t.dateLimite || t.dateEcheance).toISOString().split('T')[0] : '',
+      projetId: t.projetId
+    };
   }
   deleteTache(t: any) {
     if (confirm('Supprimer cette tâche?')) {
@@ -804,17 +831,29 @@ export class ChefTachesComponent implements OnInit {
       this.snackBar.open('Veuillez sélectionner un projet', 'Fermer', { duration: 3000 });
       return;
     }
-    
+
     // Mapping frontend data to backend Tache entity
+    // Normalize statut from internal kanban ids to backend expected values
+    let statutValue = 'To Do';
+    if (this.editingTache) {
+      const rawS = (this.editingTache.statut || this.editingTache.status || '').toLowerCase();
+      if (rawS === 'done' || rawS === 'terminé' || rawS === 'terminée') statutValue = 'Done';
+      else if (rawS === 'inprogress' || rawS === 'in progress' || rawS === 'en cours') statutValue = 'In Progress';
+      else statutValue = 'To Do';
+    }
+
     const taskData: any = {
       titre: this.formData.titre,
-      description: this.formData.description,
-      priorite: this.formData.priorite,
-      statut: this.editingTache ? (this.editingTache.statut || this.editingTache.status) : 'To Do',
+      description: this.formData.description || '',
+      priorite: this.formData.priorite || 'Medium',
+      statut: statutValue,
       dateFin: (this.formData.dateEcheance && !isNaN(new Date(this.formData.dateEcheance).getTime())) ? new Date(this.formData.dateEcheance).toISOString() : null,
       projetId: this.formData.projetId,
       societeId: this.societeId,
-      utilisateurId: this.formData.assigneeId || '',
+      // Send null when no assignee selected — empty string causes backend issues
+      utilisateurId: this.formData.assigneeId ? this.formData.assigneeId : null,
+      devComment: '',
+      testComment: '',
       actif: true
     };
 
@@ -824,42 +863,81 @@ export class ChefTachesComponent implements OnInit {
 
     this.api.saveTache(taskData).subscribe({
       next: () => {
-        // Notifier le collaborateur (Liaison Chef-Dev)
-        if (taskData.utilisateurId) {
-          this.notificationService.notifyUser(
-            taskData.utilisateurId,
-            'Nouvelle Tâche Assignée',
-            `Le Chef de Projet vous a assigné la tâche: ${taskData.titre}`,
-            'info'
-          );
+        const assigneeId = taskData.utilisateurId;
+        const assignee = assigneeId ? this.membres.find((m: any) => String(m.id) === String(assigneeId)) : null;
+
+        // After save, also persist the assignation if an assignee was selected (for editing where we know the id)
+        if (assigneeId && this.editingTache?.id) {
+          this.api.assignerTache(this.editingTache.id, assigneeId).subscribe({
+            next: () => {
+              this.notificationService.notifyUser(
+                assigneeId,
+                'Nouvelle Tâche Assignée',
+                `Le Chef de Projet vous a assigné la tâche: ${taskData.titre}`,
+                'info'
+              );
+            },
+            error: (e: any) => console.warn('Assignation:', e?.error || e)
+          });
         }
 
         if (this.editingTache) {
-          // Update task in local list
           const idx = this.taches.findIndex((t: any) => t.id === this.editingTache.id);
           if (idx !== -1) {
             const rawStatus = (taskData.statut || 'To Do').toLowerCase();
-            let normalizedStatus = 'To Do';
-            if (rawStatus === 'done' || rawStatus === 'terminé') normalizedStatus = 'Done';
-            else if (rawStatus === 'in progress' || rawStatus === 'en cours') normalizedStatus = 'In Progress';
-            this.taches[idx] = { ...this.taches[idx], ...taskData, statut: normalizedStatus };
+            let normalizedStatus = 'todo';
+            if (rawStatus === 'done' || rawStatus === 'terminé' || rawStatus === 'terminée') normalizedStatus = 'done';
+            else if (rawStatus === 'in progress' || rawStatus === 'en cours' || rawStatus === 'inprogress') normalizedStatus = 'inprogress';
+            this.taches[idx] = {
+              ...this.taches[idx], ...taskData,
+              statut: normalizedStatus,
+              assignees: assignee ? [{ id: assignee.id, nom: assignee.nom }] : this.taches[idx].assignees
+            };
           }
         } else {
-          // Immediately add the new task to local list (optimistic update)
-          const assignee = this.membres.find((m: any) => m.id === taskData.utilisateurId);
           const newTask = {
             ...taskData,
             id: 'temp-' + Date.now(),
             statut: 'todo',
-            assignees: assignee ? [assignee] : []
+            titre: taskData.titre,
+            dateLimite: taskData.dateFin,
+            assignees: assignee ? [{ id: assignee.id, nom: assignee.nom }] : []
           };
           this.taches = [...this.taches, newTask];
         }
 
         this.snackBar.open('Tâche enregistrée avec succès', 'Fermer', { duration: 3000 });
         this.closeForm();
-        // Reload to get server-assigned ID and fresh data
-        setTimeout(() => this.loadData(), 500);
+        // Reload to get server-assigned ID, then assign if needed
+        const pendingAssigneeId = taskData.utilisateurId;
+        const isNew = !this.editingTache;
+        const tacheTitre = taskData.titre;
+
+        setTimeout(() => {
+          this.loadData();
+
+          // For NEW tasks: after reload, find the just-created task by titre and assign
+          if (isNew && pendingAssigneeId) {
+            setTimeout(() => {
+              const newT = this.taches.find((t: any) => (t.titre || t.Titre) === tacheTitre);
+              if (newT?.id && !String(newT.id).startsWith('temp-')) {
+                this.api.assignerTache(newT.id, pendingAssigneeId).subscribe({
+                  next: () => {
+                    this.notificationService.notifyUser(
+                      pendingAssigneeId,
+                      'Nouvelle Tâche Assignée',
+                      `Le Chef de Projet vous a assigné la tâche: ${tacheTitre}`,
+                      'info'
+                    );
+                    // Reload again to show assignee name
+                    this.loadData();
+                  },
+                  error: (e: any) => console.warn('Assignation nouvelle tâche:', e?.error || e)
+                });
+              }
+            }, 800);
+          }
+        }, 600);
       },
       error: (err) => {
         console.error('Error saving task:', err);

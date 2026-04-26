@@ -9,7 +9,7 @@ import { catchError } from 'rxjs/operators';
 export class AiService {
   private baseUrl = 'http://localhost:5221/api/ai';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private getHeaders(): HttpHeaders {
 

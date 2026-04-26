@@ -8,6 +8,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using BCrypt.Net;
 
 namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
 {
@@ -65,7 +66,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                 Id = "", // Let the repository generate the ID
                 Nom = request.Nom,
                 Email = request.Email,
-                MotDePasse = request.Password, // Ideally hash this
+                MotDePasse = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 Cv = "", // Ensure CV is not null to avoid duplicate check issues
                 TypeUtilisateurId = "T007", // Candidat
                 SocieteId = "SP001", // Default society for recruitment
@@ -138,6 +139,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                          if (request.Email.ToLower().Contains("admin")) mockRole = "T001";
                          else if (request.Email.ToLower().Contains("rh")) mockRole = "T003";
                          else if (request.Email.ToLower().Contains("chef")) mockRole = "T004";
+                         else if (request.Email.ToLower().Contains("client")) mockRole = "T008";
                          else if (request.Email.ToLower().Contains("test")) mockRole = "T006";
 
                          System.Console.WriteLine($"[AUTH] Using MOCK user for known password with role {mockRole}");
@@ -161,10 +163,6 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                     System.Console.WriteLine($"[AUTH] User found, verifying password for {utilisateur.Email}");
                     bool isPasswordValid = false;
                     
-                    // DEV MODE: Skip password check for development
-                    // Bypass password verification in development
-                    isPasswordValid = true;
-                    /*
                     try
                     {
                         isPasswordValid = VerifyPassword(request.Password, utilisateur.MotDePasse);
@@ -173,7 +171,6 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                     {
                         isPasswordValid = utilisateur.MotDePasse == request.Password;
                     }
-                    */
 
                     if (!isPasswordValid)
                     {

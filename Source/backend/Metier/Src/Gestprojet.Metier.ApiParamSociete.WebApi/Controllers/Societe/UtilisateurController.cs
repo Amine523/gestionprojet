@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using BCrypt.Net;
 
 namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 {
@@ -38,6 +39,13 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
                 return BadRequest("L'email est requis");
             if (!IsValidEmail(entity.Email))
                 return BadRequest("Format d'email invalide");
+            
+            // Hash password if provided and it's a new user
+            if (!string.IsNullOrWhiteSpace(entity.MotDePasse) && string.IsNullOrWhiteSpace(entity.Id))
+            {
+                entity.MotDePasse = BCrypt.Net.BCrypt.HashPassword(entity.MotDePasse);
+            }
+            
             entity.Id = string.IsNullOrWhiteSpace(entity.Id) ? string.Empty : entity.Id;
             var result = await _utilisateurBusiness.AjouterOuModifierAsync(entity);
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
@@ -48,6 +56,13 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         {
             if (entity == null) return BadRequest("Données Utilisateur invalides");
             entity.Id = string.Empty;
+            
+            // Hash password if provided
+            if (!string.IsNullOrWhiteSpace(entity.MotDePasse))
+            {
+                entity.MotDePasse = BCrypt.Net.BCrypt.HashPassword(entity.MotDePasse);
+            }
+            
             var result = await _utilisateurBusiness.AjouterOuModifierAsync(entity);
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
@@ -84,6 +99,12 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             
             if (!string.IsNullOrWhiteSpace(entity.MotDePasse) && entity.MotDePasse.Length < 4)
                 return BadRequest("Le mot de passe doit contenir au moins 4 caractères");
+            
+            // Hash password if provided and it's a new user
+            if (!string.IsNullOrWhiteSpace(entity.MotDePasse) && string.IsNullOrWhiteSpace(entity.Id))
+            {
+                entity.MotDePasse = BCrypt.Net.BCrypt.HashPassword(entity.MotDePasse);
+            }
             
             var result = await _utilisateurBusiness.AjouterOuModifierAsync(entity);
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);

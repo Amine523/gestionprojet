@@ -425,6 +425,7 @@ export class LoginComponent {
       'T005': '/dev',
       'T006': '/qa',
       'T007': '/applicant',
+      'T008': '/client',
       'SUPER_ADMIN': '/superadmin',
       'ADMIN': '/admin',
       'ADMIN_SOCIETE': '/admin',
@@ -436,7 +437,9 @@ export class LoginComponent {
       'QA': '/qa',
       'CHEF_PROJET': '/chef',
       'CHEF PROJET': '/chef',
-      'CANDIDAT': '/applicant'
+      'CANDIDAT': '/applicant',
+      'CLIENT_PROJET': '/client',
+      'CLIENT': '/client'
     };
 
     let route = routes[role] || '/admin';

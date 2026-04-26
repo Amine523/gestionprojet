@@ -19,7 +19,7 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
                 tacheCore.TempsReel,
                 tacheCore.DevComment,
                 tacheCore.TestComment,
-                tacheCore.Actif,
+                tacheCore.Actif
             };
         }
     }

@@ -277,6 +277,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                   <option value="Testeur">Testeur</option>
                   <option value="Designer">Designer</option>
                   <option value="Chef de projet">Chef de projet</option>
+                  <option value="Client Projet">Client Projet</option>
                 </select>
               </div>
               <div class="form-group">
@@ -941,15 +942,16 @@ export class ChefEquipeComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.loadData();
   }
   
   loadData() {
     this.api.getEmployesBySociete(this.societeId).subscribe({
-      next: (employes) => {
-        this.membres = employes.map((e: any) => {
+      next: (res: any) => {
+        const list = Array.isArray(res) ? res : (res?.items || []);
+        this.membres = list.map((e: any) => {
           const stats = e.stats || {};
           return {
             id: e.id || e.Id,
@@ -972,10 +974,11 @@ export class ChefEquipeComponent implements OnInit {
     
     const user = this.api.getCurrentUser();
     this.api.getProjetsBySociete(this.societeId).subscribe({
-      next: (projets) => {
-        this.projets = (projets || [])
-          .filter((p: any) => p.utilisateurId === user?.id)
-          .map((p: any) => ({ id: p.id, nom: p.nom }));
+      next: (projets: any) => {
+        const pList = Array.isArray(projets) ? projets : (projets?.items || []);
+        this.projets = pList
+          .filter((p: any) => (p.utilisateurId || p.UtilisateurId) === (user?.id || user?.Id))
+          .map((p: any) => ({ id: p.id || p.Id, nom: p.nom || p.Nom }));
       },
       error: () => {}
     });
@@ -1022,12 +1025,20 @@ export class ChefEquipeComponent implements OnInit {
       return;
     }
 
+    let roleMap: Record<string, string> = {
+      'Développeur': 'T005',
+      'Testeur': 'T006',
+      'Chef de projet': 'T004',
+      'Client Projet': 'T008'
+    };
+    const tUserId = roleMap[this.formData.role] || 'T005';
+
     const payload = {
       nom: this.formData.nom,
       email: this.formData.email,
       poste: this.formData.role,
       societeId: this.societeId,
-      typeUtilisateurId: 'T005', // Par défaut développeur
+      typeUtilisateurId: tUserId,
       motDePasse: '123456',
       actif: true
     };

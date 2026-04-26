@@ -18,6 +18,22 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             _logger = logger;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetNotifications()
+        {
+            try
+            {
+                // Return an empty list for now to satisfy the frontend call
+                // and avoid 404. Persistence is handled in the Core project.
+                return Ok(new List<NotificationDto>());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching notifications");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpPost("send")]
         public async Task<IActionResult> SendNotification([FromBody] NotificationDto notification)
         {

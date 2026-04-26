@@ -768,8 +768,8 @@ export class RhCongesComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = this.api.getCurrentSocieteId();
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.currentUserId = user?.id || '';
     this.loadData();
   }
@@ -790,7 +790,7 @@ export class RhCongesComponent implements OnInit {
       next: (employes) => {
         this.employesMap = {};
         employes.forEach((e: any) => {
-          this.employesMap[e.id || e.Id] = e.nom || e.Nom;
+          this.employesMap[e.id || e.Id] = (e.prenom || e.Prenom || '') + ' ' + (e.nom || e.Nom || '');
         });
 
         this.api.getDemandesEnAttenteReal(this.societeId).subscribe({
@@ -807,7 +807,7 @@ export class RhCongesComponent implements OnInit {
                 dateFin: d.dateFin || d.DateFin,
                 nombreJours: d.jours || d.Jours || 0,
                 motif: d.motif || d.Motif || '',
-                status: (d.status || d.Status || 'En attente').replace('_', ' ')
+                status: this.formatStatus(d.status || d.Status || 'En attente')
               };
             });
             this.congesSignal.set(list);
@@ -819,10 +819,13 @@ export class RhCongesComponent implements OnInit {
     });
   }
 
-  private normalizeStatus(status: string): string {
+  private formatStatus(status: string): string {
     if (!status) return 'En attente';
-    // Convert underscore to space for consistency
-    return status.replace('_', ' ');
+    const s = status.toLowerCase().replace('_', ' ');
+    if (s === 'en attente' || s === 'pending') return 'En attente';
+    if (s === 'validée' || s === 'validee' || s === 'validated' || s === 'approved') return 'Validée';
+    if (s === 'refusée' || s === 'refusee' || s === 'rejected') return 'Refusée';
+    return status;
   }
 
   validerConge(conge: Conge, approuve: boolean) {

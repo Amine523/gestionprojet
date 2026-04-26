@@ -250,8 +250,8 @@ interface Projet {
                        <label>Commandant</label>
                        <select [(ngModel)]="formData.chef" name="chef" class="form-input">
                           <option value="">Sélectionner un officier lead</option>
-                          @for (user of chefsSignal(); track user.id) {
-                            <option [value]="user.id">{{user.nom}}</option>
+                          @for (user of chefsSignal(); track (user.id || user.Id)) {
+                            <option [value]="user.id || user.Id">{{user.nom || user.Nom}}</option>
                           }
                        </select>
                     </div>
@@ -890,14 +890,22 @@ export class AdminProjetsComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
+    this.societeId = user?.societeId || user?.SocieteId || '';
     this.loadChefs();
   }
 
   loadChefs() {
     this.api.getEmployesBySociete(this.societeId).subscribe({
-      next: (users) => {
-        const filtered = (users || []).filter(u => u.typeUtilisateurId === 'T004' || u.typeUtilisateurId === 'T002');
+      next: (users: any) => {
+        let list: any[] = Array.isArray(users) ? users : (users?.items || []);
+        const filtered = list.filter(u => {
+          const typeId = (u.typeUtilisateurId || u.TypeUtilisateurId || u.typeUtilisateur?.id || u.TypeUtilisateur?.Id || '').toString().toUpperCase();
+          const poste = (u.poste || u.Poste || '').toString().toUpperCase();
+          const nom = (u.nom || u.Nom || '').toString().toUpperCase();
+          
+          return typeId === 'T004' || typeId.includes('CHEF') || poste.includes('CHEF');
+        });
+        console.log('AdminProjets - Chefs filtrés:', filtered.length, 'sur', list.length);
         this.chefsSignal.set(filtered);
         this.loadProjets();
       },
@@ -913,10 +921,11 @@ export class AdminProjetsComponent implements OnInit {
     if (this.filterStatut) condition.criteres.Status = this.filterStatut;
     if (this.societeId) condition.criteres.SocieteId = this.societeId;
 
-    this.api.getProjetsByConditionPage(this.page, this.pageSize, condition).subscribe(res => {
+    this.api.getProjetsByConditionPage(this.page, this.pageSize, condition).subscribe((res: any) => {
+      if (!res) return;
       const mapped = (res.items || []).map((p: any) => {
         const chefId = p.utilisateurId || p.UtilisateurId;
-        const chef = this.chefsSignal().find(c => c.id === chefId);
+        const chef = this.chefsSignal().find(c => (c.id || c.Id) === chefId);
         const chefName = p.utilisateurNom || (chef ? `${chef.prenom || ''} ${chef.nom || ''}` : 'Non assigné');
         return {
           id: p.id || p.Id, 

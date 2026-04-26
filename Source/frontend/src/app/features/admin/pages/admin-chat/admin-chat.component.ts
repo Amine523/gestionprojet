@@ -678,6 +678,8 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
   newMessage = '';
   searchQuery = '';
   showNewGroupDialog = false;
+  newGroupName = '';
+  groupContacts: any[] = [];
 
   ngOnInit() {
     const u = this.api.getCurrentUser();
@@ -754,5 +756,37 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
   }
 
   onFileSelected(e: any) { this.snackBar.open('Uploading transmission packets...', 'Fermer', { duration: 3000 }); }
-  openNewGroupDialog() { this.snackBar.open('Initializing multi-node channel...', 'Fermer', { duration: 3000 }); }
+
+  openNewGroupDialog() {
+    this.newGroupName = '';
+    this.groupContacts = this.contacts.filter(c => !c.isGroup).map(c => ({ ...c, selected: false }));
+    this.showNewGroupDialog = true;
+  }
+
+  createGroup() {
+    if (!this.newGroupName.trim()) return;
+    const selectedUsers = this.groupContacts.filter(c => c.selected);
+    if (selectedUsers.length === 0) {
+      this.snackBar.open('Sélectionnez au moins un participant', 'Fermer', { duration: 3000 });
+      return;
+    }
+    
+    const newGroup: Contact = {
+      id: 'group_' + Date.now(),
+      nom: this.newGroupName,
+      avatar: this.newGroupName.charAt(0).toUpperCase(),
+      email: '',
+      typeUtilisateurId: 'GROUP',
+      dernierMessage: 'Groupe créé',
+      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      unread: 0,
+      isGroup: true
+    };
+
+    this.contacts.unshift(newGroup);
+    this.filterContacts();
+    this.showNewGroupDialog = false;
+    this.selectContact(newGroup);
+    this.snackBar.open('Groupe créé avec succès', 'Fermer', { duration: 3000 });
+  }
 }

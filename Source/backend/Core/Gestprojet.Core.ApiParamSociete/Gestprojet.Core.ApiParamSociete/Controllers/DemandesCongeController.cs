@@ -80,6 +80,14 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
             }
         }
 
+        [HttpGet("solde/{utilisateurId}")]
+        public IActionResult GetSolde(string utilisateurId)
+        {
+            // Calculate or return mock solde
+            // By default let's return 21 days
+            return Ok(new { joursRestants = 21, joursPris = 0, total = 21 });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] DemandeCongeCore entity)
         {

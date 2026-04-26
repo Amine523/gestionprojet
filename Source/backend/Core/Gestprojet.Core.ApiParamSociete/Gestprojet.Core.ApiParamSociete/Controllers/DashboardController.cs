@@ -67,5 +67,29 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         {
             return Ok(new List<object>());
         }
+
+        [HttpGet("rh-stats/{societeId}")]
+        public IActionResult GetRhStats(string societeId, [FromQuery] string date = null)
+        {
+            var stats = new
+            {
+                totalEmployes = 15,
+                employesActifs = 12,
+                employesAbsents = 3,
+                tauxPresence = 80,
+                congesValidesCeMois = 2,
+                demandesCongesEnAttente = 0 // The frontend re-calculates this from actual pending leaves
+            };
+            return Ok(stats);
+        }
+        [HttpGet("debug-sp")]
+        public IActionResult DebugSp([FromServices] Gestprojet.Core.ApiParamSociete.Infrastructure.Dapper.DapperContext ctx)
+        {
+            using (var connection = ctx.CreateConnection())
+            {
+                var result = Dapper.SqlMapper.Query(connection, "SELECT p.name AS ParameterName, t.name AS DataType FROM sys.parameters p INNER JOIN sys.types t ON p.user_type_id = t.user_type_id WHERE object_id = OBJECT_ID('ps_ApiParamSociete_DemandeConge_i')");
+                return Ok(result);
+            }
+        }
     }
 }

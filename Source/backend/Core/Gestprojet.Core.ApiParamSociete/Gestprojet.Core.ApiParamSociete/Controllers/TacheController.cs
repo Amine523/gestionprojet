@@ -10,13 +10,16 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
     public class TacheController : ControllerBase
     {
         private readonly ITacheCoreBusiness _tacheCoreBusiness;
+        private readonly ITacheAssignationCoreBusiness _tacheassignationCoreBusiness;
         private readonly ILogger<TacheController> _logger;
 
         public TacheController(
             ITacheCoreBusiness tacheCoreBusiness,
+            ITacheAssignationCoreBusiness tacheassignationCoreBusiness,
             ILogger<TacheController> logger)
         {
             _tacheCoreBusiness = tacheCoreBusiness;
+            _tacheassignationCoreBusiness = tacheassignationCoreBusiness;
             _logger = logger;
         }
 
@@ -35,8 +38,23 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         [HttpPost("ajouter")]
         public async Task<ActionResult<bool>> AjouterTache([FromBody] TacheCore tacheCore)
         {
-            var resultat = await _tacheCoreBusiness.AjouterTacheAsync(tacheCore);
-            return Ok(resultat);
+            try
+            {
+                if (tacheCore == null)
+                    return BadRequest("Le corps de la requête est vide.");
+                if (string.IsNullOrWhiteSpace(tacheCore.Titre))
+                    return BadRequest("Le titre de la tâche est obligatoire.");
+                if (string.IsNullOrWhiteSpace(tacheCore.ProjetId))
+                    return BadRequest("Le projet est obligatoire.");
+
+                var resultat = await _tacheCoreBusiness.AjouterTacheAsync(tacheCore);
+                return Ok(resultat);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de l'ajout de la tâche : {Message}", ex.Message);
+                return StatusCode(500, $"Erreur interne : {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -47,8 +65,21 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         [HttpPut("modifier")]
         public async Task<ActionResult<bool>> ModifierTache([FromBody] TacheCore tacheCore)
         {
-            var resultat = await _tacheCoreBusiness.ModifierTacheAsync(tacheCore);
-            return Ok(resultat);
+            try
+            {
+                if (tacheCore == null)
+                    return BadRequest("Le corps de la requête est vide.");
+                if (string.IsNullOrWhiteSpace(tacheCore.Id))
+                    return BadRequest("L'identifiant de la tâche est obligatoire pour une modification.");
+
+                var resultat = await _tacheCoreBusiness.ModifierTacheAsync(tacheCore);
+                return Ok(resultat);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de la modification de la tâche {Id} : {Message}", tacheCore?.Id, ex.Message);
+                return StatusCode(500, $"Erreur interne : {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -178,6 +209,62 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         {
             var resultat = await _tacheCoreBusiness.ListeTacheParConditionParPageAsync(critereRecherche, pageNumero, pageTaille);
             return Ok(resultat);
+        }
+
+        /// <summary>
+        /// Assigner une tâche à un utilisateur via TacheAssignation.
+        /// </summary>
+        [HttpPost("assigner")]
+        public async Task<ActionResult<bool>> AssignerTache([FromBody] TacheAssignationCore assignation)
+        {
+            try
+            {
+                if (assignation == null || string.IsNullOrWhiteSpace(assignation.TacheId) || string.IsNullOrWhiteSpace(assignation.UtilisateurId))
+                    return BadRequest("TacheId et UtilisateurId sont obligatoires.");
+
+                // Generate ID if not provided
+                if (string.IsNullOrWhiteSpace(assignation.Id))
+                    assignation.Id = $"ASS-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+
+                assignation.Actif = true;
+                var resultat = await _tacheassignationCoreBusiness.AjouterTacheAssignationAsync(assignation);
+                return Ok(resultat);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de l'assignation tâche {TacheId} -> {UtilisateurId}: {Message}",
+                    assignation?.TacheId, assignation?.UtilisateurId, ex.Message);
+                return StatusCode(500, $"Erreur interne : {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Récupérer les tâches assignées à un utilisateur spécifique.
+        /// </summary>
+        [HttpGet("par-utilisateur/{utilisateurId}")]
+        public async Task<ActionResult<List<TacheCore>>> GetTachesParUtilisateur(string utilisateurId)
+        {
+            try
+            {
+                // Get all assignations for this user
+                var critereAssignation = new CritereRecherche { UtilisateurId = utilisateurId };
+                var assignations = await _tacheassignationCoreBusiness.ListeTacheAssignationParConditionAsync(critereAssignation);
+
+                if (assignations == null || !assignations.Any())
+                    return Ok(new List<TacheCore>());
+
+                // Get all tasks then filter by assigned tacheIds
+                var toutesLesTaches = await _tacheCoreBusiness.ListeTacheAsync();
+                var tacheIds = new HashSet<string>(assignations.Select(a => a.TacheId ?? "").Where(id => !string.IsNullOrEmpty(id)));
+                var tachesFiltrees = toutesLesTaches.Where(t => tacheIds.Contains(t.Id ?? "")).ToList();
+
+                return Ok(tachesFiltrees);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur GetTachesParUtilisateur({UtilisateurId}): {Message}", utilisateurId, ex.Message);
+                return StatusCode(500, $"Erreur interne : {ex.Message}");
+            }
         }
     }
 }

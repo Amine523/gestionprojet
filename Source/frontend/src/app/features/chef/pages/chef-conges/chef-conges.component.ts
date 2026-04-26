@@ -712,10 +712,10 @@ export class ChefCongesComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.societeId = this.api.getCurrentSocieteId();
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
-    this.currentUserId = user?.id || '';
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
+    this.currentUserId = this.api.getCurrentUserId();
     this.loadData();
   }
 
@@ -726,9 +726,8 @@ export class ChefCongesComponent implements OnInit {
   }
 
   loadMesConges() {
-    this.api.getDemandesConge().subscribe(data => {
-      const list = data.filter((d: any) => (d.utilisateurId || d.UtilisateurId) === this.currentUserId)
-        .map((d: any) => ({
+    this.api.getDemandesCongeByUtilisateur(this.currentUserId).subscribe(data => {
+      const list = data.map((d: any) => ({
           id: d.id || d.Id,
           utilisateurId: d.utilisateurId || d.UtilisateurId,
           utilisateurNom: 'Moi',
@@ -737,10 +736,19 @@ export class ChefCongesComponent implements OnInit {
           dateFin: d.dateFin || d.DateFin,
           nombreJours: d.jours || d.Jours || 0,
           motif: d.motif || d.Motif || '',
-          status: d.status || d.Status || 'En attente'
+          status: this.formatStatus(d.status || d.Status || 'En attente')
         }));
       this.mesCongesSignal.set(list);
     });
+  }
+
+  private formatStatus(status: string): string {
+    if (!status) return 'En attente';
+    const s = status.toLowerCase().replace('_', ' ');
+    if (s === 'en attente' || s === 'pending') return 'En attente';
+    if (s === 'validée' || s === 'validee' || s === 'validated' || s === 'approved') return 'Validée';
+    if (s === 'refusée' || s === 'refusee' || s === 'rejected') return 'Refusée';
+    return status;
   }
 
   soumettreDemande() {

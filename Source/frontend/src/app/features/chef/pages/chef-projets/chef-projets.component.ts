@@ -885,8 +885,8 @@ export class ChefProjetsComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.loadData();
   }
   
@@ -895,26 +895,30 @@ export class ChefProjetsComponent implements OnInit {
     
     // Charger les chefs pour résoudre les noms
     this.api.getEmployesBySociete(this.societeId).subscribe({
-      next: (chefs) => {
+      next: (res: any) => {
+        const chefsList = Array.isArray(res) ? res : (res?.items || []);
+        
         this.api.getProjetsBySociete(this.societeId).subscribe({
-          next: (data) => {
-            const projects = (data || []).map((p: any) => {
+          next: (projData: any) => {
+            const projectsList = Array.isArray(projData) ? projData : (projData?.items || projData?.data || []);
+            
+            const projects = projectsList.map((p: any) => {
               const chefId = p.utilisateurId || p.UtilisateurId;
-              const chef = chefs.find((c: any) => c.id === chefId);
+              const chef = chefsList.find((c: any) => (c.id || c.Id) === chefId);
               return {
                 ...p,
                 id: p.id || p.Id,
                 nom: p.nom || p.Nom,
                 description: p.description || p.Description,
-                statut: p.status || p.Status || 'En_cours',
-                progression: p.avancee || p.Avancee || 0,
+                statut: p.status || p.Status || p.statut || 'En_cours',
+                progression: p.avancee || p.Avancee || p.progression || 0,
                 taches: p.tachesCount || Math.floor(Math.random() * 20),
                 membres: p.membresCount || 1,
-                echeance: p.endDate || p.EndDate || 'Non définie',
-                chefName: chef ? `${chef.prenom || ''} ${chef.nom || ''}` : 'Non assigné'
+                echeance: p.endDate || p.EndDate || p.dateFin || p.DateFin || 'Non définie',
+                chefName: chef ? `${chef.prenom || chef.Prenom || ''} ${chef.nom || chef.Nom || ''}` : 'Non assigné'
               };
             });
-            const myProjets = projects.filter((p: any) => (p.utilisateurId || p.UtilisateurId) === user?.id);
+            const myProjets = projects.filter((p: any) => (p.utilisateurId || p.UtilisateurId) === (user?.id || user?.Id));
             this.projetsSignal.set(myProjets);
           }
         });
@@ -948,7 +952,7 @@ export class ChefProjetsComponent implements OnInit {
     const data = { 
       ...this.formData, 
       societeId: this.societeId, 
-      utilisateurId: user?.id,
+      utilisateurId: user?.id || user?.Id,
       statut: this.formData.progression === 100 ? 'Terminé' : 'En_cours'
     };
 

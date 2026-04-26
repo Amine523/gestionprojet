@@ -335,9 +335,9 @@ export class RhPointageComponent implements OnInit {
   editForm: any = { entre: '', sortie: '' };
 
   ngOnInit() {
+    this.societeId = this.api.getCurrentSocieteId();
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.currentDateDisplay = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     this.loadData();
   }

@@ -745,17 +745,15 @@ export class DevCongesComponent implements OnInit {
   }
 
   loadData() {
-    const user = this.api.getCurrentUser();
-    const uid = user.id || user.utilisateurId;
+    const uid = this.api.getCurrentUserId();
     this.api.getSoldeConge(uid).subscribe(res => {
       this.solde = res;
     });
     
     // Get all requests for history
-    this.api.getDemandesConge().subscribe(data => {
+    this.api.getDemandesCongeByUtilisateur(uid).subscribe(data => {
       if (data) {
-        this.conges = data.filter((d: any) => d.utilisateurId === uid)
-          .map((d: any) => {
+        this.conges = data.map((d: any) => {
             const dDebut = new Date(d.dateDebut || d.DateDebut);
             const dFin = new Date(d.dateFin || d.DateFin);
             let nj = d.jours || d.Jours || 0;
@@ -765,9 +763,12 @@ export class DevCongesComponent implements OnInit {
             }
             return {
               ...d,
+              id: d.id || d.Id,
               nombreJours: nj,
+              dateDebut: d.dateDebut || d.DateDebut,
+              dateFin: d.dateFin || d.DateFin,
               typeNom: d.typeNom || d.TypeNom || 'Congé',
-              status: d.status || d.Status || 'En attente'
+              status: this.formatStatus(d.status || d.Status || 'En attente')
             };
           })
           .sort((a: any, b: any) => new Date(b.dateDebut).getTime() - new Date(a.dateDebut).getTime());
@@ -775,6 +776,15 @@ export class DevCongesComponent implements OnInit {
         this.conges = [];
       }
     });
+  }
+
+  private formatStatus(status: string): string {
+    if (!status) return 'En attente';
+    const s = status.toLowerCase().replace('_', ' ');
+    if (s === 'en attente' || s === 'pending') return 'En attente';
+    if (s === 'validée' || s === 'validee' || s === 'validated' || s === 'approved') return 'Validée';
+    if (s === 'refusée' || s === 'refusee' || s === 'rejected') return 'Refusée';
+    return status;
   }
 
   soumettreDemande() {
@@ -792,8 +802,8 @@ export class DevCongesComponent implements OnInit {
     }
 
     this.loading = true;
-    const user = this.api.getCurrentUser();
-    const uid = user.id || user.utilisateurId;
+    const uid = this.api.getCurrentUserId();
+    const sid = this.api.getCurrentSocieteId();
     
     let finalMotif = this.nouvelleDemande.motif;
     if (this.nouvelleDemande.typePointageId === 'HALFDAY') {
@@ -804,7 +814,7 @@ export class DevCongesComponent implements OnInit {
     
     const dto = {
       utilisateurId: uid,
-      societeId: user.societeId || '',
+      societeId: sid,
       typePointageId: this.nouvelleDemande.typePointageId,
       dateDebut: this.nouvelleDemande.dateDebut,
       dateFin: this.nouvelleDemande.dateFin,

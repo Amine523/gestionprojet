@@ -3215,3 +3215,769 @@ L'instruction a été arrêtée.
 23/04/2026 21:21:56: INFO: User 'rh@softpro.com' already exists.
 23/04/2026 21:21:56: INFO: User 'qa@softpro.com' already exists.
 23/04/2026 21:21:56: Database Seeding: Finished.
+24/04/2026 11:11:54: Database Seeding: Starting...
+24/04/2026 11:11:54: Fetching Type Utilisateur list...
+24/04/2026 11:11:55: Found 7 types.
+24/04/2026 11:11:55: Type 'Administrateur' not found. Attempting to create...
+24/04/2026 11:11:55: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+24/04/2026 11:11:55: Type 'Admin Société' not found. Attempting to create...
+24/04/2026 11:11:55: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+24/04/2026 11:11:55: INFO: Type 'RH' exists (Id: T003).
+24/04/2026 11:11:55: Type 'Chef Projet' not found. Attempting to create...
+24/04/2026 11:11:55: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+24/04/2026 11:11:55: Type 'Développeur' not found. Attempting to create...
+24/04/2026 11:11:55: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+24/04/2026 11:11:55: INFO: Type 'Testeur' exists (Id: T006).
+24/04/2026 11:11:55: Type 'Utilisateur' not found. Attempting to create...
+24/04/2026 11:11:55: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+24/04/2026 11:11:55: Fetching User list...
+24/04/2026 11:11:55: Found 55 users.
+24/04/2026 11:11:55: INFO: User 'admin@gestprojet.com' already exists.
+24/04/2026 11:11:55: INFO: User 'admin@softpro.com' already exists.
+24/04/2026 11:11:55: INFO: User 'adminS@softpro.com' already exists.
+24/04/2026 11:11:55: INFO: User 'chef@softpro.com' already exists.
+24/04/2026 11:11:55: INFO: User 'dev1@softpro.com' already exists.
+24/04/2026 11:11:55: INFO: User 'rh@softpro.com' already exists.
+24/04/2026 11:11:55: INFO: User 'qa@softpro.com' already exists.
+24/04/2026 11:11:56: Database Seeding: Finished.
+24/04/2026 12:58:52: Database Seeding: Starting...
+24/04/2026 12:58:52: Fetching Type Utilisateur list...
+24/04/2026 12:58:52: Found 7 types.
+24/04/2026 12:58:52: Type 'Administrateur' not found. Attempting to create...
+24/04/2026 12:58:52: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+24/04/2026 12:58:52: Type 'Admin Société' not found. Attempting to create...
+24/04/2026 12:58:52: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+24/04/2026 12:58:52: INFO: Type 'RH' exists (Id: T003).
+24/04/2026 12:58:52: Type 'Chef Projet' not found. Attempting to create...
+24/04/2026 12:58:52: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+24/04/2026 12:58:52: Type 'Développeur' not found. Attempting to create...
+24/04/2026 12:58:52: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+24/04/2026 12:58:52: INFO: Type 'Testeur' exists (Id: T006).
+24/04/2026 12:58:52: Type 'Utilisateur' not found. Attempting to create...
+24/04/2026 12:58:52: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+24/04/2026 12:58:52: Fetching User list...
+24/04/2026 12:58:52: Found 55 users.
+24/04/2026 12:58:52: INFO: User 'admin@gestprojet.com' already exists.
+24/04/2026 12:58:52: INFO: User 'admin@softpro.com' already exists.
+24/04/2026 12:58:52: INFO: User 'adminS@softpro.com' already exists.
+24/04/2026 12:58:52: INFO: User 'chef@softpro.com' already exists.
+24/04/2026 12:58:52: INFO: User 'dev1@softpro.com' already exists.
+24/04/2026 12:58:52: INFO: User 'rh@softpro.com' already exists.
+24/04/2026 12:58:52: INFO: User 'qa@softpro.com' already exists.
+24/04/2026 12:58:52: Database Seeding: Finished.
+24/04/2026 15:29:09: Database Seeding: Starting...
+24/04/2026 15:29:09: Fetching Type Utilisateur list...
+24/04/2026 15:29:10: Found 7 types.
+24/04/2026 15:29:10: Type 'Administrateur' not found. Attempting to create...
+24/04/2026 15:29:10: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+24/04/2026 15:29:10: Type 'Admin Société' not found. Attempting to create...
+24/04/2026 15:29:10: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+24/04/2026 15:29:10: INFO: Type 'RH' exists (Id: T003).
+24/04/2026 15:29:10: Type 'Chef Projet' not found. Attempting to create...
+24/04/2026 15:29:10: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+24/04/2026 15:29:10: Type 'Développeur' not found. Attempting to create...
+24/04/2026 15:29:10: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+24/04/2026 15:29:10: INFO: Type 'Testeur' exists (Id: T006).
+24/04/2026 15:29:10: Type 'Utilisateur' not found. Attempting to create...
+24/04/2026 15:29:10: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+24/04/2026 15:29:10: Fetching User list...
+24/04/2026 15:29:10: Found 54 users.
+24/04/2026 15:29:10: INFO: User 'admin@gestprojet.com' already exists.
+24/04/2026 15:29:10: INFO: User 'admin@softpro.com' already exists.
+24/04/2026 15:29:10: INFO: User 'adminS@softpro.com' already exists.
+24/04/2026 15:29:10: INFO: User 'chef@softpro.com' already exists.
+24/04/2026 15:29:10: INFO: User 'dev1@softpro.com' already exists.
+24/04/2026 15:29:10: INFO: User 'rh@softpro.com' already exists.
+24/04/2026 15:29:10: INFO: User 'qa@softpro.com' already exists.
+24/04/2026 15:29:10: Database Seeding: Finished.
+24/04/2026 22:26:44: Database Seeding: Starting...
+24/04/2026 22:26:44: Fetching Type Utilisateur list...
+24/04/2026 22:26:44: Found 7 types.
+24/04/2026 22:26:44: Type 'Administrateur' not found. Attempting to create...
+24/04/2026 22:26:44: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+24/04/2026 22:26:44: Type 'Admin Société' not found. Attempting to create...
+24/04/2026 22:26:44: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+24/04/2026 22:26:44: INFO: Type 'RH' exists (Id: T003).
+24/04/2026 22:26:44: Type 'Chef Projet' not found. Attempting to create...
+24/04/2026 22:26:44: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+24/04/2026 22:26:44: Type 'Développeur' not found. Attempting to create...
+24/04/2026 22:26:44: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+24/04/2026 22:26:44: INFO: Type 'Testeur' exists (Id: T006).
+24/04/2026 22:26:44: Type 'Utilisateur' not found. Attempting to create...
+24/04/2026 22:26:44: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+24/04/2026 22:26:44: Fetching User list...
+24/04/2026 22:26:44: Found 54 users.
+24/04/2026 22:26:44: INFO: User 'admin@gestprojet.com' already exists.
+24/04/2026 22:26:44: INFO: User 'admin@softpro.com' already exists.
+24/04/2026 22:26:44: INFO: User 'adminS@softpro.com' already exists.
+24/04/2026 22:26:44: INFO: User 'chef@softpro.com' already exists.
+24/04/2026 22:26:44: INFO: User 'dev1@softpro.com' already exists.
+24/04/2026 22:26:44: INFO: User 'rh@softpro.com' already exists.
+24/04/2026 22:26:44: INFO: User 'qa@softpro.com' already exists.
+24/04/2026 22:26:45: Database Seeding: Finished.
+24/04/2026 22:28:30: Database Seeding: Starting...
+24/04/2026 22:28:30: Fetching Type Utilisateur list...
+24/04/2026 22:28:31: Found 7 types.
+24/04/2026 22:28:31: Type 'Administrateur' not found. Attempting to create...
+24/04/2026 22:28:31: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+24/04/2026 22:28:31: Type 'Admin Société' not found. Attempting to create...
+24/04/2026 22:28:31: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+24/04/2026 22:28:31: INFO: Type 'RH' exists (Id: T003).
+24/04/2026 22:28:31: Type 'Chef Projet' not found. Attempting to create...
+24/04/2026 22:28:31: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+24/04/2026 22:28:31: Type 'Développeur' not found. Attempting to create...
+24/04/2026 22:28:31: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+24/04/2026 22:28:31: INFO: Type 'Testeur' exists (Id: T006).
+24/04/2026 22:28:31: Type 'Utilisateur' not found. Attempting to create...
+24/04/2026 22:28:31: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+24/04/2026 22:28:31: Fetching User list...
+24/04/2026 22:28:31: Found 54 users.
+24/04/2026 22:28:31: INFO: User 'admin@gestprojet.com' already exists.
+24/04/2026 22:28:31: INFO: User 'admin@softpro.com' already exists.
+24/04/2026 22:28:31: INFO: User 'adminS@softpro.com' already exists.
+24/04/2026 22:28:31: INFO: User 'chef@softpro.com' already exists.
+24/04/2026 22:28:31: INFO: User 'dev1@softpro.com' already exists.
+24/04/2026 22:28:31: INFO: User 'rh@softpro.com' already exists.
+24/04/2026 22:28:31: INFO: User 'qa@softpro.com' already exists.
+24/04/2026 22:28:31: Database Seeding: Finished.
+25/04/2026 01:35:51: Database Seeding: Starting...
+25/04/2026 01:35:51: Fetching Type Utilisateur list...
+25/04/2026 01:35:53: Found 7 types.
+25/04/2026 01:35:53: Type 'Administrateur' not found. Attempting to create...
+25/04/2026 01:35:54: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+25/04/2026 01:35:54: Type 'Admin Société' not found. Attempting to create...
+25/04/2026 01:35:54: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+25/04/2026 01:35:54: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 01:35:54: Type 'Chef Projet' not found. Attempting to create...
+25/04/2026 01:35:54: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+25/04/2026 01:35:54: Type 'Développeur' not found. Attempting to create...
+25/04/2026 01:35:54: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+25/04/2026 01:35:54: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 01:35:54: Type 'Utilisateur' not found. Attempting to create...
+25/04/2026 01:35:54: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+25/04/2026 01:35:54: Fetching User list...
+25/04/2026 01:35:54: Found 54 users.
+25/04/2026 01:35:54: INFO: User 'admin@gestprojet.com' already exists.
+25/04/2026 01:35:54: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 01:35:54: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 01:35:55: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 01:35:55: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 01:35:55: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 01:35:55: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 01:35:55: Database Seeding: Finished.
+25/04/2026 01:44:55: Database Seeding: Starting...
+25/04/2026 01:44:56: Fetching Type Utilisateur list...
+25/04/2026 01:44:56: Found 7 types.
+25/04/2026 01:44:56: Type 'Administrateur' not found. Attempting to create...
+25/04/2026 01:44:56: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+25/04/2026 01:44:56: Type 'Admin Société' not found. Attempting to create...
+25/04/2026 01:44:56: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+25/04/2026 01:44:56: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 01:44:56: Type 'Chef Projet' not found. Attempting to create...
+25/04/2026 01:44:56: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+25/04/2026 01:44:56: Type 'Développeur' not found. Attempting to create...
+25/04/2026 01:44:56: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+25/04/2026 01:44:56: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 01:44:56: Type 'Utilisateur' not found. Attempting to create...
+25/04/2026 01:44:56: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+25/04/2026 01:44:56: Fetching User list...
+25/04/2026 01:44:56: Found 54 users.
+25/04/2026 01:44:56: INFO: User 'admin@gestprojet.com' already exists.
+25/04/2026 01:44:56: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 01:44:56: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 01:44:56: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 01:44:56: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 01:44:56: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 01:44:56: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 01:44:56: Database Seeding: Finished.
+25/04/2026 01:49:59: Database Seeding: Starting...
+25/04/2026 01:49:59: Fetching Type Utilisateur list...
+25/04/2026 01:50:00: Found 7 types.
+25/04/2026 01:50:00: Type 'Administrateur' not found. Attempting to create...
+25/04/2026 01:50:00: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+25/04/2026 01:50:00: Type 'Admin Société' not found. Attempting to create...
+25/04/2026 01:50:00: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+25/04/2026 01:50:00: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 01:50:00: Type 'Chef Projet' not found. Attempting to create...
+25/04/2026 01:50:00: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+25/04/2026 01:50:00: Type 'Développeur' not found. Attempting to create...
+25/04/2026 01:50:00: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+25/04/2026 01:50:00: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 01:50:00: Type 'Utilisateur' not found. Attempting to create...
+25/04/2026 01:50:00: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+25/04/2026 01:50:00: Fetching User list...
+25/04/2026 01:50:00: Found 54 users.
+25/04/2026 01:50:00: INFO: User 'admin@gestprojet.com' already exists.
+25/04/2026 01:50:00: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 01:50:00: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 01:50:00: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 01:50:00: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 01:50:00: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 01:50:00: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 01:50:00: Database Seeding: Finished.
+25/04/2026 01:53:03: Database Seeding: Starting...
+25/04/2026 01:53:03: Fetching Type Utilisateur list...
+25/04/2026 01:53:05: Found 7 types.
+25/04/2026 01:53:05: Type 'Administrateur' not found. Attempting to create...
+25/04/2026 01:53:05: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+25/04/2026 01:53:05: Type 'Admin Société' not found. Attempting to create...
+25/04/2026 01:53:05: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+25/04/2026 01:53:05: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 01:53:05: Type 'Chef Projet' not found. Attempting to create...
+25/04/2026 01:53:05: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+25/04/2026 01:53:05: Type 'Développeur' not found. Attempting to create...
+25/04/2026 01:53:05: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+25/04/2026 01:53:05: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 01:53:05: Type 'Utilisateur' not found. Attempting to create...
+25/04/2026 01:53:05: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+25/04/2026 01:53:05: Fetching User list...
+25/04/2026 01:53:05: Found 54 users.
+25/04/2026 01:53:05: INFO: User 'admin@gestprojet.com' already exists.
+25/04/2026 01:53:05: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 01:53:05: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 01:53:05: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 01:53:05: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 01:53:05: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 01:53:05: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 01:53:05: Database Seeding: Finished.
+25/04/2026 01:57:16: Database Seeding: Starting...
+25/04/2026 01:57:16: Fetching Type Utilisateur list...
+25/04/2026 01:57:17: Found 7 types.
+25/04/2026 01:57:17: Type 'Administrateur' not found. Attempting to create...
+25/04/2026 01:57:17: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+25/04/2026 01:57:17: Type 'Admin Société' not found. Attempting to create...
+25/04/2026 01:57:17: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+25/04/2026 01:57:17: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 01:57:17: Type 'Chef Projet' not found. Attempting to create...
+25/04/2026 01:57:17: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+25/04/2026 01:57:17: Type 'Développeur' not found. Attempting to create...
+25/04/2026 01:57:17: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+25/04/2026 01:57:17: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 01:57:17: Type 'Utilisateur' not found. Attempting to create...
+25/04/2026 01:57:17: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+25/04/2026 01:57:17: Fetching User list...
+25/04/2026 01:57:17: Found 54 users.
+25/04/2026 01:57:17: INFO: User 'admin@gestprojet.com' already exists.
+25/04/2026 01:57:17: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 01:57:17: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 01:57:17: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 01:57:17: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 01:57:17: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 01:57:17: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 01:57:17: Database Seeding: Finished.
+25/04/2026 10:00:37: Database Seeding: Starting...
+25/04/2026 10:00:37: Fetching Type Utilisateur list...
+25/04/2026 10:00:37: Found 7 types.
+25/04/2026 10:00:37: Type 'Administrateur' not found. Attempting to create...
+25/04/2026 10:00:37: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+25/04/2026 10:00:37: Type 'Admin Société' not found. Attempting to create...
+25/04/2026 10:00:37: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+25/04/2026 10:00:37: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 10:00:37: Type 'Chef Projet' not found. Attempting to create...
+25/04/2026 10:00:37: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+25/04/2026 10:00:37: Type 'Développeur' not found. Attempting to create...
+25/04/2026 10:00:37: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+25/04/2026 10:00:37: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 10:00:37: Type 'Utilisateur' not found. Attempting to create...
+25/04/2026 10:00:37: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+25/04/2026 10:00:37: Fetching User list...
+25/04/2026 10:00:37: Found 54 users.
+25/04/2026 10:00:37: INFO: User 'admin@gestprojet.com' already exists.
+25/04/2026 10:00:37: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 10:00:37: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 10:00:37: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 10:00:37: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 10:00:37: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 10:00:37: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 10:00:37: Database Seeding: Finished.
+25/04/2026 13:35:16: Database Seeding: Starting...
+25/04/2026 13:35:16: Fetching Type Utilisateur list...
+25/04/2026 13:35:17: Found 7 types.
+25/04/2026 13:35:17: Type 'Administrateur' not found. Attempting to create...
+25/04/2026 13:35:17: Skipping Type Administrateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T001).
+L'instruction a été arrêtée.
+25/04/2026 13:35:17: Type 'Admin Société' not found. Attempting to create...
+25/04/2026 13:35:17: Skipping Type Admin Société: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T002).
+L'instruction a été arrêtée.
+25/04/2026 13:35:17: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 13:35:17: Type 'Chef Projet' not found. Attempting to create...
+25/04/2026 13:35:17: Skipping Type Chef Projet: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T004).
+L'instruction a été arrêtée.
+25/04/2026 13:35:17: Type 'Développeur' not found. Attempting to create...
+25/04/2026 13:35:17: Skipping Type Développeur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T005).
+L'instruction a été arrêtée.
+25/04/2026 13:35:17: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 13:35:17: Type 'Utilisateur' not found. Attempting to create...
+25/04/2026 13:35:17: Skipping Type Utilisateur: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_TypeUtilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.TypeUtilisateur ». Valeur de clé dupliquée : (T007).
+L'instruction a été arrêtée.
+25/04/2026 13:35:17: Fetching User list...
+25/04/2026 13:35:17: Found 54 users.
+25/04/2026 13:35:17: INFO: User 'admin@gestprojet.com' already exists.
+25/04/2026 13:35:17: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 13:35:17: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 13:35:17: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 13:35:17: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 13:35:17: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 13:35:17: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 13:35:17: Database Seeding: Finished.
+25/04/2026 16:27:48: Database Seeding: Starting...
+25/04/2026 16:27:48: Fetching Type Utilisateur list...
+25/04/2026 16:27:48: Found 0 types.
+25/04/2026 16:27:48: Type 'Administrateur' not found. Attempting to create...
+25/04/2026 16:27:49: SUCCESS: Type 'Administrateur' created.
+25/04/2026 16:27:49: Type 'Admin Société' not found. Attempting to create...
+25/04/2026 16:27:49: SUCCESS: Type 'Admin Société' created.
+25/04/2026 16:27:49: Type 'RH' not found. Attempting to create...
+25/04/2026 16:27:49: SUCCESS: Type 'RH' created.
+25/04/2026 16:27:49: Type 'Chef Projet' not found. Attempting to create...
+25/04/2026 16:27:49: SUCCESS: Type 'Chef Projet' created.
+25/04/2026 16:27:49: Type 'Développeur' not found. Attempting to create...
+25/04/2026 16:27:49: SUCCESS: Type 'Développeur' created.
+25/04/2026 16:27:49: Type 'Testeur' not found. Attempting to create...
+25/04/2026 16:27:49: SUCCESS: Type 'Testeur' created.
+25/04/2026 16:27:49: Type 'Utilisateur' not found. Attempting to create...
+25/04/2026 16:27:49: SUCCESS: Type 'Utilisateur' created.
+25/04/2026 16:27:49: Fetching User list...
+25/04/2026 16:27:49: Found 5 users.
+25/04/2026 16:27:49: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 16:27:49: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 16:27:49: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 16:27:49: User 'adminS@softpro.com' not found. Creating...
+25/04/2026 16:27:50: SUCCESS: User 'AdminSociete' created.
+25/04/2026 16:27:50: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 16:27:50: User 'dev1@softpro.com' not found. Creating...
+25/04/2026 16:27:50: SUCCESS: User 'Dev1' created.
+25/04/2026 16:27:50: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 16:27:50: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 16:27:50: Société 'SP001' not found. Creating...
+25/04/2026 16:27:50: Database Seeding: Finished.
+25/04/2026 16:41:07: Database Seeding: Starting...
+25/04/2026 16:41:07: Fetching Type Utilisateur list...
+25/04/2026 16:41:08: Found 7 types.
+25/04/2026 16:41:08: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 16:41:08: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 16:41:08: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 16:41:08: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 16:41:08: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 16:41:08: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 16:41:08: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 16:41:08: Fetching User list...
+25/04/2026 16:41:08: Found 7 users.
+25/04/2026 16:41:08: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 16:41:08: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 16:41:08: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 16:41:08: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 16:41:08: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 16:41:08: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 16:41:08: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 16:41:08: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 16:41:08: Database Seeding: Finished.
+25/04/2026 16:44:15: Database Seeding: Starting...
+25/04/2026 16:44:15: Fetching Type Utilisateur list...
+25/04/2026 16:44:16: Found 7 types.
+25/04/2026 16:44:16: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 16:44:16: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 16:44:16: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 16:44:16: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 16:44:16: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 16:44:16: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 16:44:16: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 16:44:16: Fetching User list...
+25/04/2026 16:44:16: Found 7 users.
+25/04/2026 16:44:16: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 16:44:16: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 16:44:16: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 16:44:16: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 16:44:16: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 16:44:16: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 16:44:16: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 16:44:16: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 16:44:17: Database Seeding: Finished.
+25/04/2026 17:31:16: Database Seeding: Starting...
+25/04/2026 17:31:16: Fetching Type Utilisateur list...
+25/04/2026 17:31:16: Found 7 types.
+25/04/2026 17:31:16: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 17:31:16: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 17:31:16: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 17:31:16: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 17:31:16: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 17:31:16: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 17:31:16: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 17:31:16: Fetching User list...
+25/04/2026 17:31:16: Found 9 users.
+25/04/2026 17:31:16: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 17:31:17: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 17:31:17: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 17:31:17: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 17:31:17: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 17:31:17: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 17:31:17: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 17:31:17: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 17:31:17: Database Seeding: Finished.
+25/04/2026 17:42:00: Database Seeding: Starting...
+25/04/2026 17:42:00: Fetching Type Utilisateur list...
+25/04/2026 17:42:01: Found 7 types.
+25/04/2026 17:42:01: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 17:42:01: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 17:42:01: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 17:42:01: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 17:42:01: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 17:42:01: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 17:42:01: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 17:42:01: Fetching User list...
+25/04/2026 17:42:01: Found 9 users.
+25/04/2026 17:42:01: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 17:42:01: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 17:42:01: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 17:42:01: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 17:42:01: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 17:42:01: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 17:42:01: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 17:42:01: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 17:42:01: Database Seeding: Finished.
+25/04/2026 22:43:28: Database Seeding: Starting...
+25/04/2026 22:43:28: Fetching Type Utilisateur list...
+25/04/2026 22:43:29: Found 7 types.
+25/04/2026 22:43:29: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 22:43:29: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 22:43:30: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 22:43:30: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 22:43:30: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 22:43:30: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 22:43:30: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 22:43:30: Fetching User list...
+25/04/2026 22:43:30: Found 9 users.
+25/04/2026 22:43:30: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 22:43:31: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 22:43:31: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 22:43:31: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 22:43:31: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 22:43:31: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 22:43:31: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 22:43:31: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 22:43:32: Database Seeding: Finished.
+25/04/2026 22:50:43: Database Seeding: Starting...
+25/04/2026 22:50:43: Fetching Type Utilisateur list...
+25/04/2026 22:50:43: Found 7 types.
+25/04/2026 22:50:43: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 22:50:43: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 22:50:43: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 22:50:43: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 22:50:43: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 22:50:43: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 22:50:43: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 22:50:43: Fetching User list...
+25/04/2026 22:50:43: Found 9 users.
+25/04/2026 22:50:43: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 22:50:44: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 22:50:44: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 22:50:44: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 22:50:44: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 22:50:44: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 22:50:44: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 22:50:44: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 22:50:44: Database Seeding: Finished.
+25/04/2026 23:01:36: Database Seeding: Starting...
+25/04/2026 23:01:36: Fetching Type Utilisateur list...
+25/04/2026 23:01:36: Found 7 types.
+25/04/2026 23:01:36: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:01:36: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:01:36: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:01:36: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:01:36: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:01:36: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:01:36: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:01:36: Fetching User list...
+25/04/2026 23:01:36: Found 9 users.
+25/04/2026 23:01:36: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:01:37: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:01:37: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:01:37: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:01:37: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:01:37: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:01:37: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:01:37: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:01:37: Database Seeding: Finished.
+25/04/2026 23:02:07: Database Seeding: Starting...
+25/04/2026 23:02:07: Fetching Type Utilisateur list...
+25/04/2026 23:02:07: Found 7 types.
+25/04/2026 23:02:07: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:02:07: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:02:07: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:02:07: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:02:07: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:02:07: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:02:07: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:02:07: Fetching User list...
+25/04/2026 23:02:07: Found 9 users.
+25/04/2026 23:02:07: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:02:08: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:02:08: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:02:08: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:02:08: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:02:08: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:02:08: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:02:08: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:02:08: Database Seeding: Finished.
+25/04/2026 23:02:56: Database Seeding: Starting...
+25/04/2026 23:02:56: Fetching Type Utilisateur list...
+25/04/2026 23:02:57: Found 7 types.
+25/04/2026 23:02:57: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:02:57: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:02:57: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:02:57: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:02:57: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:02:57: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:02:57: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:02:57: Fetching User list...
+25/04/2026 23:02:57: Found 9 users.
+25/04/2026 23:02:57: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:02:57: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:02:57: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:02:57: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:02:57: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:02:57: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:02:57: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:02:57: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:02:57: Database Seeding: Finished.
+25/04/2026 23:35:00: Database Seeding: Starting...
+25/04/2026 23:35:00: Fetching Type Utilisateur list...
+25/04/2026 23:35:00: Found 7 types.
+25/04/2026 23:35:00: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:35:00: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:35:00: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:35:00: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:35:00: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:35:00: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:35:00: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:35:00: Fetching User list...
+25/04/2026 23:35:00: Found 9 users.
+25/04/2026 23:35:00: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:35:01: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:35:01: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:35:01: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:35:01: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:35:01: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:35:01: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:35:01: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:35:01: Database Seeding: Finished.
+25/04/2026 23:45:04: Database Seeding: Starting...
+25/04/2026 23:45:04: Fetching Type Utilisateur list...
+25/04/2026 23:45:04: Found 7 types.
+25/04/2026 23:45:04: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:45:04: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:45:04: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:45:04: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:45:04: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:45:04: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:45:04: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:45:04: Fetching User list...
+25/04/2026 23:45:04: Found 9 users.
+25/04/2026 23:45:04: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:45:05: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:45:05: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:45:05: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:45:05: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:45:05: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:45:05: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:45:05: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:45:05: Database Seeding: Finished.
+25/04/2026 23:46:24: Database Seeding: Starting...
+25/04/2026 23:46:24: Fetching Type Utilisateur list...
+25/04/2026 23:46:24: Found 7 types.
+25/04/2026 23:46:24: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:46:24: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:46:24: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:46:24: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:46:24: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:46:24: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:46:24: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:46:24: Fetching User list...
+25/04/2026 23:46:24: Found 9 users.
+25/04/2026 23:46:24: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:46:25: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:46:25: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:46:25: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:46:25: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:46:25: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:46:25: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:46:25: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:46:25: Database Seeding: Finished.
+25/04/2026 23:50:22: Database Seeding: Starting...
+25/04/2026 23:50:22: Fetching Type Utilisateur list...
+25/04/2026 23:50:22: Found 7 types.
+25/04/2026 23:50:22: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:50:22: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:50:22: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:50:22: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:50:22: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:50:22: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:50:22: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:50:22: Fetching User list...
+25/04/2026 23:50:22: Found 9 users.
+25/04/2026 23:50:22: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:50:23: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:50:23: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:50:23: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:50:23: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:50:23: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:50:23: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:50:23: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:50:23: Database Seeding: Finished.
+25/04/2026 23:52:07: Database Seeding: Starting...
+25/04/2026 23:52:07: Fetching Type Utilisateur list...
+25/04/2026 23:52:07: Found 7 types.
+25/04/2026 23:52:07: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:52:07: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:52:07: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:52:07: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:52:07: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:52:07: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:52:07: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:52:07: Fetching User list...
+25/04/2026 23:52:07: Found 9 users.
+25/04/2026 23:52:07: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:52:07: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:52:07: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:52:07: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:52:07: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:52:07: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:52:07: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:52:07: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:52:07: Database Seeding: Finished.
+25/04/2026 23:53:07: Database Seeding: Starting...
+25/04/2026 23:53:07: Fetching Type Utilisateur list...
+25/04/2026 23:53:07: Found 7 types.
+25/04/2026 23:53:07: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:53:07: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:53:07: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:53:07: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:53:07: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:53:07: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:53:07: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:53:07: Fetching User list...
+25/04/2026 23:53:07: Found 9 users.
+25/04/2026 23:53:07: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:53:07: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:53:07: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:53:07: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:53:07: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:53:07: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:53:07: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:53:07: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:53:07: Database Seeding: Finished.
+25/04/2026 23:55:14: Database Seeding: Starting...
+25/04/2026 23:55:14: Fetching Type Utilisateur list...
+25/04/2026 23:55:14: Found 7 types.
+25/04/2026 23:55:14: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:55:14: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:55:14: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:55:14: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:55:14: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:55:14: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:55:14: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:55:14: Fetching User list...
+25/04/2026 23:55:14: Found 9 users.
+25/04/2026 23:55:14: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:55:15: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:55:15: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:55:15: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:55:15: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:55:15: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:55:15: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:55:15: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:55:15: Database Seeding: Finished.
+25/04/2026 23:56:48: Database Seeding: Starting...
+25/04/2026 23:56:48: Fetching Type Utilisateur list...
+25/04/2026 23:56:48: Found 7 types.
+25/04/2026 23:56:48: INFO: Type 'Administrateur' exists (Id: T001).
+25/04/2026 23:56:48: INFO: Type 'Admin Société' exists (Id: T002).
+25/04/2026 23:56:48: INFO: Type 'RH' exists (Id: T003).
+25/04/2026 23:56:48: INFO: Type 'Chef Projet' exists (Id: T004).
+25/04/2026 23:56:48: INFO: Type 'Développeur' exists (Id: T005).
+25/04/2026 23:56:48: INFO: Type 'Testeur' exists (Id: T006).
+25/04/2026 23:56:48: INFO: Type 'Utilisateur' exists (Id: T007).
+25/04/2026 23:56:48: Fetching User list...
+25/04/2026 23:56:48: Found 9 users.
+25/04/2026 23:56:48: User 'admin@gestprojet.com' not found. Attempting to create...
+25/04/2026 23:56:49: Skipping admin user: Probl�me d'ajout : Violation de la contrainte PRIMARY KEY « PK_Utilisateur ». Impossible d'insérer une clé en double dans l'objet « dbo.Utilisateur ». Valeur de clé dupliquée : (USR001).
+L'instruction a été arrêtée.
+25/04/2026 23:56:49: INFO: User 'admin@softpro.com' already exists.
+25/04/2026 23:56:49: INFO: User 'adminS@softpro.com' already exists.
+25/04/2026 23:56:49: INFO: User 'chef@softpro.com' already exists.
+25/04/2026 23:56:49: INFO: User 'dev1@softpro.com' already exists.
+25/04/2026 23:56:49: INFO: User 'rh@softpro.com' already exists.
+25/04/2026 23:56:49: INFO: User 'qa@softpro.com' already exists.
+25/04/2026 23:56:49: Database Seeding: Finished.

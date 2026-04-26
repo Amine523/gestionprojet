@@ -26,15 +26,11 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
                         (Constants.Ps_DemandeConge_i, new {
                             id = demandeCongeCore.Id,
                             utilisateurId = demandeCongeCore.UtilisateurId,
-                            societeId = demandeCongeCore.SocieteId,
                             typePointageId = demandeCongeCore.TypePointageId,
                             dateDebut = demandeCongeCore.DateDebut,
                             dateFin = demandeCongeCore.DateFin,
                             status = demandeCongeCore.Status,
                             motif = demandeCongeCore.Motif,
-                            avecCertificat = demandeCongeCore.AvecCertificat,
-                            jours = demandeCongeCore.Jours,
-                            dateCreation = demandeCongeCore.DateCreation,
                             valideParId = demandeCongeCore.ValideParId
                         }, commandType: CommandType.StoredProcedure);
                     return response > 0;
@@ -56,15 +52,11 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
                         (Constants.Ps_DemandeConge_u, new {
                             id = demandeCongeCore.Id,
                             utilisateurId = demandeCongeCore.UtilisateurId,
-                            societeId = demandeCongeCore.SocieteId,
                             typePointageId = demandeCongeCore.TypePointageId,
                             dateDebut = demandeCongeCore.DateDebut,
                             dateFin = demandeCongeCore.DateFin,
                             status = demandeCongeCore.Status,
                             motif = demandeCongeCore.Motif,
-                            avecCertificat = demandeCongeCore.AvecCertificat,
-                            jours = demandeCongeCore.Jours,
-                            dateCreation = demandeCongeCore.DateCreation,
                             valideParId = demandeCongeCore.ValideParId
                         }, commandType: CommandType.StoredProcedure);
                     return response > 0;

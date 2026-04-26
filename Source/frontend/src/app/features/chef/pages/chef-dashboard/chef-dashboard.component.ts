@@ -746,8 +746,8 @@ export class ChefDashboardComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.loadData();
   }
 
@@ -755,8 +755,8 @@ export class ChefDashboardComponent implements OnInit {
     const user = this.api.getCurrentUser();
     this.api.getProjetsBySociete(this.societeId).subscribe({
       next: (projetsResult: any) => {
-        const data = projetsResult.data || projetsResult || [];
-        const filteredProjets = data.filter((p: any) => p.utilisateurId === user?.id);
+        const data = Array.isArray(projetsResult) ? projetsResult : (projetsResult?.items || projetsResult?.data || []);
+        const filteredProjets = data.filter((p: any) => (p.utilisateurId || p.UtilisateurId) === (user?.id || user?.Id));
         this.projets = filteredProjets;
         this.stats.projets = filteredProjets.length;
         if (filteredProjets.length > 0) {
@@ -784,19 +784,21 @@ export class ChefDashboardComponent implements OnInit {
     });
 
     this.api.getEmployesBySociete(this.societeId).subscribe({
-      next: (employes) => {
+      next: (employes: any) => {
+        const empList = Array.isArray(employes) ? employes : (employes?.items || []);
         // Charger les tâches pour calculer la charge de travail réelle
-        this.api.getTachesBySociete(this.societeId).subscribe(taches => {
+        this.api.getTachesBySociete(this.societeId).subscribe((taches: any) => {
+          const tList = Array.isArray(taches) ? taches : (taches?.items || []);
 
-          this.stats.taches = taches.length;
-          this.stats.tacheTerminees = taches.filter((t: any) => {
+          this.stats.taches = tList.length;
+          this.stats.tacheTerminees = tList.filter((t: any) => {
             const status = (t.statut || t.Statut || t.status || t.Status || '').toLowerCase();
             return status === 'done' || status === 'terminé' || status === 'terminée';
           }).length;
 
-          this.membres = (employes || []).map((e: any) => {
+          this.membres = empList.map((e: any) => {
             const eId = e.id || e.Id;
-            const userTaches = taches.filter((t: any) => {
+            const userTaches = tList.filter((t: any) => {
               const tUId = t.utilisateurId || t.UtilisateurId;
               const tAssigneeId = t.assigneeId || t.AssigneeId;
               return tUId === eId || tAssigneeId === eId;

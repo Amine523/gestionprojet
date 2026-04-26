@@ -652,13 +652,23 @@ export class SidebarComponent {
         { name: 'Offres', icon: s('briefcase'), path: '/applicant/offres' },
         { name: 'Candidatures', icon: s('send'), path: '/applicant/postuler' },
         { name: 'Profil', icon: s('user'), path: '/applicant/profil' }
+      ],
+      'client_projet': [
+        { name: 'Dashboard', icon: s('grid'), path: '/client/dashboard' },
+        { name: 'Mes Projets', icon: s('folder'), path: '/client/projets' },
+        { name: 'Rapports', icon: s('report'), path: '/client/rapports' },
+        { name: 'Feedback', icon: s('chat'), path: '/client/feedback' },
+        { name: 'Messagerie', icon: s('send'), path: '/client/chat' },
+        { name: 'Paramètres', icon: s('settings'), path: '/client/parametres' }
       ]
     };
 
     const roleMapping: { [key: string]: string } = {
       't001': 'superadmin', 't002': 'admin_societe', 't003': 'rh',
       't004': 'chef_projet', 't005': 'developpeur', 't006': 'testeur', 't007': 'candidat',
-      'admin_societe': 'admin_societe', 'admin': 'admin_societe'
+      't008': 'client_projet',
+      'admin_societe': 'admin_societe', 'admin': 'admin_societe',
+      'client_projet': 'client_projet', 'client': 'client_projet'
     };
 
     const normalizedRole = roleMapping[role] || role;
@@ -670,7 +680,8 @@ export class SidebarComponent {
   private getRoleLabel(role: string): string {
     const labels: Record<string, string> = {
       'superadmin': 'Super Admin', 'admin_societe': 'Admin Société', 'rh': 'Ressources Humaines',
-      'chef_projet': 'Chef de Projet', 'developpeur': 'Développeur', 'testeur': 'Testeur QA', 'candidat': 'Candidat'
+      'chef_projet': 'Chef de Projet', 'developpeur': 'Développeur', 'testeur': 'Testeur QA',
+      'candidat': 'Candidat', 'client_projet': 'Client Projet'
     };
     return labels[role] || role;
   }

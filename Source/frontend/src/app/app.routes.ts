@@ -6,6 +6,7 @@ import { ChefGroupeLayoutComponent } from '@layout/layouts/chef-groupe.layout';
 import { TesteurLayoutComponent } from '@layout/layouts/testeur-layout.component';
 import { DeveloppeurLayoutComponent } from '@layout/layouts/developpeur.layout';
 import { ApplicantLayoutComponent } from '@layout/layouts/applicant.layout';
+import { ClientLayoutComponent } from '@layout/layouts/client.layout';
 
 import { authGuard } from '@core/guards/auth.guard';
 
@@ -54,6 +55,12 @@ export const routes: Routes = [
     component: DeveloppeurLayoutComponent,
     canActivate: [authGuard],
     loadChildren: () => import('@features/dev/dev.routes').then(m => m.DEV_ROUTES)
+  },
+  {
+    path: 'client',
+    component: ClientLayoutComponent,
+    canActivate: [authGuard],
+    loadChildren: () => import('@features/client/client.routes').then(m => m.CLIENT_ROUTES)
   },
   { path: '**', redirectTo: '' }
 ];
