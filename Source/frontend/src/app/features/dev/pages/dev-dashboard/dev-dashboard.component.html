@@ -1,0 +1,223 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Hub d'Ingénierie v5.2</span>
+            @if (isTimerActive) {
+              <span class="badge badge-danger">
+                <span class="status-dot"></span>
+                Session Active: {{formattedTime}}
+              </span>
+            }
+          </div>
+          <h1 class="header-title">
+            COMMANDE <span class="gradient-text">CODE</span>
+          </h1>
+          <p class="header-subtitle">
+            {{societeNom}} • Focus sur les livrables, les sprints actifs et la vélocité technique.
+          </p>
+        </div>
+        <div class="header-actions">
+          @if (isTimerActive) {
+            <button (click)="stopTimer()" class="btn btn-danger">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="4" width="4" height="16"/>
+                <rect x="14" y="4" width="4" height="16"/>
+              </svg>
+              Arrêter Session
+            </button>
+          }
+          <button (click)="signalBlockage()" class="btn btn-ghost btn-white">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Signaler Blocage
+          </button>
+        </div>
+      </header>
+
+      <!-- Critical Metrics Grid -->
+      <div class="metrics-grid">
+        <app-metric-card
+          title="TÂCHES ASSIGNÉES"
+          [value]="stats.tachesAssignees.toString()"
+          icon="bi-clipboard-check"
+          color="indigo"
+          [trend]="'+2 Nouvelles'"
+          [isPositive]="true">
+        </app-metric-card>
+
+        <app-metric-card
+          title="EN COURS"
+          [value]="stats.enCours.toString()"
+          icon="bi-hourglass-split"
+          color="sky"
+          [trend]="'Focus Actuel'"
+          [isPositive]="true">
+        </app-metric-card>
+
+        <app-metric-card
+          title="TERMINÉES"
+          [value]="stats.terminees.toString()"
+          icon="bi-check-circle-fill"
+          color="emerald"
+          [trend]="stats.progression + '% Prêtes'"
+          [isPositive]="true">
+        </app-metric-card>
+
+        <app-metric-card
+          title="DÉLAIS"
+          [value]="stats.deadlinesProches.toString()"
+          icon="bi-clock-fill"
+          color="rose"
+          [trend]="'Chemin Critique'"
+          [isPositive]="false">
+        </app-metric-card>
+      </div>
+
+      <!-- Kanban View -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Kanban du Sprint</h3>
+          <span class="badge badge-gray">Cycle de développement actif</span>
+        </div>
+        <div class="kanban-board">
+          <!-- TODO -->
+          <div class="kanban-column">
+            <div class="kanban-header">
+              <span class="column-title">À faire</span>
+              <span class="column-count">{{kanban.todo.length}}</span>
+            </div>
+            <div class="kanban-list">
+              @for (t of kanban.todo; track t.id) {
+                <div (click)="startTask(t)" class="kanban-item">
+                  <div class="kanban-item-header">
+                    <span class="task-id">#{{(t.id?.toString() || '').slice(-4)}}</span>
+                    <span class="task-priority">{{t.priorite}}</span>
+                  </div>
+                  <p class="task-name">{{t.nom || t.titre}}</p>
+                  <div class="task-meta">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/>
+                      <line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    {{t.dateEcheance | date:'shortDate'}}
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- IN PROGRESS -->
+          <div class="kanban-column">
+            <div class="kanban-header">
+              <span class="column-title active">En cours</span>
+              <span class="column-count active">{{kanban.inprogress.length}}</span>
+            </div>
+            <div class="kanban-list">
+              @for (t of kanban.inprogress; track t.id) {
+                <div class="kanban-item active">
+                  <div class="kanban-item-header">
+                    <span class="task-id">#{{(t.id?.toString() || '').slice(-4)}}</span>
+                    <span class="status-dot"></span>
+                  </div>
+                  <p class="task-name">{{t.nom || t.titre}}</p>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: 60%;"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- DONE -->
+          <div class="kanban-column">
+            <div class="kanban-header">
+              <span class="column-title done">Terminées</span>
+              <span class="column-count done">{{kanban.done.length}}</span>
+            </div>
+            <div class="kanban-list">
+              @for (t of kanban.done; track t.id) {
+                <div class="kanban-item done">
+                  <div class="kanban-item-header">
+                    <span class="task-id">#{{(t.id?.toString() || '').slice(-4)}}</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </div>
+                  <p class="task-name done">{{t.nom || t.titre}}</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Velocity Circle -->
+        <div class="card card-circle">
+          <div class="card-header">
+            <h3>Vélocité du Sprint</h3>
+          </div>
+          <div class="quality-circle">
+            <svg class="circle-svg" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="80" stroke="currentColor" stroke-width="12" fill="transparent" class="circle-bg"></circle>
+              <circle cx="100" cy="100" r="80" stroke="currentColor" stroke-width="12" fill="transparent" 
+                      [attr.stroke-dasharray]="(stats.progression * 5.02) + ' 502'"
+                      stroke-linecap="round"
+                      class="circle-progress"></circle>
+            </svg>
+            <div class="circle-content">
+              <span class="circle-value">{{stats.progression}}%</span>
+              <span class="circle-label">Finis</span>
+            </div>
+          </div>
+          <p class="circle-description">
+            {{stats.terminees}} sur {{stats.tachesAssignees}} composants vérifiés
+          </p>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Flux Système</h3>
+          </div>
+          <div class="activity-list">
+            @for (activity of activities; track activity.id) {
+              <div class="activity-item">
+                <span class="activity-dot"></span>
+                <div class="activity-details">
+                  <p class="activity-title">{{activity.texte}}</p>
+                  <p class="activity-meta">{{activity.heure}}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Direct Alerts -->
+        <div class="card card-alerts">
+          <div class="card-header">
+            <h3>Alertes Directes</h3>
+          </div>
+          <div class="alerts-list">
+            @for (notif of notifications; track notif.id) {
+              <div class="alert-item" [class.unread]="!notif.lu">
+                <div class="alert-content">
+                  <p class="alert-title">{{notif.texte}}</p>
+                  <p class="alert-message">{{notif.heure}}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  

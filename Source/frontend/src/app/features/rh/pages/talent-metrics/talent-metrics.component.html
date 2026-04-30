@@ -1,0 +1,121 @@
+
+    <div class="talent-container">
+      <header class="page-header">
+        <div class="header-content">
+          <h1 class="title">Talent <span class="gradient-text">Intelligence</span></h1>
+          <p class="subtitle">Analyse 360° de la performance et de la santé des équipes.</p>
+        </div>
+      </header>
+
+      <div class="metrics-grid">
+        <!-- Top Performers Card -->
+        <div class="metrics-card top-performers">
+          <div class="card-header">
+            <h3>Top Performers</h3>
+            <span class="badge badge-success">Mois en cours</span>
+          </div>
+          <div class="performers-list">
+            @for (user of topPerformers(); track user.id) {
+              <div class="performer-item">
+                <div class="avatar">{{user.nom.substring(0,2)}}</div>
+                <div class="info">
+                  <span class="name">{{user.nom}}</span>
+                  <span class="role">{{user.poste}}</span>
+                </div>
+                <div class="score">
+                  <span class="value">{{user.performanceScore}}</span>
+                  <span class="label">Score</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Burnout Risk Card -->
+        <div class="metrics-card burnout-alert">
+          <div class="card-header">
+            <h3>Risques de Surcharge</h3>
+            <span class="badge badge-danger">Critique</span>
+          </div>
+          <div class="risk-list">
+            @for (user of riskProfiles(); track user.id) {
+              <div class="risk-item" [class.high]="user.burnoutRisk === 'High'">
+                <div class="risk-info">
+                  <span class="name">{{user.nom}}</span>
+                  <span class="load">{{user.currentWorkloadHours}}h estimées</span>
+                </div>
+                <div class="risk-level">{{user.burnoutRisk}}</div>
+              </div>
+            }
+            @if (riskProfiles().length === 0) {
+              <p class="empty-msg">Aucun risque de burnout détecté actuellement.</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Talent Table -->
+      <div class="table-card">
+        <div class="table-header">
+          <h2>Matrice de Performance</h2>
+          <div class="search-box">
+            <input type="text" placeholder="Rechercher un talent..." [(ngModel)]="searchQuery">
+          </div>
+        </div>
+        <table class="talent-table">
+          <thead>
+            <tr>
+              <th>Talent</th>
+              <th>Qualité</th>
+              <th>Délais</th>
+              <th>Collab.</th>
+              <th>Compétences</th>
+              <th>Score Global</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of filteredUsers(); track u.id) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <span class="u-name">{{u.nom}}</span>
+                    <span class="u-dept">{{u.departement}}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="progress-mini">
+                    <div class="bar"><div class="fill" [style.width.%]="u.qualityScore"></div></div>
+                    <span>{{u.qualityScore}}%</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="progress-mini">
+                    <div class="bar"><div class="fill blue" [style.width.%]="u.timelinessScore"></div></div>
+                    <span>{{u.timelinessScore}}%</span>
+                  </div>
+                </td>
+                <td>
+                   <div class="progress-mini">
+                    <div class="bar purple"><div class="fill" [style.width.%]="u.collaborationScore"></div></div>
+                    <span>{{u.collaborationScore}}%</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="skills-chips">
+                    @for (skill of u.skillsMatrix | keyvalue; track skill.key) {
+                      <span class="skill-chip">{{skill.key}}</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="global-score" [class.excellent]="u.performanceScore > 85">
+                    {{u.performanceScore}}
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  

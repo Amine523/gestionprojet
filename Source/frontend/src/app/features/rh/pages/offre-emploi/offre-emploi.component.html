@@ -1,0 +1,56 @@
+
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Offres d'Emploi</h1>
+          <p class="text-slate-500">Gérez vos campagnes de recrutement</p>
+        </div>
+        <button mat-flat-button color="primary" class="rounded-xl px-6 py-2">
+          <mat-icon class="mr-2">add</mat-icon>
+          Publier une Offre
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (offre of offres(); track offre.id) {
+          <mat-card class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-xl transition-all group">
+            <div class="p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="p-3 rounded-2xl bg-indigo-50 text-indigo-600">
+                  <mat-icon>work_outline</mat-icon>
+                </div>
+                <span [class]="offre.statut === 'Ouvert' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'" 
+                      class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">
+                  {{ offre.statut }}
+                </span>
+              </div>
+
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">{{ offre.titre }}</h3>
+              <p class="text-xs text-slate-500 mb-4">{{ offre.poste }} • {{ offre.lieu }}</p>
+
+              <p class="text-xs text-slate-600 dark:text-slate-400 mb-6 line-clamp-3">
+                {{ offre.description }}
+              </p>
+
+              <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">
+                <span>Candidatures: <span class="text-slate-900 dark:text-white">{{ offre.candidaturesCount || 0 }}</span></span>
+                <span>Salaire: <span class="text-slate-900 dark:text-white">{{ offre.salaire || 'N/A' }}</span></span>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <button mat-flat-button class="flex-1 rounded-xl bg-slate-900 text-white" (click)="viewCandidats(offre)">
+                  Candidats
+                </button>
+                <button mat-icon-button class="rounded-xl bg-slate-100 dark:bg-slate-700">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button class="rounded-xl bg-slate-100 dark:bg-slate-700 text-rose-500">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-card>
+        }
+      </div>
+    </div>
+  

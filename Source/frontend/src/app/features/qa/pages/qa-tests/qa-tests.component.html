@@ -1,0 +1,194 @@
+
+
+    <div class="tests-container">
+      <!-- Header -->
+      <div class="page-header">
+        <h1 class="header-title">Tests à exécuter</h1>
+        <p class="header-subtitle">Gérez et exécutez vos tests - {{societeNom}}</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <div class="form-group">
+          <label class="form-label">Projet</label>
+          <select class="form-select" [(ngModel)]="filterProjet">
+            <option value="">Tous</option>
+            <option value="App Mobile">App Mobile</option>
+            <option value="API REST">API REST</option>
+            <option value="Dashboard">Dashboard</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priorité</label>
+          <select class="form-select" [(ngModel)]="filterPriorite">
+            <option value="">Toutes</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select class="form-select" [(ngModel)]="filterStatut">
+            <option value="">Tous</option>
+            <option value="Pending">À faire</option>
+            <option value="Pass">Pass</option>
+            <option value="Fail">Fail</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tests Table -->
+      <div class="tests-card">
+        <table class="tests-table">
+          <thead>
+            <tr>
+              <th>Nom du test</th>
+              <th>Type</th>
+              <th>Projet</th>
+              <th>Priorité</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of filteredTests; track t.id) {
+              <tr class="test-row">
+                <td class="test-name">{{t.nom}}</td>
+                <td>
+                  <span class="badge type-chip">{{t.type}}</span>
+                </td>
+                <td>{{t.projet}}</td>
+                <td>
+                  <span class="badge" [ngClass]="'priority-' + t.priorite.toLowerCase()">{{t.priorite}}</span>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="'statut-' + t.statut.toLowerCase()">{{t.statut}}</span>
+                </td>
+                <td>
+                  <div class="test-actions">
+                    @if (t.statut === 'Pending') {
+                      <button class="btn btn-sm btn-success" (click)="passTest(t)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Pass
+                      </button>
+                      <button class="btn btn-sm btn-danger" (click)="failTest(t)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"/>
+                          <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        Fail
+                      </button>
+                    }
+                    <button class="btn btn-icon" (click)="viewDetails(t)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal -->
+      @if (viewingTest) {
+        <div class="modal-overlay" (click)="viewingTest = null">
+          <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>{{viewingTest.nom}}</h2>
+              <button class="btn-close btn-close-white" (click)="viewingTest = null">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="detail-section">
+                <h4>Description</h4>
+                <p>{{viewingTest.description}}</p>
+              </div>
+              <div class="detail-section">
+                <h4>Étapes à suivre</h4>
+                <ol>
+                  @for (etape of viewingTest.etapes; track etape) {
+                    <li>{{etape}}</li>
+                  }
+                </ol>
+              </div>
+              <div class="detail-section">
+                <h4>Résultat attendu</h4>
+                <p>{{viewingTest.resultatAttendu}}</p>
+              </div>
+
+              @if (viewingTest.resultatAttentes && viewingTest.resultatAttentes.length) {
+                <div class="detail-section">
+                  <h4>Résultats attendus détaillés</h4>
+                  <ul>
+                    @for (res of viewingTest.resultatAttentes; track res) {
+                      <li>{{res}}</li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              <div class="comment-section">
+                <h4>Commentaires</h4>
+                <div class="comment-list">
+                  @for (comment of viewingTest.commentaires; track comment.id) {
+                    <div class="comment-item">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      <div class="comment-content">
+                        <span class="comment-author">{{comment.auteur}}</span>
+                        <span class="comment-text">{{comment.texte}}</span>
+                        <span class="comment-time">{{comment.heure}}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Ajouter un commentaire</label>
+                  <div class="input-with-btn">
+                    <input type="text" class="form-input" [(ngModel)]="newComment" placeholder="Votre commentaire...">
+                    <button class="btn btn-icon" (click)="addComment()">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              @if (viewingTest.statut === 'Pending') {
+                <button class="btn btn-success" (click)="passTest(viewingTest); viewingTest = null">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Pass
+                </button>
+                <button class="btn btn-danger" (click)="failTest(viewingTest); viewingTest = null">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                  Fail
+                </button>
+              }
+              <button class="btn btn-ghost" (click)="viewingTest = null">Fermer</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

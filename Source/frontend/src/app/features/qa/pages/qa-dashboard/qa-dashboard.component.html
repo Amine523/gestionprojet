@@ -1,0 +1,190 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Hub d'Assurance Qualité v3.1</span>
+            <span class="badge badge-success">
+              <span class="status-dot"></span>
+              Actif
+            </span>
+          </div>
+          <h1 class="header-title">
+            COMMANDE <span class="gradient-text">QUALITÉ</span>
+          </h1>
+          <p class="header-subtitle">
+            {{societeNom}} • Suivi des bugs, vélocité d'exécution des tests et indicateurs de fiabilité logicielle.
+          </p>
+        </div>
+        <div class="header-actions">
+          <a routerLink="/qa/tests" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Lancer Campagne
+          </a>
+          <button (click)="loadData()" class="btn-icon btn-ghost btn-white">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Critical Metrics Grid -->
+      <div class="metrics-grid">
+        <app-metric-card
+          title="TESTS EN ATTENTE"
+          [value]="stats.testsAExecuter.toString()"
+          icon="bi-clipboard-check"
+          color="indigo"
+          [trend]="'Prochain Sprint'"
+          [isPositive]="true">
+        </app-metric-card>
+
+        <app-metric-card
+          title="BUGS CRITIQUES"
+          [value]="stats.bugsCritiques.toString()"
+          icon="bi-bug-fill"
+          color="rose"
+          [trend]="'Haute Priorité'"
+          [isPositive]="false">
+        </app-metric-card>
+
+        <app-metric-card
+          title="TAUX DE RÉUSSITE"
+          [value]="stats.tauxReussite + '%'"
+          icon="bi-check-circle-fill"
+          color="emerald"
+          [trend]="'Version stable'"
+          [isPositive]="true">
+        </app-metric-card>
+
+        <app-metric-card
+          title="PROJETS ACTIFS"
+          [value]="stats.projetsActifs.toString()"
+          icon="bi-folder-fill"
+          color="sky"
+          [trend]="'Périmètre Qualité'"
+          [isPositive]="true">
+        </app-metric-card>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Quality Circle -->
+        <div class="card card-circle">
+          <div class="card-header">
+            <h3>Fiabilité de la Version</h3>
+          </div>
+          <div class="quality-circle">
+            <svg class="circle-svg" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="80" stroke="currentColor" stroke-width="12" fill="transparent" class="circle-bg"></circle>
+              <circle cx="100" cy="100" r="80" stroke="currentColor" stroke-width="12" fill="transparent" 
+                      [attr.stroke-dasharray]="(stats.tauxReussite * 5.02) + ' 502'"
+                      stroke-linecap="round"
+                      class="circle-progress"></circle>
+            </svg>
+            <div class="circle-content">
+              <span class="circle-value">{{stats.tauxReussite}}%</span>
+              <span class="circle-label">Succès</span>
+            </div>
+          </div>
+          <p class="circle-description">
+            Score de stabilité global basé sur les derniers {{testsRecents.length}} rapports techniques.
+          </p>
+        </div>
+
+        <!-- Bug Distribution -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Carte des Incidents</h3>
+            <div class="icon-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+              </svg>
+            </div>
+          </div>
+          <div class="bug-list">
+            @for (b of bugsParProjet; track b.projet) {
+              <div class="bug-item">
+                <div class="bug-info">
+                  <span class="bug-name">{{b.projet}}</span>
+                  <span class="bug-count">{{b.nombre}} Incidents</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill bug-fill" [style.width.%]="b.percentage"></div>
+                </div>
+              </div>
+            } @empty {
+              <div class="empty-bugs">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <p>Zéro bug actif détecté</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Recent Tests -->
+        <div class="card card-tests">
+          <div class="card-header">
+            <h3>Activité de Test</h3>
+            <span class="badge badge-gray">Flux d'Exécution en Direct</span>
+          </div>
+          <div class="test-list">
+            @for (test of testsRecents; track test.id) {
+              <div class="test-item">
+                <div class="test-icon" [class.test-pass]="test.statut === 'Pass'" [class.test-fail]="test.statut === 'Fail'">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    @if (test.statut === 'Pass') {
+                      <polyline points="20 6 9 17 4 12"/>
+                    } @else {
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    }
+                  </svg>
+                </div>
+                <div class="test-details">
+                  <p class="test-name">{{test.nom}}</p>
+                  <p class="test-meta">{{test.projet}} • {{test.heure}}</p>
+                </div>
+                <span class="badge" [ngClass]="test.statut === 'Pass' ? 'badge-success' : 'badge-danger'">
+                  {{test.statut === 'Pass' ? 'Succès' : 'Échec'}}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Critical Alerts -->
+        <div class="card card-alerts">
+          <div class="card-header">
+            <h3>Alertes Critiques</h3>
+          </div>
+          <div class="alerts-list">
+            @for (alerte of alertes; track alerte.id) {
+              <div class="alert-item">
+                <p class="alert-title">{{alerte.texte}}</p>
+                <p class="alert-message">{{alerte.heure}}</p>
+              </div>
+            } @empty {
+              <div class="empty-alerts">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <p>Environnement Sécurisé</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  

@@ -1,0 +1,29 @@
+
+<div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white">Équipe du Projet</h3>
+      <p class="text-xs text-slate-500">Sélectionnez les membres à assigner</p>
+    </div>
+    <button mat-flat-button color="primary" class="rounded-xl" (click)="saveAssignments()" [disabled]="isSaving()">
+      {{ isSaving() ? 'Enregistrement...' : 'Enregistrer' }}
+    </button>
+  </div>
+
+  <div class="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+    @for (user of users(); track user.id) {
+      <div class="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-700">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300">
+            {{ user.nom.substring(0, 2).toUpperCase() }}
+          </div>
+          <div>
+            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ user.nom }}</p>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider">{{ user.email }}</p>
+          </div>
+        </div>
+        <mat-checkbox color="primary" [checked]="isAssigned(user.id)" (change)="toggleAssignment(user.id)"></mat-checkbox>
+      </div>
+    }
+  </div>
+</div>

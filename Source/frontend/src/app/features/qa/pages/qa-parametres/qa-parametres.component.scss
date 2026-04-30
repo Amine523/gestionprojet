@@ -1,0 +1,286 @@
+
+    .parametres-container {
+      padding: var(--space-lg);
+    }
+
+    .page-header {
+      margin-bottom: var(--space-xl);
+    }
+
+    .header-title {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin: 0;
+    }
+
+    .settings-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-xl);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-title {
+      margin: 0 0 var(--space-lg);
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-md);
+    }
+
+    .form-label {
+      display: block;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text);
+      margin-bottom: var(--space-xs);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      background: white;
+      transition: border-color var(--transition-base);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-md);
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-sm);
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-outline:hover {
+      background: var(--color-bg);
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: white;
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: background var(--transition-base);
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .toggle-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .toggle-item:last-child {
+      border-bottom: none;
+    }
+
+    .toggle-label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text);
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: var(--transition-base);
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: var(--transition-base);
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #3b82f6;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .dialog-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .dialog-card {
+      width: 400px;
+      max-width: 90vw;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-lg);
+      background: #3b82f6;
+      color: white;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .dialog-title {
+      margin: 0;
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+    }
+
+    .dialog-body {
+      padding: var(--space-lg);
+    }
+
+    .dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .error-text {
+      color: #ef4444;
+      font-size: var(--font-size-sm);
+      margin-top: var(--space-sm);
+    }
+
+    /* Dark mode */
+    :host-context(.dark) .settings-card,
+    :host-context(.dark) .dialog-card {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .header-title,
+    :host-context(.dark) .card-title,
+    :host-context(.dark) .form-label,
+    :host-context(.dark) .toggle-label {
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .form-input {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .form-input:focus {
+      border-color: #3b82f6;
+    }
+
+    :host-context(.dark) .btn-outline {
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    :host-context(.dark) .toggle-item {
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .toggle-slider {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    :host-context(.dark) .toggle-slider:before {
+      background-color: white;
+    }
+
+    :host-context(.dark) .dialog-footer {
+      border-color: var(--color-border);
+    }
+
+    @media (max-width: 768px) {
+      .parametres-container {
+        padding: var(--space-md);
+      }
+
+      .settings-card {
+        padding: var(--space-md);
+      }
+
+      .dialog-card {
+        width: 90vw;
+      }
+    }
+  

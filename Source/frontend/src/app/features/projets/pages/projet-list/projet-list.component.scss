@@ -1,0 +1,23 @@
+:host { display: block; }
+
+::ng-deep .mat-mdc-table {
+  background-color: transparent !important;
+}
+
+::ng-deep .mat-mdc-header-cell {
+  background-color: rgba(248, 250, 252, 0.5) !important;
+  padding: 1rem !important;
+}
+
+::ng-deep .mat-mdc-cell {
+  padding: 0.5rem 1rem !important;
+}
+
+.status-badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

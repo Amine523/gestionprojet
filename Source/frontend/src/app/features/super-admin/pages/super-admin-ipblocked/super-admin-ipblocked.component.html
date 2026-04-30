@@ -1,0 +1,101 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Sécurité Réseau</span>
+          </div>
+          <h1 class="header-title">
+            IPs <span class="gradient-text">Bloquées.</span>
+          </h1>
+          <p class="header-subtitle">
+            Gestion des adresses IP bloquées.
+          </p>
+        </div>
+        <div class="header-actions">
+          <div class="stats-card">
+            <div class="stat-item">
+              <p class="stat-label">Total Bloquées</p>
+              <p class="stat-value text-primary">{{blockedIps.length}}</p>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <p class="stat-label">Actif</p>
+              <p class="stat-value text-primary">{{activeBlockedCount}}</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Card -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Bloquer une nouvelle IP</h3>
+        </div>
+        <div class="block-form">
+          <div class="form-field">
+            <label>Adresse IP</label>
+            <input type="text" class="form-input" [(ngModel)]="newIp" placeholder="192.168.1.100">
+          </div>
+          <div class="form-field">
+            <label>Raison</label>
+            <input type="text" class="form-input" [(ngModel)]="newRaison" placeholder="Raison du blocage">
+          </div>
+          <button class="btn btn-danger" (click)="bloquerIp()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            Bloquer
+          </button>
+        </div>
+      </div>
+
+      <!-- IPs List -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Liste des IPs Bloquées</h3>
+        </div>
+        <div class="ips-list">
+          @for (ip of blockedIps; track ip.id) {
+            <div class="ip-card" [class.unblocked]="ip.statut === 'debloqué'">
+              <div class="ip-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                  <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                  <line x1="12" y1="20" x2="12.01" y2="20"/>
+                </svg>
+              </div>
+              <div class="ip-details">
+                <strong>{{ip.ip}}</strong>
+                <span class="text-muted">{{ip.raison}} - {{ip.dateBlocage}}</span>
+              </div>
+              <span class="badge" [class.blocked]="ip.statut === 'bloqué'" [class.unblocked]="ip.statut === 'debloqué'">{{ip.statut}}</span>
+              @if (ip.statut === 'bloqué') {
+                <button class="btn-icon btn-success" (click)="debloquerIp(ip)" title="Débloquer">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+          @if (blockedIps.length === 0) {
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              <p class="empty-state-text">Aucune IP bloquée</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  

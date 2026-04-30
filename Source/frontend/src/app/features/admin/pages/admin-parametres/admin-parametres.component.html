@@ -1,0 +1,168 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Configuration</span>
+          </div>
+          <h1 class="header-title">
+            System <span class="gradient-text">Nexus.</span>
+          </h1>
+          <p class="header-subtitle">
+            Global Environment Parameters & Security Protocols for {{societeNom}}.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button (click)="saveAll()" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Commit Global Changes
+          </button>
+        </div>
+      </header>
+
+      <!-- Settings Grid -->
+      <div class="settings-grid">
+         <!-- Left Column -->
+         <div class="settings-main">
+            <section class="card">
+               <div class="card-header">
+                  <div class="header-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 21h18"/>
+                      <path d="M5 21V7l7-4 7 4v14"/>
+                      <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                  </div>
+                  <h3>Identity Matrix</h3>
+               </div>
+
+               <div class="form-grid">
+                  <div class="form-field">
+                     <label>Entity Nomenclature</label>
+                     <input [(ngModel)]="societe.nom" class="form-input" placeholder="Enterprise Name">
+                  </div>
+                  <div class="form-field">
+                     <label>Transmission Frequency (Email)</label>
+                     <input [(ngModel)]="societe.email" class="form-input" placeholder="contact@nexus.com">
+                  </div>
+                  <div class="form-field">
+                     <label>Communication Line</label>
+                     <input [(ngModel)]="societe.telephone" class="form-input" placeholder="+216 ...">
+                  </div>
+                  <div class="form-field">
+                     <label>Geographical Sector</label>
+                     <input [(ngModel)]="societe.adresse" class="form-input" placeholder="Physical Address">
+                  </div>
+               </div>
+
+               <div class="form-field">
+                  <label>Executive Summary</label>
+                  <textarea [(ngModel)]="societe.description" class="form-input" rows="4" placeholder="Enterprise mission directive..."></textarea>
+               </div>
+            </section>
+
+            <section class="card">
+               <div class="card-header">
+                  <div class="header-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                  </div>
+                  <h3>Operational Schedule</h3>
+               </div>
+
+               <div class="form-grid">
+                  <div class="form-field">
+                     <label>Standard Start</label>
+                     <input type="time" [(ngModel)]="config.heureDebut" class="form-input">
+                  </div>
+                  <div class="form-field">
+                     <label>Standard End</label>
+                     <input type="time" [(ngModel)]="config.heureFin" class="form-input">
+                  </div>
+                  <div class="form-field">
+                     <label>Temporal Zone</label>
+                     <select class="form-input">
+                        <option>GMT+1 (Tunis/Paris)</option>
+                        <option>UTC (Global Standard)</option>
+                     </select>
+                  </div>
+               </div>
+            </section>
+         </div>
+
+         <!-- Right Column -->
+         <div class="settings-sidebar">
+            <section class="card card-dark">
+               <div class="card-header">
+                  <div class="header-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="13.5" cy="6.5" r=".5"/>
+                      <circle cx="17.5" cy="10.5" r=".5"/>
+                      <circle cx="8.5" cy="7.5" r=".5"/>
+                      <circle cx="6.5" cy="12.5" r=".5"/>
+                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+                    </svg>
+                  </div>
+                  <h3>Interface Prefs</h3>
+               </div>
+
+               <div class="settings-toggles">
+                  <div class="toggle-item">
+                     <div class="toggle-info">
+                        <p>Cimmerian Mode</p>
+                        <span>Enable high-contrast dark environment</span>
+                     </div>
+                     <button (click)="toggleDarkMode()" class="toggle-btn" [class.active]="isDarkMode">
+                       <span class="toggle-knob"></span>
+                     </button>
+                  </div>
+
+                  <div class="toggle-item">
+                     <div class="toggle-info">
+                        <p>Signal Notifications</p>
+                        <span>Audio-visual operational alerts</span>
+                     </div>
+                     <button class="toggle-btn active">
+                       <span class="toggle-knob"></span>
+                     </button>
+                  </div>
+
+                  <div class="toggle-item">
+                     <div class="toggle-info">
+                        <p>Neural Sync (AI)</p>
+                        <span>Llama 3.2 real-time assistance</span>
+                     </div>
+                     <button class="toggle-btn active">
+                       <span class="toggle-knob"></span>
+                     </button>
+                  </div>
+               </div>
+            </section>
+
+            <section class="card">
+               <div class="card-header">
+                  <div class="header-icon header-icon-danger">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  </div>
+                  <h3>Security Protocols</h3>
+               </div>
+               
+               <p class="security-text">Unauthorized access attempts will be logged and the originating node will be quarantined. Dual-factor authentication is mandatory for all Command Level entities.</p>
+               
+               <button class="btn btn-danger w-full">
+                  Rotate Encryption Keys
+               </button>
+            </section>
+         </div>
+      </div>
+    </div>
+  

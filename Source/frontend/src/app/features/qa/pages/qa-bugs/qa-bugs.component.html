@@ -1,0 +1,207 @@
+
+
+    <div class="bugs-container">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="header-content">
+          <h1 class="header-title">Gestion des Bugs</h1>
+          <p class="header-subtitle">Signalez et suivez les bugs - {{societeNom}}</p>
+        </div>
+        <button class="btn btn-primary add-btn" (click)="showCreateForm = true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Signaler un bug
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div class="stat-info">
+            <span class="stat-value">{{stats.ouverts}}</span>
+            <span class="stat-label">Ouverts</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+          </svg>
+          <div class="stat-info">
+            <span class="stat-value">{{stats.enCours}}</span>
+            <span class="stat-label">En cours</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6"></path>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <div class="stat-info">
+            <span class="stat-value">{{stats.corriges}}</span>
+            <span class="stat-label">Corrigés</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <div class="form-group">
+          <label class="form-label">Projet</label>
+          <select class="form-select" [(ngModel)]="filterProjet">
+            <option value="">Tous</option>
+            <option value="App Mobile">App Mobile</option>
+            <option value="API REST">API REST</option>
+            <option value="Dashboard">Dashboard</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select class="form-select" [(ngModel)]="filterStatut">
+            <option value="">Tous</option>
+            <option value="Open">Open</option>
+            <option value="In_progress">En cours</option>
+            <option value="Fixed">Corrigé</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bugs List -->
+      <div class="bugs-card">
+        <div class="bugs-list">
+          @for (bug of filteredBugs; track bug.id) {
+            <div class="bug-item" [class.critique]="bug.priorite === 'Critical'">
+              <div class="bug-header">
+                <span class="bug-titre">{{bug.titre}}</span>
+                <span class="badge" [ngClass]="'priorite-' + bug.priorite.toLowerCase()">{{bug.priorite}}</span>
+              </div>
+              <p class="bug-desc">{{bug.description}}</p>
+              <div class="bug-meta">
+                <span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  {{bug.projet}}
+                </span>
+                <span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  {{bug.assignee || 'Non assigné'}}
+                </span>
+                <span class="badge" [ngClass]="'statut-' + bug.statut.toLowerCase()">{{bug.statut}}</span>
+              </div>
+              <div class="bug-actions">
+                @if (bug.statut === 'Open') {
+                  <button class="btn btn-ghost" (click)="affecter(bug)">Affecter</button>
+                  <button class="btn btn-ghost" (click)="corriger(bug)">Corriger</button>
+                }
+                <button class="btn btn-ghost" (click)="details(bug)">Détails</button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Modal -->
+      @if (showCreateForm || viewingBug) {
+        <div class="modal-overlay" (click)="closeForm()">
+          <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>{{viewingBug ? 'Détails du bug' : 'Signaler un bug'}}</h2>
+              <button class="btn-close btn-close-white" (click)="closeForm()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Titre</label>
+                <input type="text" class="form-input" [(ngModel)]="formData.titre" placeholder="Titre du bug...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-input" [(ngModel)]="formData.description" rows="3" placeholder="Description détaillée..."></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Projet</label>
+                  <select class="form-select" [(ngModel)]="formData.projetId">
+                    <option value="App Mobile">App Mobile</option>
+                    <option value="API REST">API REST</option>
+                    <option value="Dashboard">Dashboard</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Priorité</label>
+                  <select class="form-select" [(ngModel)]="formData.priorite">
+                    <option value="Critical">Critical</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Étapes pour reproduire</label>
+                <textarea class="form-input" [(ngModel)]="formData.steps" rows="4" placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea>
+              </div>
+
+              @if (viewingBug) {
+                <div class="comment-section">
+                  <h4>Commentaires</h4>
+                  <div class="comment-list">
+                    @for (comment of viewingBug.commentaires; track comment.id) {
+                      <div class="comment-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <div class="comment-content">
+                          <span class="comment-author">{{comment.auteur}}</span>
+                          <span class="comment-text">{{comment.texte}}</span>
+                          <span class="comment-time">{{comment.heure}}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Ajouter un commentaire</label>
+                    <div class="input-with-btn">
+                      <input type="text" class="form-input" [(ngModel)]="newComment" placeholder="Votre commentaire...">
+                      <button class="btn btn-icon" (click)="addComment()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="22" y1="2" x2="11" y2="13"></line>
+                          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-ghost" (click)="closeForm()">Annuler</button>
+              <button class="btn btn-success save-btn" (click)="saveBug()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                {{viewingBug ? 'Mettre à jour' : 'Créer'}}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

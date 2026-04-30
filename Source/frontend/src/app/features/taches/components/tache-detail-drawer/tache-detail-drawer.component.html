@@ -1,0 +1,88 @@
+
+    <div class="h-full flex flex-col bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-100 dark:border-slate-800">
+      <!-- Header -->
+      <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <mat-icon class="text-indigo-600">task_alt</mat-icon>
+          <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Détails de la tâche</span>
+        </div>
+        <button mat-icon-button (click)="onClose.emit()" class="text-slate-400"><mat-icon>close</mat-icon></button>
+      </div>
+
+      <!-- Content -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-8">
+        @if (isLoading()) {
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        } @else if (tache()) {
+          <!-- Title & Description -->
+          <div>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4">{{ tache()?.nom }}</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ tache()?.description || 'Aucune description fournie.' }}</p>
+          </div>
+
+          <!-- Metadata -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl">
+              <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Priorité</span>
+              <span [class]="getPriorityClass(tache()?.priorite)">{{ tache()?.priorite }}</span>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl">
+              <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Statut</span>
+              <span class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ tache()?.status }}</span>
+            </div>
+          </div>
+
+          <!-- Checklist (Sous-tâches) -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-slate-900 dark:text-white flex items-center">
+                <mat-icon class="text-sm mr-2">checklist</mat-icon> Sous-tâches
+              </h3>
+              <span class="text-[10px] font-bold text-slate-400">{{ completedCount() }}/{{ subtasks().length }}</span>
+            </div>
+            <div class="space-y-2">
+              @for (st of subtasks(); track st.id) {
+                <div class="flex items-center space-x-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors">
+                  <input type="checkbox" [checked]="st.status === 'Done'" (change)="toggleSubtask(st)"
+                         class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                  <span [class]="st.status === 'Done' ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-300'" class="text-sm">
+                    {{ st.description }}
+                  </span>
+                </div>
+              }
+              <div class="flex items-center space-x-2 pt-2">
+                <input type="text" [(ngModel)]="newSubtaskText" placeholder="Ajouter une sous-tâche..."
+                       (keyup.enter)="addSubtask()"
+                       class="flex-1 bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-indigo-500">
+                <button mat-icon-button color="primary" class="scale-75" (click)="addSubtask()" [disabled]="!newSubtaskText.trim()">
+                  <mat-icon>add</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Attachments -->
+          <div>
+            <h3 class="font-bold text-slate-900 dark:text-white mb-4 flex items-center">
+              <mat-icon class="text-sm mr-2">attach_file</mat-icon> Pièces Jointes
+            </h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <mat-icon class="text-slate-400 mb-1">upload</mat-icon>
+                <span class="text-[10px] font-bold text-slate-500">Uploader</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Footer / Comments -->
+      <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">JD</div>
+          <input type="text" placeholder="Ajouter un commentaire..."
+                 class="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+      </div>
+    </div>
+  

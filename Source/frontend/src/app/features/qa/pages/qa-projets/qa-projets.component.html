@@ -1,0 +1,83 @@
+
+
+    <div class="projets-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-bg"></div>
+        <div class="header-content">
+          <div class="header-left">
+            <div class="header-badge">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <span class="badge-text">Assurance Qualité</span>
+            </div>
+            <h1 class="header-title">
+              Missions de <span class="gradient-text">Validation.</span>
+            </h1>
+            <p class="header-subtitle">Accès prioritaire aux écosystèmes nécessitant des audits de qualité et des tests de régression.</p>
+          </div>
+          <div class="header-stat">
+            <p class="stat-label">Audit Global</p>
+            <div class="stat-value">
+              <span class="value">{{projets.length}}</span>
+              <span class="unit">Unités</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Project Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Projet</th>
+              <th>Statut</th>
+              <th>Description</th>
+              <th>Scénarios</th>
+              <th>Anomalies</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (projet of projets; track projet.id) {
+              <tr>
+                <td>
+                  <div class="project-info">
+                    <span class="project-name">{{projet.nom}}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="card-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Sous Audit Qualité</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="project-desc">{{projet.description || 'Synthèse de l\'environnement de test'}}</span>
+                </td>
+                <td>
+                  <span class="stat-value-text">{{projet.tests || 0}}</span>
+                </td>
+                <td>
+                  <span class="stat-value-text bugs">{{projet.bugs || 0}}</span>
+                </td>
+                <td class="text-right">
+                  <div class="card-actions">
+                    <a routerLink="/qa/tests" class="btn btn-primary">Tests</a>
+                    <a routerLink="/qa/bugs" class="btn btn-secondary">Bugs</a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (projets.length === 0) {
+          <div class="empty-state">
+            <p>Aucune mission trouvée.</p>
+          </div>
+        }
+      </div>
+    </div>
+  

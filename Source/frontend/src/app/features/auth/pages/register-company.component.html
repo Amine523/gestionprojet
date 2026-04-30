@@ -1,0 +1,76 @@
+
+    <div class="register-container">
+      <div class="register-card">
+        <div class="register-header">
+          <div class="logo-section">
+            <svg class="logo-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+            <span class="logo-text">GestProjet</span>
+          </div>
+          <h1 class="register-title">Enregistrer votre société</h1>
+          <p class="register-subtitle">Remplissez le formulaire pour demander l'accès à la plateforme</p>
+        </div>
+
+        @if (isSubmitted) {
+          <div class="success-message">
+            <div class="success-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <h2>Demande envoyée !</h2>
+            <p>Votre demande de création de société a été transmise à notre équipe administrative. Vous recevrez un email dès qu'elle sera approuvée.</p>
+            <button class="btn btn-primary" routerLink="/">Retour à la connexion</button>
+          </div>
+        } @else {
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+            <div class="form-section">
+              <h3>Informations Société</h3>
+              <div class="form-group">
+                <label class="form-label">Nom de la société</label>
+                <input type="text" formControlName="societeNom" class="form-input" placeholder="Ex: Tech Solutions">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Adresse</label>
+                <input type="text" formControlName="societeAdresse" class="form-input" placeholder="Ex: Tunis, Tunisie">
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Informations Administrateur</h3>
+              <div class="form-group">
+                <label class="form-label">Nom complet</label>
+                <input type="text" formControlName="adminNom" class="form-input" placeholder="Ex: Amine Ben Ali">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email professionnel</label>
+                <input type="email" formControlName="adminEmail" class="form-input" placeholder="amine@tech.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Mot de passe souhaité</label>
+                <input type="password" formControlName="adminPassword" class="form-input" placeholder="••••••••">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Téléphone</label>
+                <input type="text" formControlName="telephone" class="form-input" placeholder="+216 12 345 678">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" [disabled]="registerForm.invalid || isLoading">
+              @if (isLoading) {
+                <span>Traitement en cours...</span>
+              } @else {
+                Soumettre la demande
+              }
+            </button>
+            
+            <a routerLink="/" class="back-link">Annuler et retourner au login</a>
+          </form>
+        }
+      </div>
+    </div>
+  

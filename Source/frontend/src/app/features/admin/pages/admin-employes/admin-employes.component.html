@@ -1,0 +1,185 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Équipe</span>
+          </div>
+          <h1 class="header-title">
+            Répertoire <span class="gradient-text">Équipe.</span>
+          </h1>
+          <p class="header-subtitle">
+            Répertoire centralisé des ressources humaines pour {{societeNom}}.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button (click)="openAddDialog()" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="20" y1="8" x2="20" y2="14"/>
+              <line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+            Intégrer un Talent
+          </button>
+        </div>
+      </header>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="filterEmployes()" placeholder="Rechercher par nom ou email...">
+        </div>
+        <div class="filter-selects">
+          <select [(ngModel)]="filterPoste" (change)="filterEmployes()">
+            <option value="">Tous les Rôles</option>
+            <option value="developpeur">Ingénieur Logiciel</option>
+            <option value="testeur">Spécialiste QA</option>
+            <option value="chef_projet">Chef de Projet</option>
+            <option value="rh">Ressources Humaines</option>
+            <option value="admin_societe">Administrateur Site</option>
+          </select>
+          <select [(ngModel)]="filterStatut" (change)="filterEmployes()">
+            <option value="">Tous les États</option>
+            <option value="actif">Unité Active</option>
+            <option value="inactif">En Veille</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Personnel Grid -->
+      <div class="personnel-grid">
+        @for (e of filteredEmployes; track e.id) {
+          <div class="card employee-card" [class.active]="e.actif">
+            <div class="employee-header">
+              <div class="employee-avatar">{{e.nom.charAt(0)}}</div>
+              <div class="employee-info">
+                <h3 class="employee-name">{{e.nom}}</h3>
+                <span class="badge badge-role">{{getPosteLabel(e.typeUtilisateurId || e.poste)}}</span>
+              </div>
+            </div>
+            <div class="employee-details">
+              <div class="detail-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span>{{e.email}}</span>
+              </div>
+              <div class="detail-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                <span>{{e.telephone || '—'}}</span>
+              </div>
+              <div class="detail-item">
+                <div class="status-dot" [class.active]="e.actif"></div>
+                <span [class.active]="e.actif">{{e.actif ? 'Déploiement Actif' : 'État Hors Ligne'}}</span>
+              </div>
+            </div>
+            <div class="employee-actions">
+              <button (click)="editEmploye(e)" class="btn btn-action">
+                Matrice Profil
+              </button>
+              <button (click)="toggleStatut(e)" class="btn-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </button>
+              <button (click)="deleteEmploye(e)" class="btn-icon btn-danger">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (filteredEmployes.length === 0) {
+        <div class="empty-state">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <p>Aucun Signal Détecté</p>
+        </div>
+      }
+
+      <!-- Modal -->
+      @if (showAddDialog || editingEmploye) {
+        <div class="modal-backdrop" (click)="closeDialog()">
+           <div class="modal-container" (click)="$event.stopPropagation()">
+              <div class="modal-header">
+                 <div>
+                    <h3>{{editingEmploye ? 'Mise à jour' : 'Intégration Talent'}}</h3>
+                    <p>Protocole de Ressource Stratégique</p>
+                 </div>
+                 <button (click)="closeDialog()" class="btn-icon">
+                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                     <line x1="18" y1="6" x2="6" y2="18"/>
+                     <line x1="6" y1="6" x2="18" y2="18"/>
+                   </svg>
+                 </button>
+              </div>
+
+              <form (ngSubmit)="saveEmploye()">
+                 <div class="form-grid">
+                    <div class="form-field">
+                       <label>Identité</label>
+                       <input [(ngModel)]="formData.nom" name="nom" class="form-input" placeholder="Entrez le nom complet...">
+                    </div>
+                    <div class="form-field">
+                       <label>Email de Transmission</label>
+                       <input [(ngModel)]="formData.email" name="email" class="form-input" placeholder="nom@domaine.com">
+                    </div>
+                    <div class="form-field">
+                       <label>Clé de Sécurité</label>
+                       <input type="password" [(ngModel)]="formData.password" name="password" class="form-input" placeholder="••••••••">
+                    </div>
+                    <div class="form-field">
+                       <label>Unité Fonctionnelle</label>
+                       <select [(ngModel)]="formData.typeUtilisateurId" name="role" class="form-input">
+                          <option value="developpeur">Développeur</option>
+                          <option value="testeur">Testeur</option>
+                          <option value="chef_projet">Chef de projet</option>
+                          <option value="rh">RH</option>
+                          <option value="admin_societe">Admin Société</option>
+                       </select>
+                    </div>
+                 </div>
+
+                 <div class="toggle-section">
+                    <div class="toggle-info">
+                       <p>Droits d'Accès Système</p>
+                       <span>Autoriser la synchronisation du nœud</span>
+                    </div>
+                    <button (click)="formData.actif = !formData.actif" class="toggle-btn" [class.active]="formData.actif">
+                      <span class="toggle-knob"></span>
+                    </button>
+                 </div>
+              </form>
+
+              <div class="modal-actions">
+                 <button type="button" (click)="closeDialog()" class="btn btn-ghost">Séquence d'Avortement</button>
+                 <button type="button" (click)="saveEmploye()" class="btn btn-primary">
+                    {{editingEmploye ? 'Valider Mise à Jour' : 'Initialiser Talent'}}
+                 </button>
+              </div>
+           </div>
+        </div>
+      }
+    </div>
+  

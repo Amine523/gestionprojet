@@ -1,0 +1,217 @@
+
+
+    <div class="bugs-container">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+          </svg>
+        </div>
+        <div class="header-info">
+          <h1 class="header-title">Mes Bugs</h1>
+          <p class="header-subtitle">Les bugs qui me sont assignés - {{societeNom}}</p>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card stat-danger">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <div class="stat-info">
+            <span class="stat-value">{{stats.ouverts}}</span>
+            <span class="stat-label">Ouverts</span>
+          </div>
+        </div>
+        <div class="stat-card stat-warning">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <div class="stat-info">
+            <span class="stat-value">{{stats.enCours}}</span>
+            <span class="stat-label">En cours</span>
+          </div>
+        </div>
+        <div class="stat-card stat-success">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <div class="stat-info">
+            <span class="stat-value">{{stats.corriges}}</span>
+            <span class="stat-label">Corrigés</span>
+          </div>
+        </div>
+        <div class="stat-card stat-primary">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+            <path d="M16 21h5v-5"></path>
+          </svg>
+          <div class="stat-info">
+            <span class="stat-value">{{stats.total}}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <select [(ngModel)]="filterProjet" class="select-input">
+          <option value="">Tous</option>
+          <option value="App Mobile">App Mobile</option>
+          <option value="API REST">API REST</option>
+          <option value="Dashboard">Dashboard</option>
+        </select>
+        <select [(ngModel)]="filterPriorite" class="select-input">
+          <option value="">Toutes</option>
+          <option value="Critical">Critical</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+
+      <!-- Bugs Table -->
+      <div class="card">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Titre</th>
+                <th>Priorité</th>
+                <th>Statut</th>
+                <th>Projet</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of filteredBugs; track b.id) {
+                <tr>
+                  <td>{{b.titre}}</td>
+                  <td>
+                    <span class="badge" [class.badge-critical]="b.priorite.toLowerCase() === 'critical'" [class.badge-high]="b.priorite.toLowerCase() === 'high'" [class.badge-medium]="b.priorite.toLowerCase() === 'medium'" [class.badge-low]="b.priorite.toLowerCase() === 'low'">{{b.priorite}}</span>
+                  </td>
+                  <td>
+                    <span class="badge" [class.badge-danger]="b.statut.toLowerCase() === 'ouvert'" [class.badge-warning]="b.statut.toLowerCase() === 'en cours'" [class.badge-success]="b.statut.toLowerCase() === 'corrigé'">{{b.statut}}</span>
+                  </td>
+                  <td>{{b.projet}}</td>
+                  <td>
+                    <div class="action-buttons">
+                      @if (b.statut !== 'Corrigé') {
+                        <button class="btn btn-success btn-sm" (click)="corriger(b)">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                          Corriger
+                        </button>
+                      }
+                      <button class="btn-icon" (click)="viewDetails(b)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bug Detail Modal -->
+      @if (viewingBug) {
+        <div class="modal-overlay" (click)="viewingBug = null">
+          <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header modal-header-danger">
+              <h3 class="modal-title">Détails du bug</h3>
+              <button class="btn-close btn-close-white" (click)="viewingBug = null">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="detail-section">
+                <h6 class="section-title">Description</h6>
+                <p class="section-text">{{viewingBug.description}}</p>
+              </div>
+              <div class="detail-section">
+                <h6 class="section-title">Steps to reproduce</h6>
+                <ol class="steps-list">
+                  @for (step of viewingBug.steps; track step) {
+                    <li>{{step}}</li>
+                  }
+                </ol>
+              </div>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Projet:</span>
+                  <span class="detail-value">{{viewingBug.projet}}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Priorité:</span>
+                  <span class="badge" [class.badge-critical]="viewingBug.priorite.toLowerCase() === 'critical'" [class.badge-high]="viewingBug.priorite.toLowerCase() === 'high'" [class.badge-medium]="viewingBug.priorite.toLowerCase() === 'medium'" [class.badge-low]="viewingBug.priorite.toLowerCase() === 'low'">{{viewingBug.priorite}}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Statut:</span>
+                  <span class="badge" [class.badge-danger]="viewingBug.statut.toLowerCase() === 'ouvert'" [class.badge-warning]="viewingBug.statut.toLowerCase() === 'en cours'" [class.badge-success]="viewingBug.statut.toLowerCase() === 'corrigé'">{{viewingBug.statut}}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Créé par:</span>
+                  <span class="detail-value">{{viewingBug.createur}}</span>
+                </div>
+              </div>
+              <div class="comments-section">
+                <h6 class="section-title">Commentaires</h6>
+                <div class="comments-list">
+                  @for (comment of viewingBug.commentaires; track comment.id) {
+                    <div class="comment-item">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                      <div class="comment-content">
+                        <span class="comment-author">{{comment.auteur}}</span>
+                        <span class="comment-text">{{comment.texte}}</span>
+                      </div>
+                      <span class="comment-time">{{comment.heure}}</span>
+                    </div>
+                  }
+                </div>
+                <div class="comment-input-group">
+                  <input type="text" [(ngModel)]="newComment" class="form-input" placeholder="Votre commentaire...">
+                  <button class="btn btn-primary" (click)="addComment()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13"></polygon>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-ghost" (click)="viewingBug = null">Fermer</button>
+              @if (viewingBug.statut !== 'Corrigé') {
+                <button class="btn btn-success" (click)="corriger(viewingBug); viewingBug = null">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  Marquer comme corrigé
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

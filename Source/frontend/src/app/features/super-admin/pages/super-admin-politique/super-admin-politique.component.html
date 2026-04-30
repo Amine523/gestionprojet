@@ -1,0 +1,133 @@
+
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-badges">
+        <span class="badge badge-primary">Politique Sécurité</span>
+      </div>
+      <h1 class="header-title">
+        Politique <span class="gradient-text">de Sécurité.</span>
+      </h1>
+      <p class="header-subtitle">
+        Règles et politiques de sécurité.
+      </p>
+    </div>
+  </header>
+
+  <!-- Policies Grid -->
+  <div class="politiques-grid">
+    @for (p of politiques; track p.id) {
+      <div class="card politique-card" [class.inactive]="!p.active">
+        <div class="politique-header">
+          <div class="politique-icon">
+            @if (p.icon === 'lock') {
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            } @else if (p.icon === 'wifi') {
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                <line x1="12" y1="20" x2="12.01" y2="20"/>
+              </svg>
+            } @else if (p.icon === 'supervised_user_circle') {
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/>
+                <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
+                <path d="M12 22a8 8 0 0 0-8-8 8 8 0 0 0-8 8"/>
+              </svg>
+            } @else if (p.icon === 'verified_user') {
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+            } @else {
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                <line x1="6" y1="6" x2="6.01" y2="6"/>
+                <line x1="6" y1="18" x2="6.01" y2="18"/>
+              </svg>
+            }
+          </div>
+          <div class="politique-info">
+            <h3>{{p.titre}}</h3>
+            <p class="text-muted">{{p.description}}</p>
+          </div>
+          <span class="badge" [class.active]="p.active" [class.inactive]="!p.active">{{p.active ? 'Active' : 'Inactive'}}</span>
+        </div>
+        <ul class="regles-list">
+          @for (regle of p.regles; track regle) {
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              {{regle}}
+            </li>
+          }
+        </ul>
+        <div class="politique-actions">
+          <button class="btn btn-secondary" (click)="modifierPolitique(p)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Modifier
+          </button>
+          <button class="btn btn-danger" (click)="togglePolitique(p)">
+            @if (p.active) {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <rect x="10" y="9" width="4" height="6"/>
+              </svg>
+              Désactiver
+            } @else {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Activer
+            }
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Edit Dialog -->
+  @if (showEditDialog) {
+    <div class="modal-backdrop" (click)="showEditDialog = false">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Modifier la Politique</h3>
+          <button class="btn-icon" (click)="showEditDialog = false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <form (ngSubmit)="savePolitique()">
+          <div class="form-field">
+            <label>Titre</label>
+            <input type="text" class="form-input" [(ngModel)]="editForm.titre" name="titre" required>
+          </div>
+          <div class="form-field">
+            <label>Description</label>
+            <textarea class="form-input" [(ngModel)]="editForm.description" name="description" rows="2"></textarea>
+          </div>
+          <div class="form-field">
+            <label>Règles (une par ligne)</label>
+            <textarea class="form-input" [(ngModel)]="editForm.regles" name="regles" rows="4"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" type="button" (click)="showEditDialog = false">Annuler</button>
+            <button class="btn btn-primary" type="submit">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

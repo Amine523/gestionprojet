@@ -1,0 +1,180 @@
+
+    .plans-container {
+      padding: var(--space-lg);
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-xl);
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-title {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin: 0;
+    }
+
+    .header-subtitle {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-base);
+      margin: var(--space-xs) 0 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-md);
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-sm);
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    .plans-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .plan-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-md);
+    }
+
+    .plan-header h3 {
+      margin: 0;
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .plan-desc {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin: 0 0 var(--space-md);
+    }
+
+    .plan-stats {
+      display: flex;
+      gap: var(--space-lg);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-md);
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .plan-actions {
+      display: flex;
+      gap: var(--space-sm);
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-md);
+    }
+
+    .no-plans {
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: var(--font-size-base);
+      padding: var(--space-2xl);
+    }
+
+    /* Dark mode */
+    :host-context(.dark) .plan-card {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .header-title,
+    :host-context(.dark) .plan-header h3 {
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .header-subtitle,
+    :host-context(.dark) .plan-desc,
+    :host-context(.dark) .plan-stats,
+    :host-context(.dark) .no-plans {
+      color: var(--color-text-muted);
+    }
+
+    :host-context(.dark) .btn-ghost {
+      border-color: var(--color-border);
+      color: var(--color-text-muted);
+    }
+
+    :host-context(.dark) .plan-actions {
+      border-color: var(--color-border);
+    }
+
+    @media (max-width: 768px) {
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-md);
+      }
+
+      .plan-stats {
+        flex-direction: column;
+        gap: var(--space-sm);
+      }
+
+      .plan-actions {
+        flex-direction: column;
+      }
+    }
+  

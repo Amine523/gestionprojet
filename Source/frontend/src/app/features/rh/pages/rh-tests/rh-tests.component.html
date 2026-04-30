@@ -1,0 +1,328 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <div class="dashboard-header">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <div class="header-info">
+          <h1 class="header-title">Evaluation Hub</h1>
+          <p class="header-subtitle">Gestion des tests techniques et évaluations de compétences</p>
+        </div>
+        <div class="header-stats">
+          <div class="header-stat">
+            <span class="stat-value">{{roleQuizzes.length}}</span>
+            <span class="stat-label">Tests Actifs</span>
+          </div>
+          <div class="header-stat">
+            <span class="stat-value">{{noteMoyenne}}/20</span>
+            <span class="stat-label">Moyenne</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Navigation Sidebar -->
+        <div class="sidebar-nav">
+          <div class="nav-title">Modules par Rôle</div>
+          <div class="nav-items">
+            <button class="nav-btn" [class.active]="selectedQuizRole === 'developpeur'" (click)="selectedQuizRole = 'developpeur'; loadRoleQuizzes()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+              Développeur
+            </button>
+            <button class="nav-btn" [class.active]="selectedQuizRole === 'testeur'" (click)="selectedQuizRole = 'testeur'; loadRoleQuizzes()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+              </svg>
+              Testeur QA
+            </button>
+            <button class="nav-btn" [class.active]="selectedQuizRole === 'chef_projet'" (click)="selectedQuizRole = 'chef_projet'; loadRoleQuizzes()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+              Chef de Projet
+            </button>
+            <button class="nav-btn" [class.active]="selectedQuizRole === 'rh'" (click)="selectedQuizRole = 'rh'; loadRoleQuizzes()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Ressources Humaines
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Grid -->
+        <div class="quiz-content">
+          <div class="content-header">
+            <h2 class="content-title">Filière {{selectedQuizRole | titlecase}}</h2>
+            <button class="btn btn-primary" (click)="openCreateQuiz()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Créer un Test
+            </button>
+          </div>
+
+          <div class="quizzes-grid">
+            @for (quiz of roleQuizzes; track quiz.id) {
+              <div class="quiz-card">
+                <div class="quiz-header">
+                  <div class="quiz-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                  </div>
+                  <div class="quiz-meta">
+                    <span class="quiz-difficulty" [class]="'diff-'+quiz.niveau">{{quiz.niveau}}</span>
+                    <h3 class="quiz-title">{{quiz.titre}}</h3>
+                  </div>
+                </div>
+                
+                <p class="quiz-description">{{quiz.description}}</p>
+                
+                <div class="quiz-details">
+                  <div class="detail-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    {{quiz.nbQuestions}} Q.
+                  </div>
+                  <div class="detail-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    {{quiz.duree}}m
+                  </div>
+                  <div class="detail-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                      <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
+                    {{quiz.nbAttempts}} acc.
+                  </div>
+                </div>
+
+                <div class="quiz-progress">
+                  <div class="progress-labels">
+                    <span>Taux de réussite</span>
+                    <span class="progress-value">{{quiz.tauxReussite}}%</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="quiz.tauxReussite"></div>
+                  </div>
+                </div>
+
+                <div class="quiz-actions">
+                  <button class="btn btn-secondary btn-sm" (click)="viewQuizDetails(quiz)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    Présentation
+                  </button>
+                  <button class="btn-icon" (click)="editQuiz(quiz)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz Details Modal -->
+    @if (showQuizDetailsDialog) {
+      <div class="modal-overlay" (click)="closeQuizDetails()">
+        <div class="modal-card modal-wide" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="modal-title-block">
+              <div class="modal-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </div>
+              <div>
+                <h3 class="modal-title">{{selectedQuiz?.titre}}</h3>
+                <span class="modal-subtitle">Architecture & Questions</span>
+              </div>
+            </div>
+            <button class="btn-close" (click)="closeQuizDetails()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="modal-body scrollable">
+            <div class="quiz-stats-bar">
+              <div class="stat-item"><strong>{{sampleQuestions.length}}</strong> Questions</div>
+              <div class="stat-item"><strong>{{selectedQuiz?.duree}}</strong> Minutes</div>
+              <div class="stat-item"><strong>{{selectedQuiz?.niveau}}</strong> Difficulté</div>
+            </div>
+
+            <div class="questions-stack">
+              @for (q of sampleQuestions; track q.q; let i = $index) {
+                <div class="question-item">
+                  <div class="question-number">Q{{i + 1}}</div>
+                  <div class="question-body">
+                    <p class="question-text">{{q.q}}</p>
+                    <div class="options-grid">
+                      @for (opt of q.options; track opt; let j = $index) {
+                        <div class="option-chip" [class.correct]="j === q.correct">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            @if (j === q.correct) {
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            } @else {
+                              <circle cx="12" cy="12" r="10"></circle>
+                            }
+                          </svg>
+                          <span>{{opt}}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeQuizDetails()">Fermer la vue</button>
+            <button class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+              Partager le test
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Edit Quiz Modal -->
+    @if (showEditQuizDialog) {
+      <div class="modal-overlay" (click)="closeEditQuiz()">
+        <div class="modal-card modal-small" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3 class="modal-title">Paramètres du Test</h3>
+            <button class="btn-close" (click)="closeEditQuiz()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">Titre de l'évaluation</label>
+              <input type="text" [(ngModel)]="selectedQuiz.titre" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Niveau de difficulté</label>
+              <select [(ngModel)]="selectedQuiz.niveau" class="form-select">
+                <option value="Débutant">Débutant</option>
+                <option value="Intermédiaire">Intermédiaire</option>
+                <option value="Avancé">Avancé</option>
+              </select>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Questions</label>
+                <input type="number" [(ngModel)]="selectedQuiz.nbQuestions" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Temps (min)</label>
+                <input type="number" [(ngModel)]="selectedQuiz.duree" class="form-input">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeEditQuiz()">Annuler</button>
+            <button class="btn btn-primary" (click)="saveQuiz()">Mettre à jour</button>
+          </div>
+        </div>
+      </div>
+    }
+    
+    <!-- Create Quiz Modal -->
+    @if (showCreateQuizDialog) {
+      <div class="modal-overlay" (click)="closeCreateQuiz()">
+        <div class="modal-card modal-small" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3 class="modal-title">Créer un nouveau Test</h3>
+            <button class="btn-close" (click)="closeCreateQuiz()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">Titre du test</label>
+              <input type="text" [(ngModel)]="newQuiz.titre" class="form-input" placeholder="ex: React Avancé">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <input type="text" [(ngModel)]="newQuiz.description" class="form-input" placeholder="Brève description du contenu">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Niveau de difficulté</label>
+              <select [(ngModel)]="newQuiz.niveau" class="form-select">
+                <option value="Débutant">Débutant</option>
+                <option value="Intermédiaire">Intermédiaire</option>
+                <option value="Avancé">Avancé</option>
+              </select>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Nb Questions</label>
+                <input type="number" [(ngModel)]="newQuiz.nbQuestions" class="form-input" min="1" max="50">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Durée (min)</label>
+                <input type="number" [(ngModel)]="newQuiz.duree" class="form-input" min="5" max="120">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeCreateQuiz()">Annuler</button>
+            <button class="btn btn-primary" (click)="createQuiz()" [disabled]="!newQuiz.titre">Créer le test</button>
+          </div>
+        </div>
+      </div>
+    }
+  

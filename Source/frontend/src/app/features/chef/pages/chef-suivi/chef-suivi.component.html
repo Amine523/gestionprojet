@@ -1,0 +1,256 @@
+
+
+    <div class="suivi-container">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="20" x2="12" y2="10"/>
+            <line x1="18" y1="20" x2="18" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="16"/>
+          </svg>
+        </div>
+        <div class="header-content">
+          <h1 class="header-title">Suivi d'Avancement</h1>
+          <p class="header-subtitle">Analysez la progression de vos projets - {{societeNom}}</p>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <select class="form-select form-select-sm" [(ngModel)]="selectedProjet" (ngModelChange)="updateData()">
+          @for (p of projets; track p.id) {
+            <option [value]="p.nom">{{p.nom}}</option>
+          }
+        </select>
+        <button class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exporter
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-green">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{avancement}}%</div>
+            <div class="stat-label">Avancement</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-orange">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{tempsEstime}}h</div>
+            <div class="stat-label">Temps estimé</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+              <line x1="12" y1="16" x2="12" y2="18"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{tempsReel}}h</div>
+            <div class="stat-label">Temps réel</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" [ngClass]="tauxRetard > 20 ? 'stat-icon-red' : 'stat-icon-green'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{tauxRetard}}%</div>
+            <div class="stat-label">Taux retard</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs Card -->
+      <div class="card">
+        <div class="tabs">
+          <button class="tab" [class.active]="activeTab === 'tableau'" (click)="activeTab = 'tableau'">Tableau de suivi</button>
+          <button class="tab" [class.active]="activeTab === 'graphiques'" (click)="activeTab = 'graphiques'">Graphiques</button>
+          <button class="tab" [class.active]="activeTab === 'alertes'" (click)="activeTab = 'alertes'">Alertes</button>
+          <button class="tab" [class.active]="activeTab === 'feedbacks'" (click)="activeTab = 'feedbacks'">Feedbacks Client</button>
+        </div>
+
+        @if (activeTab === 'tableau') {
+          <div class="tab-content">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Tâche</th>
+                    <th>Responsable</th>
+                    <th>Statut</th>
+                    <th>Temps</th>
+                    <th>Progression</th>
+                    <th>Alerte</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (t of taches; track t.id) {
+                    <tr [ngClass]="t.retard ? 'row-warning' : ''">
+                      <td>{{t.titre}}</td>
+                      <td>{{t.responsable}}</td>
+                      <td>
+                        <span class="badge" [ngClass]="t.statut === 'To Do' ? 'badge-secondary' : t.statut === 'In Progress' ? 'badge-primary' : 'badge-success'">{{t.statut}}</span>
+                      </td>
+                      <td>{{t.temps}}h</td>
+                      <td>
+                        <div class="progress-display">
+                          <div class="progress-bar">
+                            <div class="progress-fill" [style.width.%]="t.progression"></div>
+                          </div>
+                          <span class="progress-text">{{t.progression}}%</span>
+                        </div>
+                      </td>
+                      <td>
+                        @if (t.retard) {
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                          </svg>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        @if (activeTab === 'graphiques') {
+          <div class="tab-content">
+            <h3 class="tab-title">Avancement du projet</h3>
+            <div class="progress-section">
+              <div class="progress-bar large">
+                <div class="progress-fill" [style.width.%]="avancement"></div>
+              </div>
+              <div class="progress-center">{{avancement}}% terminé</div>
+            </div>
+
+            <div class="status-grid">
+              <div class="status-item">
+                <div class="status-label">To Do</div>
+                <div class="progress-bar">
+                  <div class="progress-fill progress-gray" [style.width.%]="stats.todo"></div>
+                </div>
+                <div class="status-value">{{stats.todo}}%</div>
+              </div>
+              <div class="status-item">
+                <div class="status-label">In Progress</div>
+                <div class="progress-bar">
+                  <div class="progress-fill progress-cyan" [style.width.%]="stats.inProgress"></div>
+                </div>
+                <div class="status-value">{{stats.inProgress}}%</div>
+              </div>
+              <div class="status-item">
+                <div class="status-label">Done</div>
+                <div class="progress-bar">
+                  <div class="progress-fill progress-blue" [style.width.%]="stats.done"></div>
+                </div>
+                <div class="status-value">{{stats.done}}%</div>
+              </div>
+            </div>
+
+            <h3 class="tab-title">Temps estimé vs réel</h3>
+            <div class="time-comparison">
+              <div class="time-item">
+                <span class="time-label">Estimé</span>
+                <div class="time-bar" style="width: 200px; background: #3b82f6;"></div>
+                <span class="time-value">{{tempsEstime}}h</span>
+              </div>
+              <div class="time-item">
+                <span class="time-label">Réel</span>
+                <div class="time-bar" [style.width.%]="(tempsReel/tempsEstime)*100" style="background: #f59e0b;"></div>
+                <span class="time-value">{{tempsReel}}h</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (activeTab === 'alertes') {
+          <div class="tab-content">
+            <h3 class="tab-title">Alertes actives</h3>
+            <div class="alerts-list">
+              @for (a of alertes; track a.id) {
+                <div class="alert-item" [ngClass]="a.critique ? 'alert-danger' : 'alert-warning'">
+                  <div class="alert-icon">
+                    @if (a.critique) {
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                    } @else {
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                    }
+                  </div>
+                  <div class="alert-content">
+                    <div class="alert-title">{{a.titre}}</div>
+                    <div class="alert-desc">{{a.description}}</div>
+                    <div class="alert-date">{{a.date}}</div>
+                  </div>
+                  <button class="btn btn-sm btn-primary">Résoudre</button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (activeTab === 'feedbacks') {
+          <div class="tab-content">
+            <h3 class="tab-title">Retours du client</h3>
+            <div class="alerts-list">
+              @for (fb of feedbacks; track fb.id) {
+                <div class="alert-item" style="background: rgba(59, 130, 246, 0.1);">
+                  <div class="alert-icon" style="color: #3b82f6;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div class="alert-content">
+                    <div class="alert-title">{{fb.projet}} - {{fb.type}}</div>
+                    <div class="alert-desc">{{fb.message}}</div>
+                    <div class="alert-date">{{fb.date}}</div>
+                  </div>
+                  <button class="btn btn-sm btn-primary">Répondre</button>
+                </div>
+              }
+              @if (feedbacks.length === 0) {
+                <p style="color: #94a3b8;">Aucun feedback récent pour ce projet.</p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  

@@ -1,0 +1,117 @@
+
+    <div class="client-feedback">
+      <!-- Header -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">💬 Feedback & Validation</h1>
+          <p class="page-subtitle">Soumettez vos retours, validez ou signalez des problèmes</p>
+        </div>
+      </div>
+
+      <div class="feedback-grid">
+        <!-- Formulaire de feedback -->
+        <div class="feedback-form-card">
+          <h2 class="card-title">Nouveau feedback</h2>
+
+          <div class="form-group">
+            <label class="form-label">Type de feedback</label>
+            <div class="type-selector">
+              @for (type of feedbackTypes; track type.value) {
+                <button class="type-btn"
+                  [class.type-btn-active]="form.type === type.value"
+                  (click)="form.type = type.value">
+                  <span class="type-icon">{{ type.icon }}</span>
+                  <span>{{ type.label }}</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Projet concerné</label>
+            <select [(ngModel)]="form.projetId" class="form-select">
+              <option value="">Sélectionner un projet...</option>
+              @for (projet of projets; track projet.id) {
+                <option [value]="projet.id">{{ projet.nom }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea
+              [(ngModel)]="form.message"
+              class="form-textarea"
+              rows="5"
+              placeholder="Décrivez votre retour, observation ou validation...">
+            </textarea>
+            <div class="char-count">{{ form.message.length }} / 500 caractères</div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-clear" (click)="resetForm()">Réinitialiser</button>
+            <button class="btn-submit"
+              [disabled]="!form.projetId || !form.message || isSubmitting"
+              (click)="soumettreFeedback()">
+              @if (isSubmitting) {
+                <span class="spinner-sm"></span>
+                Envoi...
+              } @else {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>
+                Envoyer le feedback
+              }
+            </button>
+          </div>
+
+          @if (successMsg) {
+            <div class="success-alert">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              {{ successMsg }}
+            </div>
+          }
+
+          @if (errorMsg) {
+            <div class="error-alert">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ errorMsg }}
+            </div>
+          }
+        </div>
+
+        <!-- Guide des types de feedback -->
+        <div class="guide-card">
+          <h2 class="card-title">Guide des feedbacks</h2>
+          <div class="guide-list">
+            @for (type of feedbackTypes; track type.value) {
+              <div class="guide-item">
+                <div class="guide-icon" [class]="type.colorClass">{{ type.icon }}</div>
+                <div>
+                  <div class="guide-title">{{ type.label }}</div>
+                  <div class="guide-desc">{{ type.desc }}</div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Historique des feedbacks récents -->
+          <div class="recent-feedbacks">
+            <h3 class="recent-title">Feedbacks récents</h3>
+            @if (recentFeedbacks.length === 0) {
+              <p class="no-recent">Aucun feedback soumis récemment.</p>
+            } @else {
+              @for (fb of recentFeedbacks; track $index) {
+                <div class="recent-item">
+                  <span class="recent-icon">{{ getTypeIcon(fb.type) }}</span>
+                  <div class="recent-info">
+                    <span class="recent-projet">{{ fb.projetNom }}</span>
+                    <span class="recent-msg">{{ fb.message.substring(0, 60) }}...</span>
+                  </div>
+                  <span class="recent-status">{{ fb.statut }}</span>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  

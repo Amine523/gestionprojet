@@ -1,0 +1,148 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Surveillance Temps Réel</span>
+            <div class="live-indicator">
+              <span class="ping"></span>
+              <span class="dot"></span>
+            </div>
+            <span class="badge badge-live">Système Live</span>
+          </div>
+          <h1 class="header-title">
+            Nœuds <span class="gradient-text">& Performances.</span>
+          </h1>
+          <p class="header-subtitle">
+            Analyse granulaire du trafic système, de la charge serveur et de la santé de l'écosystème.
+          </p>
+        </div>
+      </header>
+
+      <!-- Metrics Grid -->
+      <div class="metrics-grid">
+        <div class="card metric-card">
+          <p class="metric-label">Utilisateurs Actifs</p>
+          <h3 class="metric-value">{{data.utilisateursActifs}}</h3>
+          <div class="metric-footer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>En ligne maintenant</span>
+          </div>
+        </div>
+
+        <div class="card metric-card">
+          <p class="metric-label">Trafic API / min</p>
+          <h3 class="metric-value">{{data.requetesApiMinute}}</h3>
+          <div class="metric-footer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>Haute Intensité</span>
+          </div>
+        </div>
+
+        <div class="card metric-card">
+          <p class="metric-label">Charge CPU</p>
+          <h3 class="metric-value">{{data.cpu}}%</h3>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="data.cpu"></div>
+          </div>
+        </div>
+
+        <div class="card metric-card" [class.alert]="data.alerts > 0">
+          <p class="metric-label">Alertes Système</p>
+          <h3 class="metric-value" [class.text-danger]="data.alerts > 0">{{data.alerts}}</h3>
+          <div class="metric-footer" [class.text-danger]="data.alerts > 0">
+            @if (data.alerts > 0) {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span>Attention Requise</span>
+            } @else {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+              <span>Système Sain</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <!-- Live Activity Stream -->
+        <div class="card activity-card">
+          <div class="card-header">
+            <h3>Flux d'Activité Live</h3>
+            <div class="sync-indicator">
+              <span class="ping"></span>
+              <span>Sync en cours</span>
+            </div>
+          </div>
+          
+          <div class="activity-list">
+            @for (act of activities; track act.id) {
+              <div class="activity-item">
+                <div class="activity-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"/>
+                    <polyline points="8 6 2 12 8 18"/>
+                  </svg>
+                </div>
+                <div class="activity-info">
+                  <p class="activity-action">{{act.action}}</p>
+                  <p class="activity-ip">IP: {{act.ip}}</p>
+                </div>
+                <div class="activity-meta">
+                  <p class="activity-time">{{act.time}}</p>
+                  <p class="activity-latency">Latence: 12ms</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- System Resources Pulse -->
+        <div class="card resources-card">
+          <h3>Ressources Cluster</h3>
+          
+          <div class="resource-item">
+            <div class="resource-header">
+              <p class="resource-label">CPU NODE_01</p>
+              <p class="resource-value">{{data.cpu}}%</p>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill gradient" [style.width.%]="data.cpu"></div>
+            </div>
+          </div>
+
+          <div class="resource-item">
+            <div class="resource-header">
+              <p class="resource-label">MÉMOIRE CACHE</p>
+              <p class="resource-value">{{data.memoire}}%</p>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill gradient-purple" [style.width.%]="data.memoire"></div>
+            </div>
+          </div>
+
+          <div class="resource-status">
+            <div class="status-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+            </div>
+            <p>Cluster sécurisé et optimisé. Aucun goulot d'étranglement détecté.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  

@@ -1,0 +1,70 @@
+
+    <div class="p-6">
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Validation des Congés</h1>
+        <p class="text-slate-500">Gérez les demandes d'absence de vos collaborateurs</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (demande of demandes(); track demande.id) {
+          <mat-card class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-xl transition-all group">
+            <div class="p-6">
+              <!-- Header -->
+              <div class="flex items-center space-x-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">
+                  {{ demande.utilisateurNom?.substring(0, 2).toUpperCase() || '??' }}
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-900 dark:text-white">{{ demande.utilisateurNom || 'Utilisateur' }}</h3>
+                  <p class="text-xs text-slate-500">{{ demande.dateCreation | date:'longDate' }}</p>
+                </div>
+              </div>
+
+              <!-- Details -->
+              <div class="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 space-y-3 mb-6">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-slate-500">Type</span>
+                  <span class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ demande.typePointageId }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-slate-500">Durée</span>
+                  <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{{ demande.jours }} jours</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-slate-500">Période</span>
+                  <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
+                    {{ demande.dateDebut | date:'dd/MM' }} → {{ demande.dateFin | date:'dd/MM' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <h4 class="text-[10px] uppercase font-bold text-slate-400 mb-1">Motif</h4>
+                <p class="text-sm text-slate-600 dark:text-slate-400 italic">"{{ demande.motif || 'Aucun motif précisé' }}"</p>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex items-center space-x-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <button mat-flat-button class="flex-1 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600" 
+                        (click)="validate(demande, true)">
+                  Accepter
+                </button>
+                <button mat-stroked-button class="flex-1 rounded-xl border-slate-200 text-rose-500 hover:bg-rose-50 hover:border-rose-200" 
+                        (click)="validate(demande, false)">
+                  Refuser
+                </button>
+              </div>
+            </div>
+          </mat-card>
+        } @empty {
+          <div class="col-span-full py-20 text-center">
+            <div class="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <mat-icon class="text-slate-400 text-4xl">check_circle_outline</mat-icon>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Tout est à jour !</h3>
+            <p class="text-slate-500">Aucune demande en attente de validation.</p>
+          </div>
+        }
+      </div>
+    </div>
+  

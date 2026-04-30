@@ -1,103 +1,77 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { ApiService } from './api.service';
+import { HttpClient } from '@angular/common/http';
+import { Observable, timer, switchMap, tap, retry } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-export interface Notification {
-  id?: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  timestamp: Date;
-  read: boolean;
-}
-
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class NotificationService {
-  private api = inject(ApiService);
+  private http = inject(HttpClient);
   private snackBar = inject(MatSnackBar);
+  private readonly baseUrl = 'http://localhost:5221/api/notifications';
 
-  notificationsSignal = signal<Notification[]>([]);
-  unreadCount = signal(0);
+  // Signal pour le compteur de notifications non lues
+  unreadCount = signal<number>(0);
+  notifications = signal<any[]>([]);
 
   constructor() {
-    this.loadFromStorage();
+    // Optionnel: Démarrer le polling si l'utilisateur est connecté
   }
 
-  private loadFromStorage() {
-    const stored = localStorage.getItem('app_notifications');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      this.notificationsSignal.set(parsed.map((n: any) => ({ ...n, timestamp: new Date(n.timestamp) })));
-      this.updateUnreadCount();
-    }
+  /**
+   * Récupère les notifications pour un utilisateur
+   */
+  getForUser(userId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/user/${userId}`).pipe(
+      tap(notifs => {
+        this.notifications.set(notifs);
+        this.unreadCount.set(notifs.filter(n => !n.estLu).length);
+      })
+    );
   }
 
-  private saveToStorage() {
-    localStorage.setItem('app_notifications', JSON.stringify(this.notificationsSignal()));
+  /**
+   * Démarre le polling des notifications (toutes les 30s)
+   */
+  startPolling(userId: string) {
+    timer(0, 30000).pipe(
+      switchMap(() => this.getForUser(userId)),
+      retry()
+    ).subscribe();
   }
 
-  private updateUnreadCount() {
-    this.unreadCount.set(this.notificationsSignal().filter(n => !n.read).length);
+  /**
+   * Envoie une notification à un utilisateur spécifique
+   */
+  sendToUser(payload: { userId: string, title: string, message: string, type: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/send-to-user`, payload);
   }
 
-  notifyUser(userId: string, title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') {
-    // API Call
-    this.api.sendNotificationToUser(userId, title, message, type).subscribe();
-
-    // Local UI Update if the recipient is the current user
-    const currentUser = this.api.getCurrentUser();
-    if (currentUser && (currentUser.id === userId || currentUser.utilisateurId === userId)) {
-      this.addLocalNotification(title, message, type);
-    }
+  /**
+   * Envoie une notification à toute une société (Super Admin)
+   */
+  sendToSociete(payload: { societeId: string, title: string, message: string, type: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/send-to-societe`, payload);
   }
 
-  notifySociete(societeId: string, title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') {
-    this.api.sendNotificationToSociete(societeId, title, message, type).subscribe();
-    
-    const currentUser = this.api.getCurrentUser();
-    if (currentUser && currentUser.societeId === societeId) {
-      this.addLocalNotification(title, message, type);
-    }
-  }
-
-  addLocalNotification(title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') {
-    const newNotif: Notification = {
-      id: Date.now().toString(),
-      title,
-      message,
-      type,
-      timestamp: new Date(),
-      read: false
-    };
-
-    this.notificationsSignal.update(list => [newNotif, ...list]);
-    this.updateUnreadCount();
-    this.saveToStorage();
-
-    // Show Snack
+  /**
+   * Affiche un toast (Snack-bar)
+   */
+  showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
     this.snackBar.open(message, 'Fermer', {
       duration: 5000,
-      panelClass: [`snack-${type}`],
-      horizontalPosition: 'right',
+      panelClass: [`toast-${type}`],
+      horizontalPosition: 'end',
       verticalPosition: 'top'
     });
   }
 
-  markAsRead(id: string) {
-    this.notificationsSignal.update(list => list.map(n => n.id === id ? { ...n, read: true } : n));
-    this.updateUnreadCount();
-    this.saveToStorage();
+  notifyUser(userId: string, title: string, message: string, type: string = 'info'): Observable<any> {
+    return this.sendToUser({ userId, title, message, type });
   }
 
-  markAllAsRead() {
-    this.notificationsSignal.update(list => list.map(n => ({ ...n, read: true })));
-    this.updateUnreadCount();
-    this.saveToStorage();
-  }
-
-  clearAll() {
-    this.notificationsSignal.set([]);
-    this.updateUnreadCount();
-    this.saveToStorage();
+  notifySociete(societeId: string, title: string, message: string, type: string = 'info'): Observable<any> {
+    return this.sendToSociete({ societeId, title, message, type });
   }
 }

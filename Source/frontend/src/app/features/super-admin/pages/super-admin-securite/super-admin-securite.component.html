@@ -1,0 +1,461 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Sécurité</span>
+          </div>
+          <h1 class="header-title">
+            Sécurité <span class="gradient-text">& Surveillance.</span>
+          </h1>
+          <p class="header-subtitle">
+            Protection et surveillance de la plateforme.
+          </p>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <div class="tabs-container">
+        <button class="tab-btn" [class.active]="activeTab === 'alertes'" (click)="activeTab = 'alertes'">
+          Alertes
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'politique'" (click)="activeTab = 'politique'">
+          Politique
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'ips'" (click)="activeTab = 'ips'">
+          IPs Bloquées
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'notifications'" (click)="activeTab = 'notifications'">
+          Notifications
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'surveillance'" (click)="activeTab = 'surveillance'">
+          Surveillance Temps Réel
+        </button>
+      </div>
+
+      <!-- Content -->
+      @if (activeTab === 'alertes') {
+        <div class="tab-content">
+          <div class="tab-header">
+            <h3>Alertes de Sécurité</h3>
+            <button class="btn btn-secondary" (click)="refreshAlerts()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 4v6h-6"/>
+                <path d="M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              Actualiser
+            </button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="card stat-card critical">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              <div class="stat-info">
+                <span class="stat-value">{{getCriticalCount()}}</span>
+                <span class="stat-label">Critiques</span>
+              </div>
+            </div>
+            <div class="card stat-card high">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <div class="stat-info">
+                <span class="stat-value">{{getHighCount()}}</span>
+                <span class="stat-label">Élevées</span>
+              </div>
+            </div>
+            <div class="card stat-card medium">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <div class="stat-info">
+                <span class="stat-value">{{getMediumCount()}}</span>
+                <span class="stat-label">Moyennes</span>
+              </div>
+            </div>
+            <div class="card stat-card low">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <div class="stat-info">
+                <span class="stat-value">{{getLowCount()}}</span>
+                <span class="stat-label">Basses</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alerts-list">
+            @for (alert of alerts; track alert.id) {
+              <div class="card alert-card" [class.critical]="alert.niveau === 'critical'" [class.high]="alert.niveau === 'high'" [class.medium]="alert.niveau === 'medium'" [class.low]="alert.niveau === 'low'">
+                <div class="alert-icon" [class.critical]="alert.niveau === 'critical'" [class.high]="alert.niveau === 'high'" [class.medium]="alert.niveau === 'medium'" [class.low]="alert.niveau === 'low'">
+                  @if (alert.niveau === 'critical') {
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                  } @else if (alert.niveau === 'high') {
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                  } @else if (alert.niveau === 'medium') {
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="16" x2="12" y2="12"/>
+                      <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                  } @else {
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                      <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                  }
+                </div>
+                <div class="alert-content">
+                  <strong>{{alert.type}}</strong>
+                  <span>{{alert.description}}</span>
+                </div>
+                <span class="badge" [class.critical]="alert.niveau === 'critical'" [class.high]="alert.niveau === 'high'" [class.medium]="alert.niveau === 'medium'" [class.low]="alert.niveau === 'low'">{{alert.niveau}}</span>
+                <span class="badge" [class.resolved]="alert.statut === 'resolved'" [class.investigating]="alert.statut === 'investigating'" [class.active]="alert.statut === 'active'">{{alert.statut === 'active' ? 'Active' : alert.statut === 'investigating' ? 'En cours' : 'Résolu'}}</span>
+                <span class="alert-date">{{alert.date}}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      @if (activeTab === 'politique') {
+        <div class="tab-content">
+          <div class="tab-header">
+            <h3>Politique de Sécurité</h3>
+            <div class="header-buttons">
+              <button class="btn btn-danger" (click)="clearSecurityData()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Effacer
+              </button>
+              <button class="btn btn-primary" (click)="savePolicy()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Enregistrer
+              </button>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h4>Politique de mot de passe</h4>
+            <div class="card">
+              <div class="policy-item">
+                <div class="policy-info">
+                  <strong>Exiger majuscules</strong>
+                  <span>Le mot de passe doit contenir au moins une lettre majuscule</span>
+                </div>
+                <button class="toggle-btn" [class.active]="passwordPolicy.requireUppercase" (click)="passwordPolicy.requireUppercase = !passwordPolicy.requireUppercase">
+                  <span class="toggle-knob"></span>
+                </button>
+              </div>
+              <div class="policy-item">
+                <div class="policy-info">
+                  <strong>Exiger chiffres</strong>
+                  <span>Le mot de passe doit contenir au moins un chiffre</span>
+                </div>
+                <button class="toggle-btn" [class.active]="passwordPolicy.requireNumbers" (click)="passwordPolicy.requireNumbers = !passwordPolicy.requireNumbers">
+                  <span class="toggle-knob"></span>
+                </button>
+              </div>
+              <div class="policy-item">
+                <div class="policy-info">
+                  <strong>Exiger caractères spéciaux</strong>
+                  <span>Le mot de passe doit contenir un caractère spécial</span>
+                </div>
+                <button class="toggle-btn" [class.active]="passwordPolicy.requireSpecial" (click)="passwordPolicy.requireSpecial = !passwordPolicy.requireSpecial">
+                  <span class="toggle-knob"></span>
+                </button>
+              </div>
+              <div class="policy-item">
+                <div class="policy-info">
+                  <strong>Longueur minimale</strong>
+                  <span>Nombre minimum de caractères: {{passwordPolicy.minLength}} caractères</span>
+                </div>
+                <input type="number" class="form-input" [(ngModel)]="passwordPolicy.minLength" name="minLength" min="4" max="32">
+              </div>
+            </div>
+
+            <h4>Authentification</h4>
+            <div class="card">
+              <div class="policy-item">
+                <div class="policy-info">
+                  <strong>Authentification à deux facteurs (2FA)</strong>
+                  <span>Exiger 2FA pour tous les utilisateurs</span>
+                </div>
+                <button class="toggle-btn" [class.active]="passwordPolicy.require2FA" (click)="passwordPolicy.require2FA = !passwordPolicy.require2FA">
+                  <span class="toggle-knob"></span>
+                </button>
+              </div>
+              <div class="policy-item">
+                <div class="policy-info">
+                  <strong>Sessions simultanées</strong>
+                  <span>Autoriser plusieurs connexions simultanées</span>
+                </div>
+                <button class="toggle-btn" [class.active]="passwordPolicy.allowSimultaneous" (click)="passwordPolicy.allowSimultaneous = !passwordPolicy.allowSimultaneous">
+                  <span class="toggle-knob"></span>
+                </button>
+              </div>
+              <div class="policy-item">
+                <div class="policy-info">
+                  <strong>Délai d'expiration de session</strong>
+                  <span>Minutes avant déconnexion automatique: {{passwordPolicy.sessionTimeout}} min</span>
+                </div>
+                <div class="timeout-input">
+                  <input type="number" class="form-input" [(ngModel)]="passwordPolicy.sessionTimeout" name="sessionTimeout" min="5" max="120">
+                  <span>minutes</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (activeTab === 'ips') {
+        <div class="tab-content">
+          <div class="tab-header">
+            <h3>Adresses IP Bloquées</h3>
+            <button class="btn btn-primary" (click)="openBlockDialog()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              Bloquer IP
+            </button>
+          </div>
+
+          <div class="blocked-list">
+            @for (ip of blockedIps; track ip.id) {
+              <div class="card blocked-card">
+                <div class="blocked-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </div>
+                <div class="blocked-content">
+                  <strong>{{ip.ip}}</strong>
+                  <span>{{ip.raison}}</span>
+                  <span class="blocked-date">Bloqué le: {{ip.dateBlocage}}</span>
+                </div>
+                <span class="badge" [class.blocked]="ip.statut === 'bloque'" [class.unblocked]="ip.statut !== 'bloque'">{{ip.statut === 'bloque' ? 'Bloquée' : 'Débloquée'}}</span>
+                <button class="btn btn-secondary" (click)="toggleIpBlock(ip)">
+                  @if (ip.statut === 'bloque') {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  } @else {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="8" y="7" width="10" height="10" rx="2" ry="2"/>
+                      <path d="M9 7V5a5 5 0 0 1 8 0v2"/>
+                    </svg>
+                  }
+                  {{ip.statut === 'bloque' ? 'Débloquer' : 'Bloquer'}}
+                </button>
+              </div>
+            }
+            @if (blockedIps.length === 0) {
+              <div class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="M9 12l2 2 4-4"/>
+                </svg>
+                <span>Aucune IP bloquée</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      @if (activeTab === 'notifications') {
+        <div class="tab-content">
+          <div class="tab-header">
+            <h3>Notifications par Email</h3>
+            <button class="btn btn-primary" (click)="saveEmailSettings()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              Enregistrer
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="form-field">
+              <label>Email du destinataire</label>
+              <div class="input-with-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <input type="email" class="form-input" [(ngModel)]="emailSettings.recipientEmail" name="recipientEmail" placeholder="admin@exemple.com">
+              </div>
+            </div>
+
+            <h4>Événements à notifier</h4>
+            <div class="policy-item">
+              <div class="policy-info">
+                <strong>Nouvel utilisateur</strong>
+                <span>Envoyer un email lors de la création d'un nouvel utilisateur</span>
+              </div>
+              <button class="toggle-btn" [class.active]="emailSettings.newUser" (click)="emailSettings.newUser = !emailSettings.newUser">
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+            <div class="policy-item">
+              <div class="policy-info">
+                <strong>Nouvelle société</strong>
+                <span>Envoyer un email lors de la création d'une nouvelle société</span>
+              </div>
+              <button class="toggle-btn" [class.active]="emailSettings.newSociete" (click)="emailSettings.newSociete = !emailSettings.newSociete">
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+            <div class="policy-item">
+              <div class="policy-info">
+                <strong>Nouvel abonnement</strong>
+                <span>Envoyer un email lors d'un nouvel abonnement</span>
+              </div>
+              <button class="toggle-btn" [class.active]="emailSettings.newAbonnement" (click)="emailSettings.newAbonnement = !emailSettings.newAbonnement">
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+            <div class="policy-item">
+              <div class="policy-info">
+                <strong>Alertes de sécurité</strong>
+                <span>Envoyer un email en cas d'activité suspecte</span>
+              </div>
+              <button class="toggle-btn" [class.active]="emailSettings.securityAlerts" (click)="emailSettings.securityAlerts = !emailSettings.securityAlerts">
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+
+            <button class="btn btn-secondary" (click)="testEmail()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+              Tester l'email
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (activeTab === 'surveillance') {
+        <div class="tab-content">
+          <h3>Activité en Temps Réel</h3>
+
+          <div class="card monitor-card">
+            <div class="monitor-header">
+              <h4>Connexions actives</h4>
+              <span class="monitor-value">{{connexionsActives}}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="connexionsActives"></div>
+            </div>
+          </div>
+
+          <div class="card monitor-card">
+            <div class="monitor-header">
+              <h4>Requêtes API (/min)</h4>
+              <span class="monitor-value">{{requetesApi}}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="requetesApi / 2"></div>
+            </div>
+          </div>
+
+          <div class="card monitor-card">
+            <div class="monitor-header">
+              <h4>Tentatives de connexion échouées</h4>
+              <span class="monitor-value text-danger">{{echecsConnexion}}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill danger" [style.width.%]="echecsConnexion * 2"></div>
+            </div>
+          </div>
+
+          <div class="live-activity">
+            <h4>Activité récente</h4>
+            @for (activity of activities; track activity.id) {
+              <div class="activity-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>{{activity.description}}</span>
+                <span class="activity-time">{{activity.time}}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Block IP Dialog -->
+    @if (showBlockDialog) {
+      <div class="modal-backdrop" (click)="showBlockDialog = false">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Bloquer une IP</h3>
+            <button class="btn-icon" (click)="showBlockDialog = false">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <form (ngSubmit)="submitBlockIp()">
+            <div class="form-field">
+              <label>Adresse IP</label>
+              <div class="input-with-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                  <line x1="6" y1="6" x2="6.01" y2="6"/>
+                  <line x1="6" y1="18" x2="6.01" y2="18"/>
+                </svg>
+                <input type="text" class="form-input" [(ngModel)]="blockIpForm.ip" name="ip" placeholder="192.168.1.100" required>
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Raison du blocage</label>
+              <textarea class="form-input" [(ngModel)]="blockIpForm.raison" name="raison" rows="2" placeholder="Trop de tentatives..." required></textarea>
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" type="button" (click)="showBlockDialog = false">Annuler</button>
+              <button class="btn btn-primary" type="submit" [disabled]="!blockIpForm.ip || !blockIpForm.raison">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Bloquer
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  

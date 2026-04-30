@@ -1,0 +1,149 @@
+
+
+    <div class="time-tracking-container">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="header-content">
+          <h1 class="header-title">Présence & Activité</h1>
+          <p class="header-subtitle">{{societeNom}} • {{currentDate}}</p>
+        </div>
+      </div>
+
+      <!-- Main Grid -->
+      <div class="main-grid">
+        <div class="left-col">
+          <!-- Clock Widget -->
+          <div class="clock-widget" [class.active]="isClockedIn">
+             <div class="clock-content">
+                <div class="status-indicator">
+                   <span class="status-dot" [class.online]="isClockedIn"></span>
+                   {{isClockedIn ? 'EN POSTE' : 'HORS LIGNE'}}
+                </div>
+                <div class="digital-clock">{{currentTimeDisplay}}</div>
+                
+                @if (!isClockedIn) {
+                   <button class="clock-btn clock-in-btn" (click)="clockIn()">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                      </svg>
+                      Pointer l'Arrivée
+                   </button>
+                } @else {
+                   <div class="active-stats">
+                      <div class="a-stat">
+                         <span class="a-label">Début à</span>
+                         <span class="a-val">{{clockInData?.heureEntree}}</span>
+                      </div>
+                      <div class="a-stat">
+                         <span class="a-label">Cumul Jour</span>
+                         <span class="a-val text-primary">{{workedHours}}h</span>
+                      </div>
+                   </div>
+                   <button class="clock-btn clock-out-btn" (click)="clockOut()">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                      </svg>
+                      Pointer le Départ
+                   </button>
+                }
+             </div>
+          </div>
+
+          <!-- Stats Mini Grid -->
+          <div class="stats-mini-grid">
+             <div class="mini-tile indigo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <div class="mt-info">
+                   <span class="mt-val">40h</span>
+                   <span class="mt-label">Objectif Semaine</span>
+                </div>
+             </div>
+             <div class="mini-tile emerald">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <div class="mt-info">
+                   <span class="mt-val">{{efficiency}}%</span>
+                   <span class="mt-label">Productivité</span>
+                </div>
+             </div>
+          </div>
+        </div>
+
+        <!-- History Card -->
+        <div class="right-col">
+          <div class="history-card">
+             <div class="card-header">
+                <h3>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  Historique de Pointage
+                </h3>
+             </div>
+             <div class="history-list">
+                @for (p of history; track p.id) {
+                   <div class="history-item-p">
+                      <div class="h-icon" [class.full]="p.heureSortie">
+                        @if (p.heureSortie) {
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                          </svg>
+                        } @else {
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                          </svg>
+                        }
+                      </div>
+                      <div class="h-details">
+                         <div class="h-row">
+                            <span class="h-date">{{p.date | date:'dd MMMM yyyy'}}</span>
+                            @if (p.heuresTravaillees) {
+                              <span class="h-hours">{{p.heuresTravaillees}}h travaillées</span>
+                            }
+                         </div>
+                         <div class="h-row sub">
+                            <span class="h-times">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                <polyline points="10 17 15 12 10 7"></polyline>
+                                <line x1="15" y1="12" x2="3" y2="12"></line>
+                              </svg>
+                              {{p.heureEntree}}
+                              @if (p.heureSortie) {
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                  <polyline points="16 17 21 12 16 7"></polyline>
+                                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                {{p.heureSortie}}
+                              } @else {
+                                <span>...</span>
+                              }
+                            </span>
+                         </div>
+                      </div>
+                   </div>
+                }
+                @if (history.length === 0) {
+                   <div class="empty-state">
+                      <p>Aucun historique disponible</p>
+                   </div>
+                }
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  

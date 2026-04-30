@@ -1,0 +1,29 @@
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      @for (item of soldes(); track item.type) {
+        <mat-card class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ item.type }}</span>
+              <div [class]="'p-2 rounded-lg bg-opacity-10 ' + item.colorClass">
+                <mat-icon class="text-sm scale-75">{{ item.icon }}</mat-icon>
+              </div>
+            </div>
+            
+            <div class="flex items-baseline space-x-2 mb-4">
+              <span class="text-3xl font-black text-slate-900 dark:text-white">{{ item.restant }}</span>
+              <span class="text-xs text-slate-500">/ {{ item.total }} jours</span>
+            </div>
+
+            <div class="space-y-1">
+              <mat-progress-bar mode="determinate" [value]="(item.restant / item.total) * 100" [color]="item.matColor"></mat-progress-bar>
+              <div class="flex justify-between text-[10px] font-bold text-slate-400">
+                <span>UTILISÉ: {{ item.total - item.restant }}J</span>
+                <span>RESTANT: {{ item.restant }}J</span>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+      }
+    </div>
+  

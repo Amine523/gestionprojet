@@ -1,0 +1,146 @@
+
+    .register-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+      padding: 40px 20px;
+    }
+
+    .register-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .register-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      color: #2d5a87;
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e3a5f;
+    }
+
+    .register-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 8px;
+    }
+
+    .register-subtitle {
+      color: #64748b;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .form-section {
+      margin-bottom: 24px;
+    }
+
+    .form-section h3 {
+      font-size: 16px;
+      color: #1e3a5f;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #2d5a87;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #2d5a87;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1e3a5f;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      color: #64748b;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .success-message {
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    .success-icon {
+      color: #10b981;
+      margin-bottom: 16px;
+    }
+
+    .success-message h2 {
+      color: #1e293b;
+      margin-bottom: 12px;
+    }
+
+    .success-message p {
+      color: #64748b;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+  

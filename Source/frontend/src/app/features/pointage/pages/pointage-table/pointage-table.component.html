@@ -1,0 +1,69 @@
+
+    <div class="p-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Historique de Pointage</h1>
+          <p class="text-slate-500">Consultez vos heures de travail passées</p>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+          <div class="bg-white dark:bg-slate-800 rounded-xl px-3 py-1 border border-slate-100 dark:border-slate-700 flex items-center">
+            <mat-icon class="text-sm mr-2 text-slate-400">calendar_today</mat-icon>
+            <input matInput [matDatepicker]="picker" [(ngModel)]="filterDate" (dateChange)="loadHistory()" class="bg-transparent border-none text-xs outline-none w-24">
+            <mat-datepicker-toggle matSuffix [for]="picker" class="scale-75"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </div>
+          <button mat-stroked-button class="rounded-xl border-slate-200 dark:border-slate-700 h-10"><mat-icon>download</mat-icon></button>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <table mat-table [dataSource]="pointages()" class="w-full">
+          
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> Date </th>
+            <td mat-cell *matCellDef="let p" class="p-6 font-medium text-slate-900 dark:text-white">
+              {{ p.date | date:'longDate' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="entree">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> Entrée </th>
+            <td mat-cell *matCellDef="let p" class="p-6">
+              <span class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg font-mono text-xs">{{ p.heureEntree }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="sortie">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> Sortie </th>
+            <td mat-cell *matCellDef="let p" class="p-6">
+              <span [class]="p.heureSortie ? 'text-rose-600 bg-rose-50' : 'text-slate-400 bg-slate-50'" class="px-2 py-1 rounded-lg font-mono text-xs">
+                {{ p.heureSortie || '--:--:--' }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="duree">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> Durée </th>
+            <td mat-cell *matCellDef="let p" class="p-6 text-sm font-bold text-slate-700 dark:text-slate-200">
+              {{ calculateDuration(p) }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="p-6"></th>
+            <td mat-cell *matCellDef="let p" class="p-6 text-right">
+              <button mat-icon-button class="text-slate-400 hover:text-indigo-600"><mat-icon>info</mat-icon></button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"></tr>
+        </table>
+
+        <mat-paginator [length]="totalItems()" [pageSize]="10" (page)="onPageChange($event)"
+                       class="bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+        </mat-paginator>
+      </div>
+    </div>
+  

@@ -1,0 +1,183 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Ressources Humaines</span>
+          </div>
+          <h1 class="header-title">
+            Contrôle <span class="gradient-text">Ressources.</span>
+          </h1>
+          <p class="header-subtitle">
+            Maintenance des talents et continuité opérationnelle pour {{societeNom}}.
+          </p>
+        </div>
+        <div class="header-tabs">
+          <button (click)="currentView = 'pointage'" 
+            [class.active]="currentView === 'pointage'">
+            Présence
+          </button>
+          <button (click)="currentView = 'conges'" 
+            [class.active]="currentView === 'conges'">
+            Congés
+          </button>
+          <button (click)="currentView = 'salaires'" 
+            [class.active]="currentView === 'salaires'">
+            Paie
+          </button>
+        </div>
+      </header>
+
+      <!-- View Container -->
+      <div class="view-container">
+        <!-- Attendance Module -->
+        @if (currentView === 'pointage') {
+          <div class="section-container">
+             <div class="section-header">
+                <h3>Registre de Présence</h3>
+                <div class="date-filter">
+                   <input type="date" [(ngModel)]="pointageDate" (change)="loadPointages()"
+                     class="date-input">
+                </div>
+             </div>
+
+             <div class="card table-card">
+                <table class="data-table">
+                   <thead>
+                      <tr>
+                         <th>Personnel</th>
+                         <th>Arrivée</th>
+                         <th>Départ</th>
+                         <th>Durée</th>
+                         <th class="text-right">Statut</th>
+                      </tr>
+                   </thead>
+                   <tbody>
+                      @for (p of pointages; track p.id) {
+                        <tr>
+                           <td>
+                              <div class="user-cell">
+                                 <div class="user-avatar">{{p.utilisateurNom?.charAt(0)}}</div>
+                                 <div>
+                                    <p>{{p.utilisateurNom}}</p>
+                                    <span>{{p.role}}</span>
+                                 </div>
+                              </div>
+                           </td>
+                           <td>{{p.heureEntree || '--:--'}}</td>
+                           <td>{{p.heureSortie || '--:--'}}</td>
+                           <td class="duration-cell">{{p.totalHeures || '0'}}h</td>
+                           <td class="text-right">
+                              <span [class]="p.statut === 'Present' ? 'badge badge-success' : 'badge badge-danger'">
+                                 {{p.statut}}
+                              </span>
+                           </td>
+                        </tr>
+                      }
+                   </tbody>
+                </table>
+             </div>
+          </div>
+        }
+
+        <!-- Leave Module -->
+        @if (currentView === 'conges') {
+          <div class="section-container">
+             <div class="section-header">
+                <h3>File d'Attente des Congés</h3>
+             </div>
+
+             <div class="leaves-grid">
+                @for (c of conges; track c.id) {
+                  <div class="card leave-card">
+                     <div class="leave-header">
+                        <div class="leave-avatar">{{c.utilisateurNom?.charAt(0)}}</div>
+                        <div>
+                           <h4>{{c.utilisateurNom}}</h4>
+                           <span class="leave-type">{{c.type}}</span>
+                        </div>
+                     </div>
+
+                     <div class="leave-body">
+                        <div class="leave-period">
+                           <span>Période</span>
+                           <span>{{c.dateDebut | date:'dd MMM'}} - {{c.dateFin | date:'dd MMM, yyyy'}}</span>
+                        </div>
+                        <div class="leave-motif">
+                           "{{c.motif || 'Aucune justification fournie'}}"
+                        </div>
+                     </div>
+
+                     <div class="leave-actions">
+                        @if (c.statut === 'En attente') {
+                          <button (click)="validerConge(c, true)" class="btn btn-success">Autoriser</button>
+                          <button (click)="validerConge(c, false)" class="btn btn-danger">Refuser</button>
+                        } @else {
+                          <div class="leave-status"
+                             [class.status-success]="c.statut === 'Validé'" [class.status-danger]="c.statut === 'Refusé'">
+                             {{c.statut}}
+                          </div>
+                        }
+                     </div>
+                  </div>
+                }
+             </div>
+          </div>
+        }
+
+        <!-- Payroll Module -->
+        @if (currentView === 'salaires') {
+          <div class="section-container">
+             <div class="section-header">
+                <h3>Compensation de Rendement</h3>
+                <button (click)="genererSalaires()" class="btn btn-primary">Générer Batch</button>
+             </div>
+
+             <div class="card table-card">
+                <table class="data-table">
+                   <thead>
+                      <tr>
+                         <th>Personnel</th>
+                         <th>Salaire Base</th>
+                         <th>Primes</th>
+                         <th>Retenues</th>
+                         <th>Net à Transférer</th>
+                         <th class="text-right">Fiche</th>
+                      </tr>
+                   </thead>
+                   <tbody>
+                      @for (s of salaires; track s.id) {
+                        <tr>
+                           <td>
+                              <div class="user-cell">
+                                 <div class="user-avatar">{{s.utilisateurNom?.charAt(0)}}</div>
+                                 <p>{{s.utilisateurNom}}</p>
+                              </div>
+                           </td>
+                           <td>{{s.salaireBase}} DT</td>
+                           <td class="text-success">+{{s.primes}} DT</td>
+                           <td class="text-danger">-{{s.retenues}} DT</td>
+                           <td>
+                              <span class="net-amount">{{s.netAPayer}} DT</span>
+                           </td>
+                           <td class="text-right">
+                              <button (click)="imprimerFiche(s)" class="btn-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <polyline points="6 9 6 2 18 2 18 9"/>
+                                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                                  <rect x="6" y="14" width="12" height="8"/>
+                                </svg>
+                              </button>
+                           </td>
+                        </tr>
+                      }
+                   </tbody>
+                </table>
+             </div>
+          </div>
+        }
+      </div>
+    </div>
+  

@@ -1,0 +1,297 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Architecture Financière</span>
+          </div>
+          <h1 class="header-title">
+            Plans & <span class="gradient-text">Abonnements.</span>
+          </h1>
+          <p class="header-subtitle">
+            Gestion des flux de revenus, des plans de souscription et de la facturation écosystème.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button (click)="openAddDialog()" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nouvel Abonnement
+          </button>
+        </div>
+      </header>
+
+      <!-- Navigation Tabs -->
+      <div class="tabs-container">
+        @for (tab of ['plans', 'abonnements', 'factures']; track tab) {
+          <button (click)="activeTab = tab" [class.active]="activeTab === tab" class="tab-btn">
+            {{tab === 'plans' ? 'Plans Stratégiques' : (tab === 'abonnements' ? 'Abonnements Actifs' : 'Registre de Facturation')}}
+          </button>
+        }
+      </div>
+
+      <!-- Tab Content: Plans -->
+      @if (activeTab === 'plans') {
+        <div class="plans-grid">
+          @for (plan of plans; track plan.id) {
+            <div class="plan-card" [class.featured]="plan.populaire">
+              @if (plan.populaire) {
+                <span class="plan-badge">Plus Populaire</span>
+              }
+              <div class="plan-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  @if (plan.id === 'starter') {
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/>
+                  } @else if (plan.id === 'pro') {
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/>
+                  } @else {
+                    <polygon points="12 2 2 12 12 12 11 22 21 10 12 10"/>
+                  }
+                </svg>
+              </div>
+              <h3 class="plan-name">{{plan.nom}}</h3>
+              <div class="plan-price">
+                <span class="price-amount">{{plan.prix}}</span>
+                <span class="price-currency">DT</span>
+                <span class="price-period">/{{plan.periode}}</span>
+              </div>
+              <div class="plan-features">
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  <span>{{plan.utilisateurs === -1 ? 'Utilisateurs Illimités' : plan.utilisateurs + ' Utilisateurs'}}</span>
+                </div>
+                <div class="feature-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                  </svg>
+                  <span>{{plan.stockage}} de Stockage</span>
+                </div>
+                <div class="feature-list">
+                  @for (feat of plan.features; track feat) {
+                    <div class="feature-list-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      <span>{{feat}}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+              <div class="plan-actions">
+                <button class="btn btn-primary plan-btn" (click)="configurePlan(plan)">Configuration</button>
+                <button class="btn-icon btn-danger" (click)="deletePlan(plan)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    <line x1="10" y1="11" x2="10" y2="17"/>
+                    <line x1="14" y1="11" x2="14" y2="17"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Tab Content: Abonnements -->
+      @if (activeTab === 'abonnements') {
+        <div class="card">
+          <div class="card-filters">
+            <div class="search-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" [(ngModel)]="filterSocieteId" (ngModelChange)="applyFilters()" placeholder="Rechercher par société ou ID...">
+            </div>
+            <select [(ngModel)]="filterPlan" (change)="applyFilters()" class="filter-select">
+              <option value="">Tous les plans</option>
+              <option value="Starter">Starter</option>
+              <option value="Premium">Premium</option>
+              <option value="Enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Organisation</th>
+                  <th>Plan</th>
+                  <th>Période</th>
+                  <th>Montant</th>
+                  <th>Statut</th>
+                  <th>Gestion</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (abo of abonnements; track abo.id) {
+                  <tr>
+                    <td>
+                      <div class="org-info">
+                        <div class="org-avatar">{{abo.societeNom?.charAt(0) || 'S'}}</div>
+                        <div class="org-details">
+                          <span class="org-name">{{abo.societeNom}}</span>
+                          <span class="org-id">ID: {{abo.societeId}}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge badge-primary">{{abo.planNom}}</span>
+                    </td>
+                    <td>
+                      <span class="date-text">{{abo.dateDebut}} — {{abo.dateFin}}</span>
+                    </td>
+                    <td>
+                      <span class="amount-text">{{abo.montant}} DT</span>
+                    </td>
+                    <td>
+                      <div class="status-indicator">
+                        <span class="status-dot" [class.active]="abo.statut === 'Actif'"></span>
+                        <span [class.active]="abo.statut === 'Actif'">{{abo.statut || 'Inactif'}}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <button (click)="sendRenewalAlert(abo)" class="btn-icon btn-ghost">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Tab Content: Factures -->
+      @if (activeTab === 'factures') {
+        <div class="card">
+          <div class="card-header">
+            <h3>Registre de Facturation</h3>
+            <button class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Exporter PDF
+            </button>
+          </div>
+          <div class="invoices-list">
+            @for (f of factures; track f.id) {
+              <div class="invoice-item">
+                <div class="invoice-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                  </svg>
+                </div>
+                <div class="invoice-details">
+                  <span class="invoice-number">{{f.numero}}</span>
+                  <span class="invoice-meta">{{f.societeNom}} • {{f.date}}</span>
+                </div>
+                <div class="invoice-amount">
+                  <span class="amount-label">Montant Total</span>
+                  <span class="amount-value">{{f.montant}} DT</span>
+                </div>
+                <span class="badge badge-success">{{f.statut}}</span>
+                <button (click)="exportPDF(f)" class="btn-icon btn-ghost">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Modal -->
+    @if (showAddDialog) {
+      <div class="modal-overlay" (click)="closeDialog()">
+         <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+               <div>
+                  <h2>NOUVEL ABONNEMENT</h2>
+                  <p class="modal-subtitle">Activation de Licence Système</p>
+               </div>
+               <button (click)="closeDialog()" class="btn-icon btn-ghost">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+               </button>
+            </div>
+            <div class="modal-body">
+               <div class="form-grid">
+                  <div class="form-field">
+                     <label>Organisation</label>
+                     <select [(ngModel)]="newAbo.societeId" (change)="onSocieteChange()" class="form-input">
+                        <option value="">Sélectionner une société</option>
+                        @for (s of societes; track s.id) {
+                          <option [value]="s.id">{{s.nom}}</option>
+                        }
+                     </select>
+                  </div>
+                  <div class="form-field">
+                     <label>Plan de Service</label>
+                     <select [(ngModel)]="newAbo.planId" (change)="onPlanChange()" class="form-input">
+                        <option value="">Sélectionner un plan</option>
+                        @for (p of plans; track p.id) {
+                          <option [value]="p.id">{{p.nom}} ({{p.prix}} DT)</option>
+                        }
+                     </select>
+                  </div>
+                  <div class="form-field">
+                     <label>Date d'Activation</label>
+                     <input type="date" [(ngModel)]="newAbo.dateDebut" class="form-input">
+                  </div>
+                  <div class="form-field">
+                     <label>Durée d'Engagement</label>
+                     <select [(ngModel)]="newAbo.dureeMois" class="form-input">
+                        <option [value]="1">1 mois</option>
+                        <option [value]="3">3 mois</option>
+                        <option [value]="12">12 mois</option>
+                        <option [value]="24">24 mois</option>
+                     </select>
+                  </div>
+               </div>
+               @if (selectedPlanForForm) {
+                 <div class="pricing-summary">
+                    <div class="pricing-info">
+                       <p class="pricing-label">Total à facturer</p>
+                       <h4 class="pricing-amount">{{selectedPlanForForm.prix * newAbo.dureeMois}} <span>DT</span></h4>
+                    </div>
+                    <div class="pricing-details">
+                       <p>{{selectedPlanForForm.nom}}</p>
+                       <p>{{newAbo.dureeMois}} mois d'accès</p>
+                    </div>
+                 </div>
+               }
+            </div>
+            <div class="modal-footer">
+               <button (click)="closeDialog()" class="btn btn-ghost">ANNULER</button>
+               <button (click)="createAbonnement()" class="btn btn-primary">ACTIVER L'ABONNEMENT</button>
+            </div>
+         </div>
+      </div>
+    }
+  
