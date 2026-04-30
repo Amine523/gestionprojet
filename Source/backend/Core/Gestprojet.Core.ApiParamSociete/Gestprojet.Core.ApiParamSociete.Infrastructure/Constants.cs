@@ -225,6 +225,11 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
         internal const string Ps_Paiement_s_Liste_ParCondition_Page = "[dbo].[ps_ApiParamSociete_Paiement_s_Liste_ParCondition_Page]";
         internal const string Ps_Paiement_d_ParCondition = "[dbo].[ps_ApiParamSociete_Paiement_d_ParCondition]";
 
+        // PaiementAudit
+        internal const string Ps_PaiementAudit_i = "[dbo].[ps_ApiParamSociete_PaiementAudit_i]";
+        internal const string Ps_PaiementAudit_s_Liste_ParPaiement = "[dbo].[ps_ApiParamSociete_PaiementAudit_s_Liste_ParPaiement]";
+        internal const string Ps_PaiementAudit_s_Liste_ParCondition = "[dbo].[ps_ApiParamSociete_PaiementAudit_s_Liste_ParCondition]";
+
         // DemandeConge
         internal const string Ps_DemandeConge_i = "[dbo].[ps_ApiParamSociete_DemandeConge_i]";
         internal const string Ps_DemandeConge_u = "[dbo].[ps_ApiParamSociete_DemandeConge_u]";

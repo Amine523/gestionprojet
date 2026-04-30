@@ -607,6 +607,70 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
       line-height: 1;
     }
 
+    .card-talent {
+      background: white;
+      border-radius: var(--radius-xl);
+    }
+
+    .btn-link {
+      background: transparent;
+      border: none;
+      color: #6366f1;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .talent-podium {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .talent-medal {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .talent-rank {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #6366f1;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 10px;
+    }
+
+    .rank-1 { background: #fffbeb; border: 1px solid #fcd34d; }
+    .rank-1 .talent-rank { background: #f59e0b; }
+    
+    .talent-info { flex: 1; display: flex; justify-content: space-between; align-items: center; }
+    .talent-name { font-weight: 700; color: #1e293b; font-size: 14px; }
+    .talent-score { color: #6366f1; font-weight: 800; font-size: 14px; }
+
+    .talent-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .t-stat { display: flex; flex-direction: column; }
+    .t-label { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 700; }
+    .t-value { font-weight: 800; color: #1e293b; }
+    .t-value.danger { color: #ef4444; }
+
     .metric-unit {
       font-size: var(--font-size-sm);
       font-weight: var(--font-weight-semibold);
@@ -693,6 +757,8 @@ export class RhDashboardComponent implements OnInit {
 
   aiLoading = false;
   aiInsights: string | null = null;
+  topTalents: any[] = [];
+  riskCount = 0;
 
   ngOnInit() {
     const user = this.api.getCurrentUser();

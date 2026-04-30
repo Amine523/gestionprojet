@@ -270,7 +270,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
               </div>
               <div class="form-group">
                 <label class="form-label">Projet</label>
-                <select class="form-select" [(ngModel)]="formData.projet">
+                <select class="form-select" [(ngModel)]="formData.projetId">
                   @for (p of projets; track p.nom) {
                     <option [value]="p.nom">{{p.nom}}</option>
                   }
@@ -894,7 +894,7 @@ export class ChefBugsComponent implements OnInit {
 
   showAddBug = false;
   editingBug: any = null;
-  formData: any = { titre: '', description: '', priorite: 'Medium', projet: '', etapes: '' };
+  formData: any = { titre: '', description: '', priorite: 'Medium', projetId: '', etapes: '' };
 
   bugsOuverts = 0;
   bugsEnCours = 0;

@@ -9,6 +9,9 @@ import { AdminParametresComponent } from './pages/admin-parametres/admin-paramet
 import { CalendarViewComponent } from '@shared/components/calendar-view/calendar-view.component';
 
 import { AdminCongesComponent } from './pages/admin-conges/admin-conges.component';
+import { NotificationsComponent } from '@shared/components/notifications/notifications.component';
+import { ProfileComponent } from '@shared/components/profile/profile.component';
+import { RhPointageComponent } from '../rh/pages/rh-pointage/rh-pointage.component';
 
 export const ADMIN_ROUTES: Routes = [
   { path: '', component: AdminDashboardComponent, pathMatch: 'full' },
@@ -19,6 +22,9 @@ export const ADMIN_ROUTES: Routes = [
   { path: 'conges', component: AdminCongesComponent },
   { path: 'calendar', component: CalendarViewComponent },
   { path: 'paiements', component: AdminPaiementsComponent },
+  { path: 'pointage', component: RhPointageComponent },
+  { path: 'notifications', component: NotificationsComponent },
+  { path: 'profil', component: ProfileComponent },
   { path: 'chat', component: AdminChatComponent },
   { path: 'parametres', component: AdminParametresComponent }
 ];

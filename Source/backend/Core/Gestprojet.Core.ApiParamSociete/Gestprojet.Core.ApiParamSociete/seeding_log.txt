@@ -3981,3 +3981,83 @@ L'instruction a été arrêtée.
 25/04/2026 23:56:49: INFO: User 'rh@softpro.com' already exists.
 25/04/2026 23:56:49: INFO: User 'qa@softpro.com' already exists.
 25/04/2026 23:56:49: Database Seeding: Finished.
+30/04/2026 01:25:39: Database Seeding: Starting...
+30/04/2026 01:25:39: Fetching Type Utilisateur list...
+30/04/2026 01:25:39: Found 7 types.
+30/04/2026 01:25:39: INFO: Type 'Administrateur' exists (Id: T001).
+30/04/2026 01:25:39: INFO: Type 'Admin Société' exists (Id: T002).
+30/04/2026 01:25:39: INFO: Type 'RH' exists (Id: T003).
+30/04/2026 01:25:39: INFO: Type 'Chef Projet' exists (Id: T004).
+30/04/2026 01:25:39: INFO: Type 'Développeur' exists (Id: T005).
+30/04/2026 01:25:39: INFO: Type 'Testeur' exists (Id: T006).
+30/04/2026 01:25:39: INFO: Type 'Utilisateur' exists (Id: T007).
+30/04/2026 01:25:39: Fetching User list...
+30/04/2026 01:25:39: Found 21 users.
+30/04/2026 01:25:39: INFO: User 'admin@gestprojet.com' already exists.
+30/04/2026 01:25:39: INFO: User 'admin@softpro.com' already exists.
+30/04/2026 01:25:39: INFO: User 'adminS@softpro.com' already exists.
+30/04/2026 01:25:39: INFO: User 'chef@softpro.com' already exists.
+30/04/2026 01:25:39: INFO: User 'dev1@softpro.com' already exists.
+30/04/2026 01:25:39: INFO: User 'rh@softpro.com' already exists.
+30/04/2026 01:25:39: INFO: User 'qa@softpro.com' already exists.
+30/04/2026 01:25:40: Database Seeding: Finished.
+30/04/2026 01:26:03: Database Seeding: Starting...
+30/04/2026 01:26:03: Fetching Type Utilisateur list...
+30/04/2026 01:26:04: Found 7 types.
+30/04/2026 01:26:04: INFO: Type 'Administrateur' exists (Id: T001).
+30/04/2026 01:26:04: INFO: Type 'Admin Société' exists (Id: T002).
+30/04/2026 01:26:04: INFO: Type 'RH' exists (Id: T003).
+30/04/2026 01:26:04: INFO: Type 'Chef Projet' exists (Id: T004).
+30/04/2026 01:26:04: INFO: Type 'Développeur' exists (Id: T005).
+30/04/2026 01:26:04: INFO: Type 'Testeur' exists (Id: T006).
+30/04/2026 01:26:04: INFO: Type 'Utilisateur' exists (Id: T007).
+30/04/2026 01:26:04: Fetching User list...
+30/04/2026 01:26:04: Found 21 users.
+30/04/2026 01:26:04: INFO: User 'admin@gestprojet.com' already exists.
+30/04/2026 01:26:04: INFO: User 'admin@softpro.com' already exists.
+30/04/2026 01:26:04: INFO: User 'adminS@softpro.com' already exists.
+30/04/2026 01:26:04: INFO: User 'chef@softpro.com' already exists.
+30/04/2026 01:26:04: INFO: User 'dev1@softpro.com' already exists.
+30/04/2026 01:26:04: INFO: User 'rh@softpro.com' already exists.
+30/04/2026 01:26:04: INFO: User 'qa@softpro.com' already exists.
+30/04/2026 01:26:04: Database Seeding: Finished.
+30/04/2026 02:49:07: Database Seeding: Starting...
+30/04/2026 02:49:07: Fetching Type Utilisateur list...
+30/04/2026 02:49:08: Found 7 types.
+30/04/2026 02:49:08: INFO: Type 'Administrateur' exists (Id: T001).
+30/04/2026 02:49:08: INFO: Type 'Admin Société' exists (Id: T002).
+30/04/2026 02:49:08: INFO: Type 'RH' exists (Id: T003).
+30/04/2026 02:49:08: INFO: Type 'Chef Projet' exists (Id: T004).
+30/04/2026 02:49:08: INFO: Type 'Développeur' exists (Id: T005).
+30/04/2026 02:49:08: INFO: Type 'Testeur' exists (Id: T006).
+30/04/2026 02:49:08: INFO: Type 'Utilisateur' exists (Id: T007).
+30/04/2026 02:49:08: Fetching User list...
+30/04/2026 02:49:08: Found 21 users.
+30/04/2026 02:49:08: INFO: User 'admin@gestprojet.com' already exists.
+30/04/2026 02:49:08: INFO: User 'admin@softpro.com' already exists.
+30/04/2026 02:49:08: INFO: User 'adminS@softpro.com' already exists.
+30/04/2026 02:49:08: INFO: User 'chef@softpro.com' already exists.
+30/04/2026 02:49:08: INFO: User 'dev1@softpro.com' already exists.
+30/04/2026 02:49:08: INFO: User 'rh@softpro.com' already exists.
+30/04/2026 02:49:08: INFO: User 'qa@softpro.com' already exists.
+30/04/2026 02:49:08: Database Seeding: Finished.
+30/04/2026 03:12:35: Database Seeding: Starting...
+30/04/2026 03:12:35: Fetching Type Utilisateur list...
+30/04/2026 03:12:36: Found 7 types.
+30/04/2026 03:12:36: INFO: Type 'Administrateur' exists (Id: T001).
+30/04/2026 03:12:36: INFO: Type 'Admin Société' exists (Id: T002).
+30/04/2026 03:12:36: INFO: Type 'RH' exists (Id: T003).
+30/04/2026 03:12:36: INFO: Type 'Chef Projet' exists (Id: T004).
+30/04/2026 03:12:36: INFO: Type 'Développeur' exists (Id: T005).
+30/04/2026 03:12:36: INFO: Type 'Testeur' exists (Id: T006).
+30/04/2026 03:12:36: INFO: Type 'Utilisateur' exists (Id: T007).
+30/04/2026 03:12:36: Fetching User list...
+30/04/2026 03:12:36: Found 21 users.
+30/04/2026 03:12:36: INFO: User 'admin@gestprojet.com' already exists.
+30/04/2026 03:12:36: INFO: User 'admin@softpro.com' already exists.
+30/04/2026 03:12:36: INFO: User 'adminS@softpro.com' already exists.
+30/04/2026 03:12:36: INFO: User 'chef@softpro.com' already exists.
+30/04/2026 03:12:36: INFO: User 'dev1@softpro.com' already exists.
+30/04/2026 03:12:36: INFO: User 'rh@softpro.com' already exists.
+30/04/2026 03:12:36: INFO: User 'qa@softpro.com' already exists.
+30/04/2026 03:12:36: Database Seeding: Finished.

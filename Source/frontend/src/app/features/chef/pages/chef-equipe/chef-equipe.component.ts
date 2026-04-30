@@ -282,7 +282,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
               </div>
               <div class="form-group">
                 <label class="form-label">Projet</label>
-                <select class="form-input" [(ngModel)]="formData.projet">
+                <select class="form-input" [(ngModel)]="formData.projetId">
                   <option value="">Aucun</option>
                   @for (p of projets; track p.id) {
                     <option [value]="p.nom">{{p.nom}}</option>
@@ -934,7 +934,7 @@ export class ChefEquipeComponent implements OnInit {
   activeTab = 'membres';
   showAddForm = false;
   editingMembre: any = null;
-  formData: any = { nom: '', role: 'Développeur', projet: '', email: '' };
+  formData: any = { nom: '', role: 'Développeur', projetId: '', email: '' };
 
   tachesTerminees = 0;
   tachesEnCours = 0;

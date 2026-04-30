@@ -16,6 +16,9 @@ import { DevDiagramsComponent } from '../dev/pages/dev-diagrams/dev-diagrams.com
 import { DevCongesComponent } from '../dev/pages/dev-conges/dev-conges.component';
 import { AdminChatComponent } from '../admin/pages/admin-chat/admin-chat.component';
 import { DevParametresComponent } from '../dev/pages/dev-parametres/dev-parametres.component';
+import { NotificationsComponent } from '@shared/components/notifications/notifications.component';
+import { ProfileComponent } from '@shared/components/profile/profile.component';
+import { SelfPointageComponent } from '@shared/components/self-pointage/self-pointage.component';
 
 export const CHEF_ROUTES: Routes = [
   { path: 'dashboard', component: ChefDashboardComponent },
@@ -30,7 +33,9 @@ export const CHEF_ROUTES: Routes = [
   { path: 'docs', component: DevDocsComponent },
   { path: 'diagrams', component: DevDiagramsComponent },
   { path: 'conges', component: ChefCongesComponent },
-  { path: 'pointage', component: ChefPointageComponent },
+  { path: 'pointage', component: SelfPointageComponent },
+  { path: 'notifications', component: NotificationsComponent },
+  { path: 'profil', component: ProfileComponent },
   { path: 'chat', component: AdminChatComponent },
   { path: 'parametres', component: DevParametresComponent },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }

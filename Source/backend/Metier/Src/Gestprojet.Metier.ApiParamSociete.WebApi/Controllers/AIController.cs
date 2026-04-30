@@ -29,7 +29,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             try
             {
                 string data = requestData?.data?.ToString() ?? "";
-                var insights = await _ollamaService.GenerateTextAsync($"Analyse ces données de projet et donne des insights: {data}", "llama3");
+                var insights = await _ollamaService.GenerateTextAsync($"Analyse ces données de projet et donne des insights: {data}", "llama3.2");
                 return Ok(new { insights });
             }
             catch (Exception ex)
@@ -44,7 +44,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             try
             {
                 string data = requestData?.data?.ToString() ?? "";
-                var insights = await _ollamaService.GenerateTextAsync($"Analyse ces données RH et donne des insights sur la performance et le turnover: {data}", "llama3");
+                var insights = await _ollamaService.GenerateTextAsync($"Analyse ces données RH et donne des insights sur la performance et le turnover: {data}", "llama3.2");
                 return Ok(new { insights });
             }
             catch (Exception ex)
@@ -59,7 +59,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             try
             {
                 string data = requestData?.data?.ToString() ?? "";
-                var insights = await _ollamaService.GenerateTextAsync($"Analyse ces données de dashboard global et donne des résumés stratégiques: {data}", "llama3");
+                var insights = await _ollamaService.GenerateTextAsync($"Analyse ces données de dashboard global et donne des résumés stratégiques: {data}", "llama3.2");
                 return Ok(new { insights });
             }
             catch (Exception ex)
@@ -75,7 +75,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             {
                 string message = chatRequest?.message?.ToString() ?? "";
                 string context = chatRequest?.context?.ToString() ?? "";
-                var response = await _ollamaService.GenerateTextAsync($"Contexte: {context}\nQuestion: {message}", "llama3");
+                var response = await _ollamaService.GenerateTextAsync($"Contexte: {context}\nQuestion: {message}", "llama3.2");
                 return Ok(new { response });
             }
             catch (Exception ex)

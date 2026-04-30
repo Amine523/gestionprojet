@@ -52,6 +52,7 @@ import { ApiService } from '@core/services/api.service';
                 <tr>
                   <th>Projet</th>
                   <th>Statut</th>
+                  <th>Client</th>
                   <th>Commandant</th>
                   <th>Déploiement</th>
                   <th>Unités</th>
@@ -70,6 +71,9 @@ import { ApiService } from '@core/services/api.service';
                     </td>
                     <td>
                       <span class="status-badge" [ngClass]="p.statut === 'En_cours' ? 'status-active' : 'status-completed'">{{p.statut}}</span>
+                    </td>
+                    <td>
+                      <span class="project-client" style="font-size: 11px; font-weight: bold; color: var(--color-text-muted); text-transform: uppercase;">{{p.nomClient || 'Unité Interne'}}</span>
                     </td>
                     <td>
                       <div class="chef-info-display">
@@ -915,10 +919,19 @@ export class ChefProjetsComponent implements OnInit {
                 taches: p.tachesCount || Math.floor(Math.random() * 20),
                 membres: p.membresCount || 1,
                 echeance: p.endDate || p.EndDate || p.dateFin || p.DateFin || 'Non définie',
+                nomClient: p.nomClient || p.NomClient || 'Unité Interne',
                 chefName: chef ? `${chef.prenom || chef.Prenom || ''} ${chef.nom || chef.Nom || ''}` : 'Non assigné'
               };
             });
             const myProjets = projects.filter((p: any) => (p.utilisateurId || p.UtilisateurId) === (user?.id || user?.Id));
+            
+            // Validate and restore project sorting (ID DESC)
+            myProjets.sort((a: any, b: any) => {
+              if (a.id < b.id) return 1;
+              if (a.id > b.id) return -1;
+              return 0;
+            });
+            
             this.projetsSignal.set(myProjets);
           }
         });

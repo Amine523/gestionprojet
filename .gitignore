@@ -29,3 +29,14 @@ Thumbs.db
 
 # Problematic files
 nul
+
+# Uploads
+**/wwwroot/uploads/
+
+# Local Test Files
+*.txt
+*.json
+
+# Local logs
+*_err.txt
+*_log.txt

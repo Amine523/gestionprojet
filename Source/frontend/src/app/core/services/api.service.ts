@@ -153,7 +153,9 @@ export class ApiService {
       Nom: data.nom || data.Nom || '',
       Adresse: data.adresse || data.Adresse || '',
       Email: data.email || data.Email || '',
-      Telephone: data.telephone || data.Telephone || '',
+      TelephoneContact: data.telephoneContact || data.TelephoneContact || data.telephone || '',
+      Ville: data.ville || data.Ville || '',
+      Pays: data.pays || data.Pays || '',
       Logo: data.logo || data.Logo || '',
       PlanAbonnement: data.planAbonnement || data.PlanAbonnement || '',
       Actif: data.actif !== undefined ? data.actif : data.Actif
@@ -169,6 +171,7 @@ export class ApiService {
       Nom: data.nom || data.Nom || '',
       Adresse: data.adresse || data.Adresse || '',
       Email: data.email || data.Email || '',
+      TelephoneContact: data.telephoneContact || data.TelephoneContact || data.telephone || '',
       Ville: data.ville || data.Ville || '',
       Pays: data.pays || data.Pays || '',
       PlanAbonnement: data.planAbonnement || data.PlanAbonnement || '',
@@ -252,6 +255,9 @@ export class ApiService {
   getProjetsByConditionPage(page: number, size: number, condition: any): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/projets/liste-par-condition-par-page/${page}/${size}`, condition, { headers: this.getHeaders() });
   }
+  getProjetsDetailleByConditionPage(page: number, size: number, condition: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/projets/ListeDetailleParConditionParPage?pageNumero=${page}&pageTaille=${size}`, condition, { headers: this.getHeaders() });
+  }
   private normalizeProjet(data: any): any {
     return {
       Id: data.id || data.Id || '',
@@ -328,12 +334,25 @@ export class ApiService {
       UtilisateurId: utilisateurId,
       Actif: true
     };
-    return this.http.post(`${this.baseUrl}/taches/assigner`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' });
+    return this.http.post(`${this.baseUrl}/tacheassignees/AjouterOuModifier`, payload, { headers: this.getHeaders(), responseType: 'text' as 'json' });
   }
 
   /** Récupérer les tâches assignées à un utilisateur spécifique */
   getTachesParUtilisateur(utilisateurId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/taches/par-utilisateur/${utilisateurId}`, { headers: this.getHeaders() }).pipe(catchError(() => of([])));
+    return forkJoin({
+      taches: this.getTaches(),
+      assignations: this.http.get<any>(`${this.baseUrl}/tacheassignees/Liste`, { headers: this.getHeaders() }).pipe(catchError(() => of([])))
+    }).pipe(
+      map(({ taches, assignations }) => {
+        const assigns = Array.isArray(assignations) ? assignations : (assignations?.items || []);
+        const taskIdsForUser = new Set(
+          assigns.filter((a: any) => (a.utilisateurId || a.UtilisateurId) === utilisateurId)
+                 .map((a: any) => a.tacheId || a.TacheId)
+        );
+        return (taches || []).filter((t: any) => taskIdsForUser.has(t.id || t.Id));
+      }),
+      catchError(() => of([]))
+    );
   }
 
   // RH & Pointage
@@ -356,6 +375,23 @@ export class ApiService {
       note: note || ''
     };
     return this.http.post(`${this.baseUrl}/rh/enhanced/clock-out`, payload, { headers: this.getHeaders() });
+  }
+
+  getPointageAujourdhui(uId: string): Observable<any> {
+    const today = new Date().toISOString().split('T')[0];
+    const critere = { Criteres: { 'UtilisateurId': uId, 'Date': today } };
+    return this.http.post<any[]>(`${this.baseUrl}/pointage/liste-par-condition`, critere, { headers: this.getHeaders() })
+      .pipe(map(list => (list && list.length > 0) ? list[0] : null), catchError(() => of(null)));
+  }
+
+  pointerEntree(uId: string): Observable<any> {
+    const sId = this.getCurrentSocieteId();
+    return this.clockIn(uId, sId);
+  }
+
+  pointerSortie(uId: string): Observable<any> {
+    const sId = this.getCurrentSocieteId();
+    return this.clockOut(uId, sId);
   }
   getPointages(uId?: string): Observable<any[]> {
     if (uId) {

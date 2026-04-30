@@ -580,72 +580,82 @@ export class SidebarComponent {
         { name: 'Communication', icon: s('chat'), path: '/superadmin/chat' },
         { name: 'Notifications', icon: s('bell'), path: '/superadmin/notifications' },
         { name: 'Tests', icon: s('clipboard'), path: '/superadmin/tests-disponibles' },
-        { name: 'Paramètres', icon: s('settings'), path: '/superadmin/parametre' }
+        { name: 'Paramètres', icon: s('settings'), path: '/superadmin/parametre' },
+        { name: 'Mon Profil', icon: s('user'), path: '/superadmin/profil' }
       ],
       'admin_societe': [
         { name: 'Tableau de bord', icon: s('grid'), path: '/admin/dashboard' },
         { name: 'Projets', icon: s('rocket'), path: '/admin/projets' },
         { name: 'Employés', icon: s('users'), path: '/admin/employes' },
+        { name: 'Talent Metrics', icon: s('activity'), path: '/rh/talent-metrics' },
         { name: 'Ressources Humaines', icon: s('users'), path: '/admin/rh' },
+        { name: 'Pointage Équipe', icon: s('clock'), path: '/admin/pointage' },
         { name: 'Congés', icon: s('calendarCheck'), path: '/admin/conges' },
-        // { name: 'Calendrier', icon: s('calendar'), path: '/admin/calendar' },
         { name: 'Paiements', icon: s('credit'), path: '/admin/paiements' },
         { name: 'Communication', icon: s('chat'), path: '/admin/chat' },
-        { name: 'Paramètres', icon: s('settings'), path: '/admin/parametres' }
+        { name: 'Notifications', icon: s('bell'), path: '/admin/notifications' },
+        { name: 'Paramètres', icon: s('settings'), path: '/admin/parametres' },
+        { name: 'Mon Profil', icon: s('user'), path: '/admin/profil' }
       ],
       'rh': [
         { name: 'Tableau de bord', icon: s('grid'), path: '/rh/dashboard' },
+        { name: 'Talent Intelligence', icon: s('activity'), path: '/rh/talent-metrics' },
         { name: 'Présences', icon: s('clock'), path: '/rh/pointage' },
         { name: 'Congés', icon: s('calendarCheck'), path: '/rh/conges' },
-        // { name: 'Calendrier', icon: s('calendar'), path: '/rh/calendar' },
         { name: 'Employés', icon: s('users'), path: '/rh/employes' },
         { name: 'Recrutement', icon: s('userPlus'), path: '/rh/recrutement' },
-        { name: 'Tests', icon: s('clipboard'), path: '/rh/tests' },
-        // { name: 'Interface de Test', icon: s('clipboard'), path: '/rh/tests-interface' },
-        { name: 'Rapports', icon: s('report'), path: '/rh/rapports' },
-        { name: 'Communication', icon: s('chat'), path: '/rh/chat' }
+        { name: 'Tests Candidats', icon: s('clipboard'), path: '/rh/tests' },
+        { name: 'Rapports RH', icon: s('report'), path: '/rh/rapports' },
+        { name: 'Communication', icon: s('chat'), path: '/rh/chat' },
+        { name: 'Notifications', icon: s('bell'), path: '/rh/notifications' },
+        { name: 'Paramètres', icon: s('settings'), path: '/rh/parametres' },
+        { name: 'Mon Profil', icon: s('user'), path: '/rh/profil' }
       ],
       'chef_projet': [
         { name: 'Dashboard', icon: s('grid'), path: '/chef/dashboard' },
         { name: 'Projets', icon: s('folder'), path: '/chef/projets' },
         { name: 'Tâches', icon: s('list'), path: '/chef/taches' },
         { name: 'Équipe', icon: s('users'), path: '/chef/equipe' },
-        { name: 'Suivi', icon: s('activity'), path: '/chef/suivi' },
-        // { name: 'Calendrier', icon: s('calendar'), path: '/chef/calendar' },
+        { name: 'Pointage', icon: s('clock'), path: '/chef/pointage' },
+        { name: 'Congés', icon: s('calendarCheck'), path: '/chef/conges' },
+        { name: 'Suivi & Stats', icon: s('activity'), path: '/chef/suivi' },
         { name: 'Bugs', icon: s('bug'), path: '/chef/bugs' },
         { name: 'Rapports', icon: s('report'), path: '/chef/rapports' },
         { name: 'Time Tracking', icon: s('clock'), path: '/chef/time' },
-        { name: 'Congés', icon: s('calendarCheck'), path: '/chef/conges' },
         { name: 'Communication', icon: s('chat'), path: '/chef/chat' },
-        { name: 'Paramètres', icon: s('settings'), path: '/chef/parametres' }
+        { name: 'Notifications', icon: s('bell'), path: '/chef/notifications' },
+        { name: 'Paramètres', icon: s('settings'), path: '/chef/parametres' },
+        { name: 'Mon Profil', icon: s('user'), path: '/chef/profil' }
       ],
       'developpeur': [
         { name: 'Dashboard', icon: s('grid'), path: '/dev/dashboard' },
         { name: 'Mes Tâches', icon: s('list'), path: '/dev/taches' },
         { name: 'Projets', icon: s('folder'), path: '/dev/projets' },
-        // { name: 'Calendrier', icon: s('calendar'), path: '/dev/calendar' },
+        { name: 'Pointage', icon: s('clock'), path: '/dev/pointage' },
+        { name: 'Congés', icon: s('calendarCheck'), path: '/dev/conges' },
         { name: 'Bugs', icon: s('bug'), path: '/dev/bugs' },
         { name: 'Time Tracking', icon: s('clock'), path: '/dev/time' },
-        { name: 'API', icon: s('doc'), path: '/dev/api' },
-        { name: 'Documentation', icon: s('doc'), path: '/dev/docs' },
+        { name: 'API Docs', icon: s('doc'), path: '/dev/api' },
         { name: 'Diagrams', icon: s('map'), path: '/dev/diagrams' },
-        { name: 'Congés', icon: s('calendarCheck'), path: '/dev/conges' },
         { name: 'Communication', icon: s('chat'), path: '/dev/chat' },
-        { name: 'Paramètres', icon: s('settings'), path: '/dev/parametres' }
+        { name: 'Notifications', icon: s('bell'), path: '/dev/notifications' },
+        { name: 'Paramètres', icon: s('settings'), path: '/dev/parametres' },
+        { name: 'Mon Profil', icon: s('user'), path: '/dev/profil' }
       ],
       'testeur': [
         { name: 'Dashboard', icon: s('grid'), path: '/qa/dashboard' },
-        { name: 'Tests', icon: s('clipboard'), path: '/qa/tests' },
+        { name: 'Pointage', icon: s('clock'), path: '/qa/pointage' },
+        { name: 'Congés', icon: s('calendarCheck'), path: '/qa/conges' },
+        { name: 'Tests & QA', icon: s('clipboard'), path: '/qa/tests' },
         { name: 'Plans de Test', icon: s('map'), path: '/qa/plans' },
         { name: 'Bugs', icon: s('bug'), path: '/qa/bugs' },
-        { name: 'Calendrier', icon: s('calendar'), path: '/qa/calendar' },
-        { name: 'Rapports', icon: s('report'), path: '/qa/rapports' },
         { name: 'Projets', icon: s('folder'), path: '/qa/projets' },
         { name: 'Time Tracking', icon: s('clock'), path: '/qa/time' },
-        { name: 'Congés', icon: s('calendarCheck'), path: '/qa/conges' },
+        { name: 'Rapports QA', icon: s('report'), path: '/qa/rapports' },
         { name: 'Communication', icon: s('chat'), path: '/qa/chat' },
         { name: 'Notifications', icon: s('bell'), path: '/qa/notifications' },
-        { name: 'Paramètres', icon: s('settings'), path: '/qa/parametres' }
+        { name: 'Paramètres', icon: s('settings'), path: '/qa/parametres' },
+        { name: 'Mon Profil', icon: s('user'), path: '/qa/profil' }
       ],
       'candidat': [
         { name: 'Accueil', icon: s('home'), path: '/applicant' },
@@ -659,7 +669,9 @@ export class SidebarComponent {
         { name: 'Rapports', icon: s('report'), path: '/client/rapports' },
         { name: 'Feedback', icon: s('chat'), path: '/client/feedback' },
         { name: 'Messagerie', icon: s('send'), path: '/client/chat' },
-        { name: 'Paramètres', icon: s('settings'), path: '/client/parametres' }
+        { name: 'Notifications', icon: s('bell'), path: '/client/notifications' },
+        { name: 'Paramètres', icon: s('settings'), path: '/client/parametres' },
+        { name: 'Mon Profil', icon: s('user'), path: '/client/profil' }
       ]
     };
 

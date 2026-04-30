@@ -679,19 +679,31 @@ export class QaTestsComponent implements OnInit {
   }
 
   loadTests() {
-    const data = JSON.parse(localStorage.getItem('app_data') || '{}');
     const currentUser = this.api.getCurrentUser();
-    const storedTasks = data.taches?.[this.societeId] || [];
-    const assignedTasks = storedTasks.filter((t: any) => t.assignee === currentUser?.nom || t.assignee === currentUser?.id);
-    this.tests = assignedTasks.map((t: any) => ({
-      id: t.id,
-      nom: t.titre,
-      type: 'Tâche',
-      projet: t.projet,
-      priorite: t.priorite,
-      statut: t.statut === 'todo' ? 'Pending' : t.statut === 'done' ? 'Pass' : 'Pending',
-      description: t.description
-    }));
+    const userId = currentUser?.id || currentUser?.Id || '';
+    if (!userId) return;
+
+    this.api.getTachesParUtilisateur(userId).subscribe({
+      next: (tasks: any[]) => {
+        this.tests = (tasks || []).map((t: any) => {
+          const rawStatus = (t.statut || t.Statut || t.status || '').toLowerCase().trim().replace(/ /g, '');
+          let normalizedStatus = 'Pending';
+          if (['done', 'terminé', 'terminée', 'valide', 'validé', 'pass'].includes(rawStatus)) normalizedStatus = 'Pass';
+          else if (['fail', 'echoué', 'échec'].includes(rawStatus)) normalizedStatus = 'Fail';
+
+          return {
+            id: t.id || t.Id,
+            nom: t.titre || t.Titre || 'Sans titre',
+            type: 'Tâche',
+            projet: t.projetNom || t.ProjetNom || 'Projet',
+            priorite: t.priorite || t.Priorite || 'Medium',
+            statut: normalizedStatus,
+            description: t.description || t.Description || '',
+            commentaires: []
+          };
+        });
+      }
+    });
   }
 
   viewDetails(test: any) {

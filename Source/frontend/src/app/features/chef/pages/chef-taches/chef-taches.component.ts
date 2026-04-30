@@ -727,11 +727,11 @@ export class ChefTachesComponent implements OnInit {
                 this.taches = allTaches;
 
                 // Now enrich each task with its assignees from TacheAssignation
-                // We fetch all TacheAssignation records via a single call
-                this.api.get<any[]>('tacheassignation/liste-legacy-1').subscribe({
-                  next: (assignations: any[]) => {
+                this.api.get<any>('tacheassignees/Liste').subscribe({
+                  next: (res: any) => {
+                    const assignations = Array.isArray(res) ? res : (res?.items || []);
                     const assignationMap = new Map<string, string[]>();
-                    (assignations || []).forEach((a: any) => {
+                    assignations.forEach((a: any) => {
                       const tid = a.tacheId || a.TacheId || '';
                       const uid = a.utilisateurId || a.UtilisateurId || '';
                       if (tid && uid) {

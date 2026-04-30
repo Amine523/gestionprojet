@@ -123,22 +123,22 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 
     public class DemandeSocieteRequest
     {
-        [JsonProperty("societeNom")]
+        [System.Text.Json.Serialization.JsonPropertyName("societeNom")]
         public required string SocieteNom { get; set; }
 
-        [JsonProperty("societeAdresse")]
+        [System.Text.Json.Serialization.JsonPropertyName("societeAdresse")]
         public required string SocieteAdresse { get; set; }
 
-        [JsonProperty("adminNom")]
+        [System.Text.Json.Serialization.JsonPropertyName("adminNom")]
         public required string AdminNom { get; set; }
 
-        [JsonProperty("adminEmail")]
+        [System.Text.Json.Serialization.JsonPropertyName("adminEmail")]
         public required string AdminEmail { get; set; }
 
-        [JsonProperty("adminPassword")]
+        [System.Text.Json.Serialization.JsonPropertyName("adminPassword")]
         public required string AdminPassword { get; set; }
 
-        [JsonProperty("telephone")]
+        [System.Text.Json.Serialization.JsonPropertyName("telephone")]
         public required string Telephone { get; set; }
     }
 

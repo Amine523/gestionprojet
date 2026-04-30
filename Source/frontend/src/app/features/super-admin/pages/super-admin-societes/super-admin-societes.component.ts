@@ -94,7 +94,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
             <thead>
               <tr>
                 <th>Organisation</th>
-                <th>Email</th>
+                <th>Contact</th>
                 <th>Localisation</th>
                 <th>Plan</th>
                 <th>Statut</th>
@@ -114,7 +114,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                     </div>
                   </td>
                   <td>
-                    <span class="text-muted">{{s.email || 'no-contact@domain.com'}}</span>
+                    <div class="contact-details">
+                      <span class="text-muted d-block">{{s.email || '-'}}</span>
+                      <span class="text-xs text-primary">{{s.telephoneContact || '-'}}</span>
+                    </div>
                   </td>
                   <td>
                     <div class="location-info">
@@ -256,6 +259,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                         <option value="SILVER">Silver (Pro)</option>
                         <option value="FREE">Standard</option>
                      </select>
+                  </div>
+                  <div class="form-field">
+                     <label>Téléphone Contact</label>
+                     <input [(ngModel)]="formData.telephoneContact" name="telephoneContact" class="form-input" placeholder="+216 ...">
                   </div>
                   <div class="form-field full-width">
                      <label>Adresse du Siège</label>
@@ -628,6 +635,20 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     .user-email {
       font-size: var(--font-size-xs);
       color: var(--color-text-muted);
+    }
+
+    .contact-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .d-block {
+      display: block;
+    }
+
+    .text-xs {
+      font-size: 0.75rem;
     }
 
     .text-muted {
@@ -1061,8 +1082,19 @@ export class SuperAdminSocietesComponent implements OnInit {
     this.api.getSocietesPage(this.page, this.pageSize).subscribe({
       next: (res: any) => {
         const items = (res.items || []).map((s: any, idx: number) => {
-          if (!s.id && !s.Id) s.id = 'SOC_TN' + (idx + 1);
-          return s;
+          // Normalisation des propriétés (Handle PascalCase vs camelCase)
+          const normalized = {
+            id: s.id || s.Id || 'SOC_TN' + (idx + 1),
+            nom: s.nom || s.Nom || '',
+            email: s.email || s.Email || '',
+            telephoneContact: s.telephoneContact || s.TelephoneContact || s.telephone || s.Telephone || '',
+            ville: s.ville || s.Ville || '',
+            pays: s.pays || s.Pays || '',
+            adresse: s.adresse || s.Adresse || '',
+            planAbonnement: s.planAbonnement || s.PlanAbonnement || 'Standard',
+            actif: s.actif !== undefined ? s.actif : (s.Actif !== undefined ? s.Actif : true)
+          };
+          return normalized;
         });
         this.societesSignal.set(items);
         this.totalItems = res.totalCount || 0;

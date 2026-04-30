@@ -1,13 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { SidebarService } from '@core/services/sidebar.service';
 import { ApiService } from '@core/services/api.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <header class="header">
       <div class="header-content">
@@ -26,7 +27,26 @@ import { ApiService } from '@core/services/api.service';
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="search-icon" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
             </svg>
-            <input type="search" placeholder="Rechercher..." aria-label="Rechercher" class="search-input"/>
+            <input type="search" 
+                   [(ngModel)]="searchQuery" 
+                   (input)="onSearch()"
+                   placeholder="Rechercher (Projets, Tâches...)" 
+                   aria-label="Rechercher" 
+                   class="search-input"/>
+            
+            @if (searchResults.length > 0 || isSearching) {
+              <div class="search-dropdown shadow-premium">
+                @if (isSearching) {
+                  <div class="search-loading">Recherche en cours...</div>
+                }
+                @for (res of searchResults; track res.id) {
+                  <div class="search-result-item" (click)="searchResults = []">
+                    <span class="res-type">{{res.type}}</span>
+                    <span class="res-title">{{res.titre || res.nom}}</span>
+                  </div>
+                }
+              </div>
+            }
           </div>
         </div>
         <div class="header-right">
@@ -234,6 +254,83 @@ import { ApiService } from '@core/services/api.service';
       border-color: var(--color-brand-500);
     }
 
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 400px;
+      background: white;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border);
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 100;
+      animation: slideDown 0.2s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    :host-context(.dark) .search-dropdown {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    .search-loading {
+      padding: var(--space-md);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+      text-align: center;
+    }
+
+    .search-result-item {
+      padding: var(--space-md);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item:hover {
+      background: var(--color-bg);
+    }
+
+    :host-context(.dark) .search-result-item {
+      border-bottom-color: #334155;
+    }
+
+    :host-context(.dark) .search-result-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .res-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 800;
+      padding: 2px 6px;
+      background: #e0e7ff;
+      color: #4338ca;
+      border-radius: 4px;
+    }
+
+    .res-title {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .shadow-premium {
+      box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+    }
+
     .header-divider {
       width: 1px;
       height: 32px;
@@ -289,7 +386,7 @@ import { ApiService } from '@core/services/api.service';
     }
   `]
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   sidebarService = inject(SidebarService);
   private api = inject(ApiService);
   private router = inject(Router);
@@ -301,14 +398,38 @@ export class HeaderComponent {
   userInitials = '';
   notifCount = 3;
 
-  ngOnInit() {
+  searchQuery = '';
+  isSearching = false;
+  searchResults: any[] = [];
 
+  ngOnInit() {
     const user = this.api.getCurrentUser();
     if (user) {
-      this.userName = (user.prenom || '') + ' ' + (user.nom || '');
-      this.userInitials = (user.prenom?.charAt(0) || '') + (user.nom?.charAt(0) || '');
+      this.userName = (user.prenom || user.Prenom || '') + ' ' + (user.nom || user.Nom || '');
+      this.userInitials = (this.userName.split(' ').map(n => n[0]).join('')).toUpperCase().substring(0, 2);
+      this.userRole = user.role || user.Role || 'Membre';
     }
-    this.isDark = document.body.classList.contains('dark');
+    this.isDark = document.body.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
+    if (this.isDark) document.body.classList.add('dark');
+  }
+
+  onSearch() {
+    if (this.searchQuery.length > 2) {
+      this.isSearching = true;
+      const user = this.api.getCurrentUser();
+      // TODO: Implement globalSearch in ApiService
+      // this.api.globalSearch(this.searchQuery, user?.societeId || user?.SocieteId).subscribe({
+      //   next: (res: any) => {
+      //     this.searchResults = res || [];
+      //     this.isSearching = false;
+      //   },
+      //   error: () => this.isSearching = false
+      // });
+      this.searchResults = [];
+      this.isSearching = false;
+    } else {
+      this.searchResults = [];
+    }
   }
 
   toggleTheme() {

@@ -17,7 +17,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
             _httpClient.BaseAddress = new Uri("http://localhost:11434");
         }
 
-        public async Task<string> GenerateTextAsync(string prompt, string model = "llama3")
+        public async Task<string> GenerateTextAsync(string prompt, string model = "llama3.2")
         {
             try {
                 var request = new

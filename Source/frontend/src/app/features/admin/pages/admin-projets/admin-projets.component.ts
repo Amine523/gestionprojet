@@ -15,8 +15,14 @@ interface Projet {
   startDate: string;
   endDate: string;
   avancee: number;
+  avanceeCalculee: number;
+  healthScore: number;
+  healthColor: string;
+  endDatePredicted: string;
   membres: number;
 }
+
+
 
 @Component({
   selector: 'app-admin-projets',
@@ -138,26 +144,46 @@ interface Projet {
                 <td>
                   <div class="project-progress">
                     <div class="progress-header">
-                      <span>{{p.avancee}}%</span>
+                      <span>{{p.avanceeCalculee}}% (Pondéré)</span>
+                      <span class="health-dot" [class]="p.healthColor?.toLowerCase()" [title]="'Score Santé: ' + p.healthScore"></span>
                     </div>
                     <div class="progress-bar">
-                      <div class="progress-fill" [style.width.%]="p.avancee"></div>
+                      <div class="progress-fill" [style.width.%]="p.avanceeCalculee" [class]="p.healthColor?.toLowerCase()"></div>
                     </div>
                   </div>
                 </td>
                 <td>
-                  <div class="date-item">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6"/>
-                      <line x1="8" y1="2" x2="8" y2="6"/>
-                      <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    {{p.endDate | date:'dd MMM yyyy'}}
+                  <div class="date-group">
+                    <div class="date-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      {{p.endDate | date:'dd MMM yyyy'}}
+                    </div>
+                    @if (p.endDatePredicted && p.status !== 'Terminé') {
+                      <div class="prediction-item" [class.danger]="p.healthColor === 'Rouge'">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                        </svg>
+                        IA: {{p.endDatePredicted | date:'dd MMM yyyy'}}
+                      </div>
+                    }
                   </div>
                 </td>
                 <td class="text-right">
                   <div class="project-actions">
+                    <button (click)="generateReport(p)" class="btn-icon" title="Rapport d'Intelligence">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                      </svg>
+                    </button>
                     <button (click)="editProjet(p)" class="btn-icon" title="Configurer Mission">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -618,6 +644,41 @@ interface Projet {
       transition: width var(--transition-base);
     }
 
+    .progress-fill.vert { background: linear-gradient(90deg, #10b981, #059669); }
+    .progress-fill.orange { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .progress-fill.rouge { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+    .health-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: var(--space-xs);
+    }
+    .health-dot.vert { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+    .health-dot.orange { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
+    .health-dot.rouge { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+
+    .date-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .prediction-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #8b5cf6;
+      font-weight: var(--font-weight-bold);
+      text-transform: uppercase;
+    }
+
+    .prediction-item.danger {
+      color: #ef4444;
+    }
+
     .date-item {
       display: flex;
       align-items: center;
@@ -916,17 +977,24 @@ export class AdminProjetsComponent implements OnInit {
   }
 
   loadProjets() {
-    const condition: any = { criteres: {} };
+    const condition: any = { 
+      criteres: {},
+      SortColumn: 'Id',
+      SortOrder: 'DESC'
+    };
     if (this.searchQuery) condition.criteres.Nom = this.searchQuery;
     if (this.filterStatut) condition.criteres.Status = this.filterStatut;
     if (this.societeId) condition.criteres.SocieteId = this.societeId;
 
-    this.api.getProjetsByConditionPage(this.page, this.pageSize, condition).subscribe((res: any) => {
+    this.api.getProjetsDetailleByConditionPage(this.page, this.pageSize, condition).subscribe((res: any) => {
       if (!res) return;
-      const mapped = (res.items || []).map((p: any) => {
+      const items = res.items || [];
+      const mapped = items.map((detail: any) => {
+        const p = detail.projet || detail.Projet;
         const chefId = p.utilisateurId || p.UtilisateurId;
         const chef = this.chefsSignal().find(c => (c.id || c.Id) === chefId);
         const chefName = p.utilisateurNom || (chef ? `${chef.prenom || ''} ${chef.nom || ''}` : 'Non assigné');
+        
         return {
           id: p.id || p.Id, 
           nom: p.nom || p.Nom, 
@@ -936,6 +1004,10 @@ export class AdminProjetsComponent implements OnInit {
           startDate: p.startDate || p.StartDate, 
           endDate: p.endDate || p.EndDate, 
           avancee: p.avancee || p.Avancee || 0, 
+          avanceeCalculee: detail.avanceeCalculee || detail.AvanceeCalculee || 0,
+          healthScore: detail.healthScore || detail.HealthScore || 0,
+          healthColor: detail.healthColor || detail.HealthColor || 'Gris',
+          endDatePredicted: detail.endDatePredicted || detail.EndDatePredicted || null,
           membres: p.membresCount || p.membres || 1,
           utilisateurId: chefId
         };
@@ -960,6 +1032,7 @@ export class AdminProjetsComponent implements OnInit {
   applyFilter() { this.page = 1; this.loadProjets(); }
   exportExcel() { this.exportService.exportToExcel(this.projetsSignal(), 'Registre_Missions'); }
   exportPdf() { this.exportService.exportToPdf(['Nom', 'Statut', 'Chef'], this.projetsSignal().map(p => [p.nom, p.status, p.chef]), 'Rapport_Controle_Missions', 'Données Intelligence Mission'); }
+  generateReport(project: Projet) { this.exportService.generateProjectIntelligenceReport(project, {}); }
   
   openAddDialog() { this.editingProjet = null; this.formData = { nom: '', description: '', chef: '', dateDebut: new Date().toISOString().split('T')[0], dateFin: '', status: 'En attente' }; this.showDialog = true; }
   editProjet(p: any) { this.editingProjet = p; this.formData = { ...p, dateDebut: p.startDate?.split('T')[0], dateFin: p.endDate?.split('T')[0] }; this.showDialog = true; }

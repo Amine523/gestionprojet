@@ -970,36 +970,57 @@ taches: any[] = [
   loadData() {
     const currentUser = this.api.getCurrentUser();
     const userId = currentUser?.id || currentUser?.Id || '';
+    if (!userId) return;
 
-    if (!userId) {
-      this.taches = [];
-      return;
-    }
-
-    // Load tasks assigned to this user via TacheAssignation
-    this.api.getTachesParUtilisateur(userId).subscribe({
-      next: (taches: any[]) => {
-        this.taches = (taches || []).map((t: any) => {
-          const rawStatus = (t.statut || t.Statut || t.status || '').toLowerCase().trim().replace(/ /g, '');
-          let normalizedStatus = 'todo';
-          if (rawStatus === 'done' || rawStatus === 'terminé' || rawStatus === 'terminée') normalizedStatus = 'done';
-          else if (rawStatus === 'inprogress' || rawStatus === 'encours') normalizedStatus = 'inprogress';
-          return {
-            ...t,
-            id: t.id || t.Id,
-            titre: t.titre || t.Titre || t.nom || 'Sans titre',
-            description: t.description || t.Description || '',
-            priorite: t.priorite || t.Priorite || 'Medium',
-            statut: normalizedStatus,
-            projet: t.projetId || t.ProjetId || '',
-            deadline: t.dateLimite ? new Date(t.dateLimite).toLocaleDateString('fr-FR') : '',
-            tempsEstime: t.tempsEstime || t.TempsEstime || 0,
-            piecesJointes: [],
-            commentaires: []
-          };
+    // 1. Charger les membres de la société pour le mapping des noms
+    this.api.getEmployesBySociete(this.societeId).subscribe({
+      next: (membres: any) => {
+        const users = membres?.items || membres || [];
+        const userMap = new Map<string, string>();
+        users.forEach((u: any) => {
+          const id = u.id || u.Id;
+          const nom = u.nom || u.Nom || u.userName || u.UserName || 'Utilisateur';
+          if (id) userMap.set(id, nom);
         });
-      },
-      error: () => { this.taches = []; }
+
+        // 2. Charger les projets pour le mapping des noms de projets
+        this.api.getProjets().subscribe({
+          next: (projets: any) => {
+            const projList = projets?.items || projets || [];
+            const projMap = new Map<string, string>();
+            projList.forEach((p: any) => {
+              const id = p.id || p.Id;
+              const nom = p.nom || p.Nom || 'Projet';
+              if (id) projMap.set(id, nom);
+            });
+
+            // 3. Charger les tâches assignées à l'utilisateur
+            this.api.getTachesParUtilisateur(userId).subscribe({
+              next: (tasks: any[]) => {
+                this.taches = (tasks || []).map((t: any) => {
+                  const rawStatus = (t.statut || t.Statut || t.status || '').toLowerCase().trim().replace(/ /g, '');
+                  let normalizedStatus = 'todo';
+                  if (['done', 'terminé', 'terminée', 'valide', 'validé'].includes(rawStatus)) normalizedStatus = 'done';
+                  else if (['inprogress', 'encours', 'en cours', 'développement'].includes(rawStatus)) normalizedStatus = 'inprogress';
+
+                  return {
+                    ...t,
+                    id: t.id || t.Id,
+                    titre: t.titre || t.Titre || 'Sans titre',
+                    description: t.description || t.Description || '',
+                    priorite: t.priorite || t.Priorite || 'Medium',
+                    statut: normalizedStatus,
+                    projet: projMap.get(t.projetId || t.ProjetId) || t.projetNom || t.ProjetNom || 'Interne',
+                    deadline: t.dateLimite ? new Date(t.dateLimite).toLocaleDateString('fr-FR') : (t.deadline || 'N/A'),
+                    tempsEstime: t.tempsEstime || t.TempsEstime || 0,
+                    assigneeNom: userMap.get(t.assigneeId || t.AssigneeId) || 'Non assigné'
+                  };
+                });
+              }
+            });
+          }
+        });
+      }
     });
   }
 

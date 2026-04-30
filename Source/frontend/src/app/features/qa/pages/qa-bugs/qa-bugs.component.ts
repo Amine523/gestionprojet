@@ -145,7 +145,7 @@ import { ApiService } from '@core/services/api.service';
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Projet</label>
-                  <select class="form-select" [(ngModel)]="formData.projet">
+                  <select class="form-select" [(ngModel)]="formData.projetId">
                     <option value="App Mobile">App Mobile</option>
                     <option value="API REST">API REST</option>
                     <option value="Dashboard">Dashboard</option>
@@ -701,44 +701,73 @@ export class QaBugsComponent implements OnInit {
   filterStatut = '';
 
   stats = { ouverts: 0, enCours: 0, corriges: 0 };
-
   bugs: any[] = [];
-
-  ngOnInit() {
-    const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
-    this.loadBugs();
-  }
-
-  loadBugs() {
-    const data = JSON.parse(localStorage.getItem('app_data') || '{}');
-    const storedBugs = data.qaBugs?.[this.societeId] || [];
-    if (storedBugs.length > 0) {
-      this.bugs = storedBugs;
-    }
-  }
+  projets: any[] = [];
 
   showCreateForm = false;
   viewingBug: any = null;
   newComment = '';
-  formData = { titre: '', description: '', projet: 'App Mobile', priorite: 'Medium', steps: '' };
+  formData: any = { titre: '', description: '', projetId: '', priorite: 'Medium', steps: '' };
+
+  ngOnInit() {
+    const user = this.api.getCurrentUser();
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
+    this.loadProjets();
+    this.loadBugs();
+  }
+
+  loadProjets() {
+    this.api.getProjetsBySociete(this.societeId).subscribe(res => {
+      this.projets = res || [];
+    });
+  }
+
+  loadBugs() {
+    this.api.getTaches().subscribe(all => {
+      // Filtrer les tâches qui sont des bugs ou qui appartiennent à la société de l'utilisateur
+      // Pour cet exemple, on considère que toutes les tâches avec le statut "Bug" ou créées par QA sont des bugs
+      const projectIds = new Set(this.projets.map(p => p.id || p.Id));
+      this.bugs = (all || []).filter((t: any) => projectIds.has(t.projetId || t.ProjetId))
+        .map((t: any) => ({
+          id: t.id || t.Id,
+          titre: t.titre || t.Titre,
+          description: t.description || t.Description,
+          projet: this.projets.find(p => (p.id || p.Id) === (t.projetId || t.ProjetId))?.nom || 'Inconnu',
+          projetId: t.projetId || t.ProjetId,
+          priorite: t.priorite || t.Priorite || 'Medium',
+          statut: t.statut || t.Statut || 'Open',
+          assignee: '',
+          commentaires: t.testComment ? [{ id: 1, auteur: 'Système', texte: t.testComment, heure: 'Auto' }] : []
+        }));
+      this.updateStats();
+    });
+  }
+
+  updateStats() {
+    this.stats.ouverts = this.bugs.filter(b => b.statut === 'Open' || b.statut === 'Todo').length;
+    this.stats.enCours = this.bugs.filter(b => b.statut === 'In_progress' || b.statut === 'InProgress').length;
+    this.stats.corriges = this.bugs.filter(b => b.statut === 'Fixed' || b.statut === 'Done').length;
+  }
 
   get filteredBugs() {
     return this.bugs.filter(b => {
-      const matchProjet = !this.filterProjet || b.projet === this.filterProjet;
+      const matchProjet = !this.filterProjet || b.projetId === this.filterProjet;
       const matchStatut = !this.filterStatut || b.statut === this.filterStatut;
       return matchProjet && matchStatut;
     });
   }
 
   affecter(bug: any) {
-    this.snackBar.open('Affecter: ' + bug.titre, 'Fermer', { duration: 2000 });
+    this.snackBar.open('Demande d\'affectation envoyée au Chef de Projet', 'OK', { duration: 2000 });
   }
 
   corriger(bug: any) {
     bug.statut = 'Fixed';
-    this.snackBar.open('Bug marqué corrigé', 'Fermer', { duration: 2000 });
+    this.api.saveTache({ ...bug, Id: bug.id, Statut: 'Fixed' }).subscribe(() => {
+      this.snackBar.open('Bug marqué corrigé dans la base de données', 'OK', { duration: 2000 });
+      this.loadBugs();
+    });
   }
 
   details(bug: any) {
@@ -746,7 +775,7 @@ export class QaBugsComponent implements OnInit {
     this.formData = {
       titre: bug.titre,
       description: bug.description,
-      projet: bug.projet,
+      projetId: bug.projetId,
       priorite: bug.priorite,
       steps: ''
     };
@@ -757,10 +786,17 @@ export class QaBugsComponent implements OnInit {
     if (this.newComment && this.viewingBug) {
       this.viewingBug.commentaires.push({
         id: Date.now(),
-        auteur: 'Moi',
+        auteur: 'QA',
         texte: this.newComment,
         heure: 'À l\'instant'
       });
+      // Optionnel: Sauvegarder dans le champ TestComment de la tâche
+      this.api.saveTache({ 
+        Id: this.viewingBug.id, 
+        TestComment: this.newComment,
+        Titre: this.viewingBug.titre,
+        Statut: this.viewingBug.statut 
+      }).subscribe();
       this.newComment = '';
     }
   }
@@ -768,30 +804,31 @@ export class QaBugsComponent implements OnInit {
   closeForm() {
     this.showCreateForm = false;
     this.viewingBug = null;
-    this.formData = { titre: '', description: '', projet: 'App Mobile', priorite: 'Medium', steps: '' };
+    this.formData = { titre: '', description: '', projetId: '', priorite: 'Medium', steps: '' };
   }
 
   saveBug() {
-    if (this.formData.titre && this.formData.description) {
-      if (this.viewingBug) {
-        this.viewingBug.titre = this.formData.titre;
-        this.viewingBug.description = this.formData.description;
-        this.viewingBug.projet = this.formData.projet;
-        this.viewingBug.priorite = this.formData.priorite;
-      } else {
-        this.bugs.unshift({
-          id: Date.now(),
-          titre: this.formData.titre,
-          description: this.formData.description,
-          projet: this.formData.projet,
-          priorite: this.formData.priorite,
-          statut: 'Open',
-          assignee: '',
-          commentaires: []
-        });
-      }
-      this.snackBar.open('Bug enregistré', 'Fermer', { duration: 2000 });
-      this.closeForm();
+    if (this.formData.titre && this.formData.description && this.formData.projetId) {
+      const bugData = {
+        Id: this.viewingBug ? this.viewingBug.id : '',
+        Titre: this.formData.titre,
+        Description: this.formData.description,
+        ProjetId: this.formData.projetId,
+        Priorite: this.formData.priorite,
+        Statut: this.viewingBug ? this.viewingBug.statut : 'Open',
+        TestComment: this.formData.steps ? 'Étapes: ' + this.formData.steps : ''
+      };
+
+      this.api.saveTache(bugData).subscribe({
+        next: () => {
+          this.snackBar.open('Bug synchronisé avec le backend', 'OK', { duration: 2000 });
+          this.loadBugs();
+          this.closeForm();
+        },
+        error: () => this.snackBar.open('Erreur de synchronisation', 'Fermer', { duration: 3000 })
+      });
+    } else {
+      this.snackBar.open('Veuillez remplir les champs obligatoires', 'Fermer', { duration: 3000 });
     }
   }
 }

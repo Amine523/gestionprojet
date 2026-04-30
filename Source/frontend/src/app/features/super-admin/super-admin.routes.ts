@@ -15,6 +15,7 @@ import { SuperAdminNotificationsComponent } from './pages/super-admin-notificati
 import { SuperAdminChatComponent } from './pages/super-admin-chat/super-admin-chat.component';
 import { TestsDisponiblesComponent } from '@shared/components/tests-disponibles/tests-disponibles.component';
 import { AdminProjetsComponent } from '../admin/pages/admin-projets/admin-projets.component';
+import { ProfileComponent } from '@shared/components/profile/profile.component';
 
 export const SUPER_ADMIN_ROUTES: Routes = [
   { path: '', component: SuperAdminDashboardComponent },
@@ -33,5 +34,6 @@ export const SUPER_ADMIN_ROUTES: Routes = [
   { path: 'politique', component: SuperAdminPolitiqueComponent },
   { path: 'notifications', component: SuperAdminNotificationsComponent },
   { path: 'chat', component: SuperAdminChatComponent },
-  { path: 'tests-disponibles', component: TestsDisponiblesComponent }
+  { path: 'tests-disponibles', component: TestsDisponiblesComponent },
+  { path: 'profil', component: ProfileComponent }
 ];

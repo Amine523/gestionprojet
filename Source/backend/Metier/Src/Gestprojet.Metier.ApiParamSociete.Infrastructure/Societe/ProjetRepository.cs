@@ -20,15 +20,18 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
         private readonly ICodeGenerationService _codeGenerationService;
         private readonly ILogger<ProjetRepository> _logger;
         private readonly IProjetApi _projetApi;
+        private readonly ITacheApi _tacheApi;
 
         public ProjetRepository(
             ICodeGenerationService codeGenerationService,
             ILogger<ProjetRepository> logger,
-            IProjetApi projetApi)
+            IProjetApi projetApi,
+            ITacheApi tacheApi)
         {
             _codeGenerationService = codeGenerationService;
             _logger = logger;
             _projetApi = projetApi;
+            _tacheApi = tacheApi;
         }
 
         public async Task<OperationResult> AjouterOuModifierAsync(ProjetCore entity)
@@ -190,9 +193,80 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
             catch (Exception ex) { _logger.LogError(ex, "Erreur ListeDetailleParCondition"); return new List<ProjetDetailles>(); }
         }
 
-        private Task<ProjetDetailles> ChargerProjetDetailleAsync(ProjetCore item)
+        private async Task<ProjetDetailles> ChargerProjetDetailleAsync(ProjetCore item)
         {
-            return Task.FromResult(new ProjetDetailles { Projet = item });
+            var detail = new ProjetDetailles { Projet = item };
+
+            try
+            {
+                // 1. Récupération des tâches du projet
+                var conditionTaches = new ConditionRecherche
+                {
+                    Criteres = new Dictionary<string, string> { { "ProjetId", item.Id } }
+                };
+                var taches = await _tacheApi.ApiTachesListeParConditionPostAsync(SoftProOutils.ToCritereSociete(conditionTaches));
+
+                if (taches != null && taches.Any())
+                {
+                    // 2. Calcul de la progression pondérée
+                    double totalEstime = taches.Sum(t => t.TempsEstime ?? 0);
+                    double totalTermine = taches.Where(t => t.Statut == "Terminé").Sum(t => t.TempsEstime ?? 0);
+
+                    detail.AvanceeCalculee = totalEstime > 0 ? Math.Round((totalTermine / totalEstime) * 100, 2) : 0;
+
+                    // 3. Calcul du Health Score (Comparaison Timeline)
+                    if (item.StartDate.HasValue && item.EndDate.HasValue)
+                    {
+                        var totalDays = (item.EndDate.Value - item.StartDate.Value).TotalDays;
+                        var elapsedDays = (DateTime.Now - item.StartDate.Value).TotalDays;
+                        
+                        if (totalDays > 0)
+                        {
+                            double expectedProgress = Math.Min(100, Math.Max(0, (elapsedDays / totalDays) * 100));
+                            double diff = detail.AvanceeCalculee - expectedProgress;
+
+                            if (diff >= 0) { detail.HealthColor = "Vert"; detail.HealthScore = 100; }
+                            else if (diff > -15) { detail.HealthColor = "Orange"; detail.HealthScore = 70; }
+                            else { detail.HealthColor = "Rouge"; detail.HealthScore = 30; }
+                        }
+                    }
+                    else
+                    {
+                        detail.HealthColor = "Orange";
+                        detail.HealthScore = 50;
+                    }
+
+                    // 4. Prédiction d'Atterrissage (AI-Lite)
+                    // Basé sur la vélocité : progression par jour depuis le début
+                    if (item.StartDate.HasValue && detail.AvanceeCalculee > 0)
+                    {
+                        var daysSinceStart = (DateTime.Now - item.StartDate.Value).TotalDays;
+                        if (daysSinceStart > 0)
+                        {
+                            double velocity = detail.AvanceeCalculee / daysSinceStart; // % par jour
+                            if (velocity > 0)
+                            {
+                                double remainingPercent = 100 - detail.AvanceeCalculee;
+                                double remainingDays = remainingPercent / velocity;
+                                detail.EndDatePredicted = DateTime.Now.AddDays(remainingDays);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    detail.HealthColor = "Vert"; // Pas de tâches = pas de retard
+                    detail.HealthScore = 100;
+                    detail.AvanceeCalculee = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Erreur lors du calcul des indicateurs pour le projet {item.Id}");
+                detail.HealthColor = "Orange";
+            }
+
+            return detail;
         }
 
         public async Task<ResultatPage<ProjetCore>> ListeParPageAsync(int pageNumero, int pageTaille)

@@ -11,6 +11,8 @@ import { QaCongesComponent } from './pages/qa-conges/qa-conges.component';
 import { CalendarViewComponent } from '@shared/components/calendar-view/calendar-view.component';
 import { DevTimeTrackingComponent } from '../dev/pages/dev-time-tracking/dev-time-tracking.component';
 import { AdminChatComponent } from '../admin/pages/admin-chat/admin-chat.component';
+import { ProfileComponent } from '@shared/components/profile/profile.component';
+import { SelfPointageComponent } from '@shared/components/self-pointage/self-pointage.component';
 
 export const QA_ROUTES: Routes = [
   { path: 'dashboard', component: QaDashboardComponent },
@@ -21,9 +23,11 @@ export const QA_ROUTES: Routes = [
   { path: 'projets', component: QaProjetsComponent },
   { path: 'calendar', component: CalendarViewComponent },
   { path: 'time', component: DevTimeTrackingComponent },
+  { path: 'pointage', component: SelfPointageComponent },
   { path: 'conges', component: QaCongesComponent },
   { path: 'notifications', component: QaNotificationsComponent },
   { path: 'chat', component: AdminChatComponent },
+  { path: 'profil', component: ProfileComponent },
   { path: 'parametres', component: QaParametresComponent },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];

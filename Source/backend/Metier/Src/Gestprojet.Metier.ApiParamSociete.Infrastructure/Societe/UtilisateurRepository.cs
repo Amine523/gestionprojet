@@ -21,15 +21,24 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
         private readonly ICodeGenerationService _codeGenerationService;
         private readonly ILogger<UtilisateurRepository> _logger;
         private readonly IUtilisateurApi _utilisateurApi;
+        private readonly ITacheApi _tacheApi;
+        private readonly ITacheAssignationApi _tacheAssignationApi;
+        private readonly IDemandeCongeApi _congeApi;
 
         public UtilisateurRepository(
             ICodeGenerationService codeGenerationService,
             ILogger<UtilisateurRepository> logger,
-            IUtilisateurApi utilisateurApi)
+            IUtilisateurApi utilisateurApi,
+            ITacheApi tacheApi,
+            ITacheAssignationApi tacheAssignationApi,
+            IDemandeCongeApi congeApi)
         {
             _codeGenerationService = codeGenerationService;
             _logger = logger;
             _utilisateurApi = utilisateurApi;
+            _tacheApi = tacheApi;
+            _tacheAssignationApi = tacheAssignationApi;
+            _congeApi = congeApi;
         }
 
         public async Task<OperationResult> AjouterOuModifierAsync(UtilisateurCore entity)
@@ -191,9 +200,73 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
             catch (Exception ex) { _logger.LogError(ex, "Erreur ListeDetailleParCondition"); return new List<UtilisateurDetailles>(); }
         }
 
-        private Task<UtilisateurDetailles> ChargerUtilisateurDetailleAsync(UtilisateurCore item)
+        private async Task<UtilisateurDetailles> ChargerUtilisateurDetailleAsync(UtilisateurCore item)
         {
-            return Task.FromResult(new UtilisateurDetailles { Utilisateur = item });
+            var detail = new UtilisateurDetailles { Utilisateur = item };
+
+            try
+            {
+                // 1. Récupération des tâches assignées
+                var condAssign = new ConditionRecherche { Criteres = new Dictionary<string, string> { { "UtilisateurId", item.Id } } };
+                var assignations = await _tacheAssignationApi.TacheassignationListeParConditionPostAsync(SoftProOutils.ToCritereSociete(condAssign));
+                
+                if (assignations != null && assignations.Any())
+                {
+                    var taskIds = assignations.Select(a => a.TacheId).ToList();
+                    var allTaches = await _tacheApi.ApiTachesListeGetAsync(); // Simplified for now
+                    var userTaches = allTaches.Where(t => taskIds.Contains(t.Id)).ToList();
+
+                    if (userTaches.Any())
+                    {
+                        // 2. Calcul Quality Score
+                        int bugs = userTaches.Count(t => (t.Titre?.Contains("Bug", StringComparison.OrdinalIgnoreCase) ?? false) || (t.Description?.Contains("Bug", StringComparison.OrdinalIgnoreCase) ?? false));
+                        detail.QualityScore = Math.Max(0, 100 - (bugs * 20));
+
+                        // 3. Calcul Timeliness Score
+                        var finishedTasks = userTaches.Where(t => t.Statut == "Terminé").ToList();
+                        if (finishedTasks.Any())
+                        {
+                            int onTime = finishedTasks.Count(t => !t.DateLimite.HasValue || t.DateLimite >= DateTime.Now); // Heuristic
+                            detail.TimelinessScore = (double)onTime / finishedTasks.Count * 100;
+                        }
+                        else { detail.TimelinessScore = 100; }
+
+                        // 4. Collaboration Score (Simulé par l'activité sur les tâches)
+                        detail.CollaborationScore = Math.Min(100, userTaches.Count * 10);
+
+                        // 5. Workload & Burnout Risk
+                        var activeTasks = userTaches.Where(t => t.Statut != "Terminé").ToList();
+                        detail.CurrentWorkloadHours = activeTasks.Sum(t => t.TempsEstime ?? 0);
+                        
+                        if (detail.CurrentWorkloadHours > 60) detail.BurnoutRisk = "High";
+                        else if (detail.CurrentWorkloadHours > 45) detail.BurnoutRisk = "Moderate";
+                        else detail.BurnoutRisk = "Low";
+
+                        // 6. Global Performance Score
+                        detail.PerformanceScore = Math.Round((detail.QualityScore * 0.4) + (detail.TimelinessScore * 0.4) + (detail.CollaborationScore * 0.2), 2);
+
+                        // 7. Skills Matrix (Mapping auto par titre/description)
+                        detail.SkillsMatrix = new Dictionary<string, int>();
+                        var text = string.Join(" ", userTaches.Select(t => (t.Titre ?? "") + " " + (t.Description ?? "")));
+                        if (text.Contains("Angular", StringComparison.OrdinalIgnoreCase)) detail.SkillsMatrix["Angular"] = (int)detail.PerformanceScore;
+                        if (text.Contains("SQL", StringComparison.OrdinalIgnoreCase)) detail.SkillsMatrix["SQL"] = (int)detail.PerformanceScore;
+                        if (text.Contains("C#", StringComparison.OrdinalIgnoreCase) || text.Contains("Backend", StringComparison.OrdinalIgnoreCase)) detail.SkillsMatrix["DotNet"] = (int)detail.PerformanceScore;
+                        if (text.Contains("Design", StringComparison.OrdinalIgnoreCase)) detail.SkillsMatrix["Design"] = (int)detail.PerformanceScore;
+                    }
+                }
+                else
+                {
+                    detail.PerformanceScore = 0;
+                    detail.BurnoutRisk = "None";
+                    detail.SkillsMatrix = new Dictionary<string, int>();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Erreur calcul RH pour {item.Id}");
+            }
+
+            return detail;
         }
 
         public async Task<ResultatPage<UtilisateurCore>> ListeParPageAsync(int pageNumero, int pageTaille)

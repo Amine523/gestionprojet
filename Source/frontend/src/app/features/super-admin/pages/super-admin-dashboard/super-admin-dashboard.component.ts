@@ -69,42 +69,7 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
         </div>
       </header>
 
-      <!-- Uptime Pulse -->
-      @if (uptimeData) {
-        <div class="card card-uptime">
-          <div class="uptime-content">
-            <div class="uptime-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-            </div>
-            <div class="uptime-info">
-              <p class="uptime-label">Disponibilité Infrastructure</p>
-              <div class="uptime-value">
-                <span class="uptime-percent">{{uptimeData.percent}}%</span>
-                <span class="uptime-tag">Uptime Global</span>
-              </div>
-            </div>
-          </div>
-          <div class="uptime-nodes">
-            @for (node of uptimeData.nodes; track node) {
-              <div class="node-tag">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-                  <line x1="6" y1="6" x2="6.01" y2="6"/>
-                  <line x1="6" y1="18" x2="6.01" y2="18"/>
-                </svg>
-                <span>{{node}}</span>
-              </div>
-            }
-          </div>
-          <div class="uptime-last">
-            <p class="uptime-last-label">Dernière Panne Détectée</p>
-            <p class="uptime-last-value">{{uptimeData.lastOccurrence}}</p>
-          </div>
-        </div>
-      }
+
 
       <!-- Critical Metrics Grid -->
       <div class="metrics-grid">
@@ -121,163 +86,7 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
       </div>
 
       <div class="dashboard-grid">
-        <!-- Revenue Intelligence -->
-        <div class="card card-revenue">
-          <div class="card-header">
-            <div class="card-title">
-              <h3>Trajectoire de Croissance</h3>
-              <p class="card-subtitle">Revenu Mensuel Récurrent (MRR)</p>
-            </div>
-            <div class="card-tabs">
-              <button (click)="filterRevenue('month')" [class.active]="currentFilter === 'month'">Mois</button>
-              <button (click)="filterRevenue('year')" [class.active]="currentFilter === 'year'">Année</button>
-            </div>
-          </div>
-          <div class="revenue-display">
-            <h2>{{revenue | number:'1.0-0'}} <span>DT</span></h2>
-            <span class="trend-up">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                <polyline points="17 6 23 6 23 12"/>
-              </svg>
-              +12.4%
-            </span>
-          </div>
-          <div class="chart-container">
-            <canvas #revenueChart></canvas>
-          </div>
-        </div>
 
-        <!-- Infrastructure Status & Alerts -->
-        <div class="sidebar">
-          <div class="card card-alerts">
-            <div class="card-header">
-              <h3>Alertes Actives</h3>
-              <span class="badge badge-danger">{{alerts.length}} Critiques</span>
-            </div>
-            <div class="alerts-list">
-              @for (alert of alerts; track alert.title) {
-                <div class="alert-item" [class.alert-error]="alert.type === 'error'" [class.alert-warning]="alert.type === 'warning'">
-                  <div class="alert-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      @if (alert.type === 'error') {
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="15" y1="9" x2="9" y2="15"/>
-                        <line x1="9" y1="9" x2="15" y2="15"/>
-                      } @else {
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                      }
-                    </svg>
-                  </div>
-                  <div class="alert-content">
-                    <p class="alert-title">{{alert.title}}</p>
-                    <p class="alert-message">{{alert.message}}</p>
-                  </div>
-                </div>
-              } @empty {
-                <div class="empty-alerts">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  </svg>
-                  <p>Le système est sain</p>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="card card-chart">
-            <div class="card-header">
-              <h3>Distribution du Cluster</h3>
-            </div>
-            <div class="chart-container small">
-              <canvas #usersChart></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="dashboard-grid">
-        <!-- Expansion Map -->
-        <div class="card card-chart">
-          <div class="card-header">
-            <h3>Expansion des Clients</h3>
-            <div class="icon-box">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                <line x1="9" y1="22" x2="9" y2="22.01"/>
-                <line x1="15" y1="22" x2="15" y2="22.01"/>
-                <line x1="12" y1="22" x2="12" y2="22.01"/>
-              </svg>
-            </div>
-          </div>
-          <div class="chart-container small">
-            <canvas #societiesChart></canvas>
-          </div>
-        </div>
-
-        <!-- Financial Insights -->
-        <div class="card card-finance">
-          <div class="card-header">
-            <h3>Flux Financiers</h3>
-            <span class="badge badge-success">Dernières 24h</span>
-          </div>
-          <div class="finance-list">
-            @for (f of factures.slice(0, 5); track f.id) {
-              <div class="finance-item">
-                <div class="finance-info">
-                  <p class="finance-societe">{{f.societeNom}}</p>
-                  <p class="finance-date">{{f.date}}</p>
-                </div>
-                <div class="finance-amount">
-                  +{{f.montant}} DT
-                </div>
-              </div>
-            } @empty {
-              <div class="empty-state">Aucun flux récent</div>
-            }
-          </div>
-          <div class="card-footer-action">
-            <button class="btn btn-ghost" routerLink="/superadmin/abonnements">Voir tout le registre</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="dashboard-grid">
-        <!-- Global Activity Log -->
-        <div class="card card-activity">
-          <div class="card-header">
-            <h3>Piste d'Audit Globale</h3>
-            <span class="badge badge-gray">10 derniers événements du cluster</span>
-          </div>
-          <div class="activity-list">
-            @for (a of activities; track a.time) {
-              <div class="activity-item">
-                <div class="activity-icon" [class.activity-user]="a.type === 'user'" [class.activity-societe]="a.type === 'societe'" [class.activity-projet]="a.type === 'projet'">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    @if (a.icon === 'person') {
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    } @else if (a.icon === 'building') {
-                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                    } @else {
-                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                    }
-                  </svg>
-                </div>
-                <div class="activity-details">
-                  <p class="activity-title">{{a.title}}</p>
-                  <p class="activity-meta">Node: {{a.user}} • {{a.time}}</p>
-                </div>
-                <div class="activity-status">
-                  <span class="status-dot"></span>
-                  <span>Vérifié</span>
-                </div>
-              </div>
-            }
-          </div>
-        </div>
 
         <!-- Demandes de création de société -->
         <div class="card card-requests">
@@ -1070,18 +879,14 @@ export class SuperAdminDashboardComponent implements OnInit, AfterViewInit {
   revenue = 0;
   currentFilter = 'month';
 
-  uptimeData: any = null;
-
-  revenueByMonth: any[] = [];
-  alerts: AlertItem[] = [];
   societies: any[] = [];
   demandes: any[] = [];
+  alerts: AlertItem[] = [];
+  revenueByMonth: any[] = [];
   activities: any[] = [];
-  factures: any[] = [];
 
   ngOnInit() {
     this.loadData();
-    this.loadFactures();
   }
 
   ngAfterViewInit() {
@@ -1211,35 +1016,6 @@ export class SuperAdminDashboardComponent implements OnInit, AfterViewInit {
       }
     });
 
-    this.api.getActiviteRecente(10).subscribe({
-      next: (data: any[]) => {
-        this.activities = (data || []).map((a: any) => ({
-          title: a.action || 'Événement',
-          user: a.nom || 'Système',
-          time: a.date ? new Date(a.date).toLocaleString() : 'Récemment',
-          type: a.type || 'info',
-          icon: a.type === 'utilisateur' ? 'person' : (a.type === 'societe' ? 'building' : 'activity')
-        }));
-      },
-      error: () => {
-        this.activities = [];
-      }
-    });
-
-    this.api.getUptime().subscribe({
-      next: (data: any) => {
-        if (data) {
-          this.uptimeData = {
-            percent: 100, // Assuming 100% if operational
-            nodes: ['API', 'DB', 'WEB'],
-            lastOccurrence: data.uptime || 'Système stable'
-          };
-        }
-      },
-      error: () => {
-        this.uptimeData = null;
-      }
-    });
 
     this.api.getDemandesSociete().subscribe({
       next: (data) => {
@@ -1256,7 +1032,6 @@ export class SuperAdminDashboardComponent implements OnInit, AfterViewInit {
       next: (res) => {
         this.snackBar.open(res.message || 'Demande traitée', 'Fermer', { duration: 3000 });
         this.loadData();
-        this.loadFactures();
         this.loadSocietes();
       },
       error: (err) => { 
@@ -1266,20 +1041,6 @@ export class SuperAdminDashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
-  loadFactures() {
-    this.api.getPaiements().subscribe({
-      next: (paiements) => {
-        const societesMap = new Map((this.societies || []).map((s: any) => [s.id, s.Nom]));
-        this.factures = (paiements || []).map((p: any) => ({
-          id: p.id,
-          societeNom: societesMap.get(p.societeId) || 'Société',
-          montant: p.montant,
-          date: p.date ? new Date(p.date).toLocaleDateString('fr-FR') : '-',
-          statut: p.statut || 'Payé'
-        })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      }
-    });
-  }
 
   loadSocietes() {
     this.api.getSocietesRecentes(5).subscribe({

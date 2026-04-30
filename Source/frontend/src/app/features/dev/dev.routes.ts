@@ -10,6 +10,9 @@ import { DevDiagramsComponent } from './pages/dev-diagrams/dev-diagrams.componen
 import { DevCongesComponent } from './pages/dev-conges/dev-conges.component';
 import { CalendarViewComponent } from '@shared/components/calendar-view/calendar-view.component';
 import { AdminChatComponent } from '../admin/pages/admin-chat/admin-chat.component';
+import { NotificationsComponent } from '@shared/components/notifications/notifications.component';
+import { ProfileComponent } from '@shared/components/profile/profile.component';
+import { SelfPointageComponent } from '@shared/components/self-pointage/self-pointage.component';
 
 export const DEV_ROUTES: Routes = [
   { path: 'dashboard', component: DevDashboardComponent },
@@ -18,10 +21,13 @@ export const DEV_ROUTES: Routes = [
   { path: 'projets', component: DevProjetsComponent },
   { path: 'calendar', component: CalendarViewComponent },
   { path: 'time', component: DevTimeTrackingComponent },
-  { path: 'docs', component: DevDocsComponent },
+  { path: 'pointage', component: SelfPointageComponent },
+  { path: 'api', component: DevDocsComponent },
   { path: 'diagrams', component: DevDiagramsComponent },
   { path: 'chat', component: AdminChatComponent },
+  { path: 'notifications', component: NotificationsComponent },
   { path: 'conges', component: DevCongesComponent },
+  { path: 'profil', component: ProfileComponent },
   { path: 'parametres', component: DevParametresComponent },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];
