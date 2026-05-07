@@ -19,7 +19,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         return await connection.QueryAsync<TestCore>(
-            "sp_GetAllTests",
+            Constants.Ps_Test_s_ParSociete,
             new { IdSociete = idSociete },
             commandType: CommandType.StoredProcedure);
     }
@@ -28,7 +28,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         return await connection.QueryFirstOrDefaultAsync<TestCore>(
-            "sp_GetTestById",
+            Constants.Ps_Test_s_ParId,
             new { Id = id },
             commandType: CommandType.StoredProcedure);
     }
@@ -37,7 +37,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            "sp_CreateTest",
+            Constants.Ps_Test_i,
             new
             {
                 test.Id,
@@ -60,7 +60,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            "sp_UpdateTest",
+            Constants.Ps_Test_u,
             new
             {
                 test.Id,
@@ -79,7 +79,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            "sp_DeleteTest",
+            Constants.Ps_Test_d,
             new { Id = id },
             commandType: CommandType.StoredProcedure);
         return result > 0;
@@ -89,7 +89,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         return await connection.QueryAsync<QuestionCore>(
-            "sp_GetQuestionsByTestId",
+            Constants.Ps_Question_s_ParTest,
             new { TestId = testId },
             commandType: CommandType.StoredProcedure);
     }
@@ -98,7 +98,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            "sp_CreateQuestion",
+            Constants.Ps_Question_i,
             new
             {
                 question.Id,
@@ -117,7 +117,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            "sp_UpdateQuestion",
+            Constants.Ps_Question_u,
             new
             {
                 question.Id,
@@ -135,7 +135,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            "sp_DeleteQuestion",
+            Constants.Ps_Question_d,
             new { Id = id },
             commandType: CommandType.StoredProcedure);
         return result > 0;
@@ -145,7 +145,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         return await connection.QueryAsync<ReponseCore>(
-            "sp_GetReponsesByQuestionId",
+            Constants.Ps_Reponse_s_ParQuestion,
             new { QuestionId = questionId },
             commandType: CommandType.StoredProcedure);
     }
@@ -154,7 +154,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            "sp_CreateReponse",
+            Constants.Ps_Reponse_i,
             new
             {
                 reponse.Id,
@@ -171,7 +171,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            "sp_UpdateReponse",
+            Constants.Ps_Reponse_u,
             new
             {
                 reponse.Id,
@@ -187,7 +187,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var result = await connection.ExecuteAsync(
-            "sp_DeleteReponse",
+            Constants.Ps_Reponse_d,
             new { Id = id },
             commandType: CommandType.StoredProcedure);
         return result > 0;
@@ -197,7 +197,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         return await connection.QueryAsync<TestResultCore>(
-            "sp_GetResultsByTestId",
+            Constants.Ps_TestResult_s_ParTest,
             new { TestId = testId },
             commandType: CommandType.StoredProcedure);
     }
@@ -206,7 +206,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         return await connection.QueryAsync<TestResultCore>(
-            "sp_GetResultsByEmployeeId",
+            Constants.Ps_TestResult_s_ParUtilisateur,
             new { EmployeeId = employeeId },
             commandType: CommandType.StoredProcedure);
     }
@@ -215,7 +215,7 @@ public class TestCoreRepository : ITestCoreRepository
     {
         using var connection = _context.CreateConnection();
         var rows = await connection.ExecuteAsync(
-            "sp_CreateTestResult",
+            Constants.Ps_TestResult_i,
             new
             {
                 result.Id,

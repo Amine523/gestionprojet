@@ -4,6 +4,8 @@ using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Business;
 using Gestprojet.Metier.ApiParamSociete.Domain.Models.Societe;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
@@ -15,7 +17,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
     [Route("api/utilisateurs")]
     [Route("api/utilisateur")]
     [AllowAnonymous]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     public class UtilisateurController : ControllerBase
     {
         private readonly IUtilisateurBusiness _utilisateurBusiness;
@@ -79,8 +81,33 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         public async Task<IActionResult> Modifier([FromBody] UtilisateurCore entity)
         {
             if (entity == null) return BadRequest("Données Utilisateur invalides");
-            var result = await _utilisateurBusiness.AjouterOuModifierAsync(entity);
-            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+            if (string.IsNullOrWhiteSpace(entity.Id)) return BadRequest("Id utilisateur requis pour la modification");
+
+            try
+            {
+                // Fetch existing to preserve fields not sent by the frontend
+                var existing = await _utilisateurBusiness.ObtenirAsync(entity.Id);
+                if (existing != null)
+                {
+                    entity.Nom = !string.IsNullOrWhiteSpace(entity.Nom) ? entity.Nom : existing.Nom;
+                    entity.Email = !string.IsNullOrWhiteSpace(entity.Email) ? entity.Email : existing.Email;
+                    // Preserve password if not provided (empty string from frontend)
+                    entity.MotDePasse = !string.IsNullOrWhiteSpace(entity.MotDePasse) ? entity.MotDePasse : existing.MotDePasse;
+                    entity.Cv = !string.IsNullOrWhiteSpace(entity.Cv) ? entity.Cv : (existing.Cv ?? "");
+                    entity.TypeUtilisateurId = !string.IsNullOrWhiteSpace(entity.TypeUtilisateurId) ? entity.TypeUtilisateurId : existing.TypeUtilisateurId;
+                    entity.SocieteId = !string.IsNullOrWhiteSpace(entity.SocieteId) ? entity.SocieteId : existing.SocieteId;
+                    entity.RoleId = !string.IsNullOrWhiteSpace(entity.RoleId) ? entity.RoleId : existing.RoleId;
+                    entity.Actif = entity.Actif ?? existing.Actif;
+                    entity.Telephone = !string.IsNullOrWhiteSpace(entity.Telephone) ? entity.Telephone : existing.Telephone;
+                }
+
+                var result = await _utilisateurBusiness.AjouterOuModifierAsync(entity);
+                return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Erreur modification utilisateur: {ex.Message}" });
+            }
         }
 
         [HttpPost("AjouterOuModifier")]
@@ -141,7 +168,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         public async Task<IActionResult> ListeParCondition([FromBody] ConditionRecherche critere)
         {
             if (critere == null) return BadRequest("Critère manquant");
-            return Ok(await _utilisateurBusiness.ListeParCritereAsync(critere));
+            try
+            {
+                return Ok(await _utilisateurBusiness.ListeParCritereAsync(critere));
+            }
+            catch (Exception)
+            {
+                return Ok(new List<UtilisateurCore>());
+            }
         }
 
         [HttpPost("ListeDetailleParCondition")]

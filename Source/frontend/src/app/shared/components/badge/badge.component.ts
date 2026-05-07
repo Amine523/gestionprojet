@@ -16,6 +16,7 @@ export class BadgeComponent {
   @Input() variant: 'success' | 'warning' | 'error' | 'brand' | 'info' | 'secondary' | 'purple' | 'pink' |
     'solid-success' | 'solid-warning' | 'solid-error' | 'solid-brand' | 'solid-info' = 'brand';
   @Input() size: 'sm' | 'md' | 'lg' = 'md';
+  @Input() content: string = '';
 
   get badgeClass(): string {
     const base = 'inline-flex items-center font-semibold rounded-full';

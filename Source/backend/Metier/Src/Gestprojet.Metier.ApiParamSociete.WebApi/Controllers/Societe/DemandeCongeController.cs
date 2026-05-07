@@ -3,6 +3,7 @@ using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Commun;
 using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Business;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
@@ -10,7 +11,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
     [ApiController]
     [Route("api/DemandesConge")]
     [AllowAnonymous]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     public class DemandeCongeController : ControllerBase
     {
         private readonly IDemandeCongeBusiness _business;
@@ -36,6 +37,16 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             if (string.IsNullOrWhiteSpace(societeId)) return BadRequest("SocieteId requis");
             var all = await _business.ListeAsync();
             var filtered = all.Where(x => x.SocieteId == societeId).ToList();
+            return Ok(filtered);
+        }
+
+        [HttpGet("utilisateur/{utilisateurId}")]
+        public async Task<IActionResult> GetByUtilisateur(string utilisateurId)
+        {
+            if (string.IsNullOrWhiteSpace(utilisateurId)) return BadRequest("UtilisateurId requis");
+            var all = await _business.ListeAsync();
+            var filtered = all.Where(x =>
+                string.Equals(x.UtilisateurId, utilisateurId, System.StringComparison.OrdinalIgnoreCase)).ToList();
             return Ok(filtered);
         }
 

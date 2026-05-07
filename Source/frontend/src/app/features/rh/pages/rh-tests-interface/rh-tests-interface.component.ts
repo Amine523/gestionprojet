@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
 
 @Component({
@@ -375,6 +375,7 @@ import { ApiService } from '@core/services/api.service';
 export class RhTestsInterfaceComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   isDark = false;
   currentQuestionIndex = 0;
@@ -382,6 +383,9 @@ export class RhTestsInterfaceComponent implements OnInit, OnDestroy {
   timerInterval: any;
   testFinished = false;
   finalScore = 0;
+  applicationId: string | null = null;
+  candidatName: string = '';
+  testName: string = '';
 
   questions = [
     {
@@ -409,8 +413,26 @@ export class RhTestsInterfaceComponent implements OnInit, OnDestroy {
   selectedAnswers: number[] = [];
 
   ngOnInit() {
+    this.applicationId = this.route.snapshot.queryParamMap.get('token');
+    if (this.applicationId) {
+      this.loadApplicationData();
+    }
     this.startTimer();
     this.isDark = document.body.classList.contains('dark');
+  }
+
+  loadApplicationData() {
+    if (!this.applicationId) return;
+    
+    this.api.get(`application/obtenir/id/${this.applicationId}`).subscribe({
+      next: (res: any) => {
+        this.candidatName = res.nom || res.candidatNom || '';
+        this.testName = res.quiz || res.Quiz || 'Test Technique';
+        // If we had a backend for questions, we would load them here
+        // this.api.getQuizQuestionsBackend(this.testName).subscribe(q => this.questions = q);
+      },
+      error: (err) => console.error('Error loading application:', err)
+    });
   }
 
   ngOnDestroy() {
@@ -461,6 +483,14 @@ export class RhTestsInterfaceComponent implements OnInit, OnDestroy {
 
     this.finalScore = Math.round((score / this.questions.length) * 100);
     this.testFinished = true;
+
+    // Save score to backend
+    if (this.applicationId) {
+      this.api.updateCandidatureStatus(this.applicationId, 'TEST_TERMINE', score, this.questions.length).subscribe({
+        next: () => console.log('Score saved successfully'),
+        error: (err) => console.error('Error saving score:', err)
+      });
+    }
   }
 
   exit() {

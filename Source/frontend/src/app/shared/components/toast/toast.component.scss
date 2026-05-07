@@ -1,0 +1,123 @@
+.toast-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2);
+  min-width: 300px;
+  max-width: 450px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  animation: slideInRight 0.3s cubic-bezier(0.2, 0, 0, 1) forwards;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+  }
+
+  &.success {
+    &::before { background: #10b981; }
+    .toast-icon { 
+      color: #10b981; 
+      background: rgba(16, 185, 129, 0.1);
+    }
+  }
+
+  &.info {
+    &::before { background: #3b82f6; }
+    .toast-icon { 
+      color: #3b82f6; 
+      background: rgba(59, 130, 246, 0.1);
+    }
+  }
+
+  &.error {
+    &::before { background: #ef4444; }
+    .toast-icon { 
+      color: #ef4444; 
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  &.warning {
+    &::before { background: #f59e0b; }
+    .toast-icon { 
+      color: #f59e0b; 
+      background: rgba(245, 158, 11, 0.1);
+    }
+  }
+}
+
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.toast-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.toast-message {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #475569;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Override MatSnackBar default styles to make them invisible wrappers */
+::ng-deep .mat-mdc-snack-bar-container {
+  &.custom-toast-panel {
+    .mdc-snackbar__surface {
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+    .mdc-snackbar__label {
+      padding: 0 !important;
+    }
+  }
+}

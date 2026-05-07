@@ -539,7 +539,7 @@ export class ClientDashboardComponent implements OnInit {
   userName = '';
 
   private get apiBase() {
-    return (this.api as any).baseUrl || 'http://localhost:5221';
+    return (this.api as any).baseUrl || '/api';
   }
 
   ngOnInit() {
@@ -555,7 +555,7 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   private loadDashboard(userId: string) {
-    this.http.get<DashboardData>(`${this.apiBase}/api/client-projet/dashboard/${userId}`)
+    this.http.get<DashboardData>(`${this.apiBase}/client-projet/dashboard/${userId}`)
       .subscribe({
         next: (data) => this.dashboardData = data,
         error: () => this.dashboardData = {
@@ -567,7 +567,7 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   private loadProjets(userId: string) {
-    this.http.get<Projet[]>(`${this.apiBase}/api/client-projet/projets/${userId}`)
+    this.http.get<Projet[]>(`${this.apiBase}/client-projet/projets/${userId}`)
       .subscribe({
         next: (data) => {
           this.projets = data || [];

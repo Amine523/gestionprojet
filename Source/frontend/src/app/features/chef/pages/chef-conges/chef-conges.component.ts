@@ -727,17 +727,26 @@ export class ChefCongesComponent implements OnInit {
 
   loadMesConges() {
     this.api.getDemandesCongeByUtilisateur(this.currentUserId).subscribe(data => {
-      const list = data.map((d: any) => ({
+      const list = data.map((d: any) => {
+        const dDebut = new Date(d.dateDebut || d.DateDebut);
+        const dFin = new Date(d.dateFin || d.DateFin);
+        let nj = 0;
+        if (!isNaN(dDebut.getTime()) && !isNaN(dFin.getTime())) {
+          const diffTime = Math.abs(dFin.getTime() - dDebut.getTime());
+          nj = d.jours || d.Jours || Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+        return {
           id: d.id || d.Id,
           utilisateurId: d.utilisateurId || d.UtilisateurId,
           utilisateurNom: 'Moi',
           typeNom: d.typeNom || d.TypeNom || 'Congé',
           dateDebut: d.dateDebut || d.DateDebut,
           dateFin: d.dateFin || d.DateFin,
-          nombreJours: d.jours || d.Jours || 0,
+          nombreJours: nj,
           motif: d.motif || d.Motif || '',
           status: this.formatStatus(d.status || d.Status || 'En attente')
-        }));
+        };
+      });
       this.mesCongesSignal.set(list);
     });
   }
@@ -800,6 +809,13 @@ export class ChefCongesComponent implements OnInit {
             const list = data.map((d: any) => {
               const uId = d.utilisateurId || d.UtilisateurId;
               const uNom = d.utilisateurNom || d.UtilisateurNom || this.employesMap[uId] || 'Utilisateur ' + uId;
+              const dDebut = new Date(d.dateDebut || d.DateDebut);
+              const dFin = new Date(d.dateFin || d.DateFin);
+              let nj = 0;
+              if (!isNaN(dDebut.getTime()) && !isNaN(dFin.getTime())) {
+                const diffTime = Math.abs(dFin.getTime() - dDebut.getTime());
+                nj = d.jours || d.Jours || Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              }
               return {
                 id: d.id || d.Id,
                 utilisateurId: uId,
@@ -807,7 +823,7 @@ export class ChefCongesComponent implements OnInit {
                 typeNom: d.typeNom || d.TypeNom || 'Congé',
                 dateDebut: d.dateDebut || d.DateDebut,
                 dateFin: d.dateFin || d.DateFin,
-                nombreJours: d.jours || d.Jours || 0,
+                nombreJours: nj,
                 motif: d.motif || d.Motif || '',
                 status: d.status || d.Status || 'En attente'
               };

@@ -1,0 +1,157 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-badges">
+        <span class="badge badge-primary">Espace Développeur</span>
+        <span class="badge badge-success">
+          <span class="status-dot"></span>
+          Connecté
+        </span>
+      </div>
+      <h1 class="header-title">
+        HELLO <span class="gradient-text">{{userName}}</span>
+      </h1>
+      <p class="header-subtitle">
+        Prêt pour une nouvelle session de code ? Voici un aperçu de vos tâches et de votre productivité.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button (click)="analyserTaches()" [disabled]="aiLoading" class="btn btn-primary" [class.btn-disabled]="aiLoading">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+          <path d="M12 12 2.1 12.05"/>
+          <path d="M12 12 12 21.9"/>
+        </svg>
+        Coach IA
+      </button>
+      <div class="timer-card" [class.active]="isClockedIn">
+        <div class="timer-info">
+          <span class="timer-label">{{isClockedIn ? 'Session en cours' : 'Hors ligne'}}</span>
+          <span class="timer-val">{{currentTime}}</span>
+        </div>
+        <button (click)="toggleClock()" class="btn-clock" [class.btn-out]="isClockedIn">
+          {{isClockedIn ? 'Fin de session' : 'Démarrer session'}}
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-grid">
+    <app-metric-card
+      title="TÂCHES ASSIGNÉES"
+      [value]="stats.tachesAssignees.toString()"
+      icon="bi-list-check"
+      color="indigo"
+      [trend]="'À réaliser'">
+    </app-metric-card>
+
+    <app-metric-card
+      title="EN COURS"
+      [value]="stats.enCours.toString()"
+      icon="bi-gear-wide-connected"
+      color="emerald"
+      [trend]="'Focus actuel'">
+    </app-metric-card>
+
+    <app-metric-card
+      title="TERMINÉES"
+      [value]="stats.terminees.toString()"
+      icon="bi-check2-circle"
+      color="amber"
+      [trend]="'Cette semaine'">
+    </app-metric-card>
+
+    <app-metric-card
+      title="PROJETS"
+      [value]="stats.projets.toString()"
+      icon="bi-kanban"
+      color="purple"
+      [trend]="'Participation active'">
+    </app-metric-card>
+  </div>
+
+  <!-- AI Coach Panel -->
+  @if (aiLoading || aiInsights) {
+    <div class="card card-ai animate-in slide-in-from-top duration-500">
+      <div class="card-header">
+        <div class="ai-header">
+          <div class="ai-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+              <path d="M12 12 2.1 12.05"/>
+              <path d="M12 12 12 21.9"/>
+            </svg>
+          </div>
+          <div class="ai-info">
+            <h3>Coach de Productivité IA</h3>
+            <p class="ai-subtitle">Analyse contextuelle Llama 3.2</p>
+          </div>
+        </div>
+      </div>
+
+      @if (aiLoading) {
+        <div class="ai-loading">
+          <div class="spinner"></div>
+          <p>Optimisation du flux de travail...</p>
+        </div>
+      } @else {
+        <div class="ai-content markdown-body" [innerHTML]="aiInsights"></div>
+      }
+    </div>
+  }
+
+  <div class="dashboard-grid">
+    <!-- Tasks Kanban View -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Mes Tâches Prioritaires</h3>
+        <a routerLink="/dev/taches" class="btn-link">Voir tout</a>
+      </div>
+      <div class="task-list">
+        @for (t of taches; track t.id) {
+          <div class="task-item">
+            <div class="task-priority" [ngClass]="t.priorite.toLowerCase()"></div>
+            <div class="task-details">
+              <p class="task-title">{{t.titre}}</p>
+              <p class="task-meta">{{t.projetNom}} • Échéance: {{t.dateLimite | date:'shortDate'}}</p>
+            </div>
+            <span class="task-status" [ngClass]="t.statut.toLowerCase().replace(' ', '-')">
+              {{t.statut}}
+            </span>
+          </div>
+        } @empty {
+          <div class="empty-state">Vous n'avez aucune tâche assignée pour le moment.</div>
+        }
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Actions Rapides</h3>
+      </div>
+      <div class="actions-grid">
+        <button class="action-btn" (click)="signalBlockage()">
+          <div class="action-icon warning">
+            <i class="bi bi-exclamation-triangle"></i>
+          </div>
+          <span>Signaler un blocage</span>
+        </button>
+        <button class="action-btn" routerLink="/dev/pointage">
+          <div class="action-icon info">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <span>Historique temps</span>
+        </button>
+        <button class="action-btn" routerLink="/dev/projets">
+          <div class="action-icon primary">
+            <i class="bi bi-briefcase"></i>
+          </div>
+          <span>Mes projets</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -5,12 +5,16 @@ namespace Gestprojet.Core.ApiParamSociete.Domain.Models
     public class ProjetCore
     {
         public string Id { get; set; }
+        [Required]
+        [MinLength(3)]
         [MaxLength(150)]
         public string Nom { get; set; }
         public string? SocieteId { get; set; }
+        [Required]
         public string Description { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        [Required]
         [MaxLength(50)]
         public string Status { get; set; }
         [MaxLength(50)]

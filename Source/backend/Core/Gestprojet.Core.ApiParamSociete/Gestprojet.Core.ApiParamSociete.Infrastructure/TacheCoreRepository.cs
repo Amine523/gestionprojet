@@ -72,6 +72,9 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
         {
             try
             {
+                critereRecherche.SocieteId = null;
+                if (critereRecherche.Criteres != null && critereRecherche.Criteres.ContainsKey("SocieteId"))
+                    critereRecherche.Criteres.Remove("SocieteId");
                 string condition = SoftProExtensions.ToSqlCondition(critereRecherche);
                 using (var connection = _context.CreateConnection())
                 {
@@ -123,6 +126,9 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
         {
             try
             {
+                critereRecherche.SocieteId = null;
+                if (critereRecherche.Criteres != null && critereRecherche.Criteres.ContainsKey("SocieteId"))
+                    critereRecherche.Criteres.Remove("SocieteId");
                 string condition = SoftProExtensions.ToSqlCondition(critereRecherche);
                 using (var connection = _context.CreateConnection())
                 {
@@ -162,6 +168,9 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
         {
             try
             {
+                critereRecherche.SocieteId = null;
+                if (critereRecherche.Criteres != null && critereRecherche.Criteres.ContainsKey("SocieteId"))
+                    critereRecherche.Criteres.Remove("SocieteId");
                 string condition = SoftProExtensions.ToSqlCondition(critereRecherche);
                 using (var connection = _context.CreateConnection())
                 {

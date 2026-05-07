@@ -13,6 +13,7 @@ interface Message {
   fromRole: string;
   time: string;
   date: string;
+  attachments?: { name: string; url: string }[];
 }
 
 interface Conversation {
@@ -147,14 +148,26 @@ interface Conversation {
                 <span>Conversation avec {{selectedConversation.nom}}</span>
               </div>
               @for (msg of messages; track msg.id) {
-                <div class="message-wrapper" [class.from-me]="msg.from === currentUser?.id" [class.from-them]="msg.from !== currentUser?.id">
-                  @if (msg.from !== currentUser?.id) {
+                <div class="message-wrapper" [class.from-me]="msg.from == currentUser?.id" [class.from-them]="msg.from != currentUser?.id">
+                  @if (msg.from != currentUser?.id) {
                     <div class="message-avatar">{{(msg.fromName || '').charAt(0) || 'A'}}</div>
                   }
-                  <div class="message-bubble" [class.from-me]="msg.from === currentUser?.id" [class.from-them]="msg.from !== currentUser?.id">
+                  <div class="message-bubble" [class.from-me]="msg.from == currentUser?.id" [class.from-them]="msg.from != currentUser?.id">
                     <span class="message-sender">{{msg.fromName}}</span>
                     <span class="message-role">{{msg.fromRole}}</span>
                     <p class="message-text">{{msg.text}}</p>
+                    
+                    @if (msg.attachments && msg.attachments.length > 0) {
+                      <div class="message-attachments" style="margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
+                        @for (att of msg.attachments; track att.name) {
+                          <div (click)="downloadAttachment(att)" class="attachment-item" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); font-size: 12px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{att.name}}</span>
+                          </div>
+                        }
+                      </div>
+                    }
+
                     <span class="message-time">{{msg.time}}</span>
                   </div>
                 </div>
@@ -164,6 +177,12 @@ interface Conversation {
 
           <!-- Input Area -->
           <div class="input-area">
+            <button class="btn-icon btn-ghost" (click)="fileInput.click()" title="Pièce jointe">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </button>
+            <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" multiple>
             <input type="text"
                    [(ngModel)]="newMessage"
                    (keyup.enter)="sendMessage()"
@@ -697,29 +716,72 @@ export class SuperAdminChatComponent implements OnInit {
   }
 
   loadMessages(societeId: string) {
-    const storage = this.api.getRawStorage();
-    
-    if (!storage.conversations) {
-      storage.conversations = {};
-    }
-    
-    const conversationsData = storage.conversations;
-    let msgs: Message[] = [];
-    
-    if (conversationsData[societeId]) {
-      msgs = conversationsData[societeId];
-    }
-    
-    this.messages = [...msgs].sort((a, b) => {
-      const dateA = a.date ? new Date(a.date).getTime() : 0;
-      const dateB = b.date ? new Date(b.date).getTime() : 0;
-      return dateA - dateB;
+    const roomId = `room_societe_${societeId}`;
+    this.api.getChatMessages(roomId).subscribe({
+      next: (data) => {
+        this.messages = (data || []).map((m: any) => ({
+          id: m.id,
+          text: m.text,
+          from: m.from,
+          fromName: m.fromName,
+          fromRole: m.fromRole,
+          time: m.time,
+          date: m.date,
+          attachments: m.attachments
+        })).sort((a: any, b: any) => {
+          const dateA = a.date ? new Date(a.date).getTime() : 0;
+          const dateB = b.date ? new Date(b.date).getTime() : 0;
+          return dateA - dateB;
+        });
+      },
+      error: () => {
+        this.messages = [];
+      }
     });
+  }
+
+  onFileSelected(event: any) {
+    const files: FileList = event.target.files;
+    if (!files || files.length === 0 || !this.selectedConversation) return;
+
+    this.snackBar.open('Téléchargement...', 'Fermer', { duration: 2000 });
+    const roomId = `room_societe_${this.selectedConversation.societeId}`;
+
+    Array.from(files).forEach(file => {
+      this.api.uploadFile(file, roomId, 'ChatAttachment').subscribe({
+        next: (res: any) => {
+          const now = new Date();
+          const msg: Message = {
+            id: Date.now().toString(),
+            text: `Document envoyé : ${file.name}`,
+            from: this.currentUser?.id || 'SUPER_ADMIN',
+            fromName: this.currentUser?.nom || 'Super Admin',
+            fromRole: 'Super Administrateur',
+            time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+            date: now.toISOString()
+          };
+          
+          const payload = { ...msg, chatRoomId: roomId, attachments: [{ name: file.name, url: res.url }] };
+
+          this.api.sendChatMessage(payload).subscribe({
+            next: () => {
+              this.messages.push({ ...msg, attachments: payload.attachments });
+              this.messages = [...this.messages];
+              this.snackBar.open('Fichier envoyé!', 'Fermer', { duration: 2000 });
+            },
+            error: () => this.snackBar.open('Erreur message', 'OK')
+          });
+        },
+        error: () => this.snackBar.open('Erreur upload', 'OK')
+      });
+    });
+    event.target.value = '';
   }
 
   sendMessage() {
     if (!this.newMessage.trim() || !this.selectedConversation) return;
 
+    const roomId = `room_societe_${this.selectedConversation.societeId}`;
     const msg: Message = {
       id: Date.now().toString(),
       text: this.newMessage,
@@ -730,18 +792,30 @@ export class SuperAdminChatComponent implements OnInit {
       date: new Date().toISOString()
     };
 
-    this.messages.push(msg);
-    
-    // Save to society-specific key
-    this.saveMessages(this.selectedConversation.societeId, this.messages);
-    
-    if (this.selectedConversation) {
-      this.selectedConversation.lastMessage = this.newMessage;
-      this.selectedConversation.time = msg.time;
-    }
-    
-    this.newMessage = '';
-    this.snackBar.open('Message envoyé', 'Fermer', { duration: 3000 });
+    const payload = { ...msg, chatRoomId: roomId };
+
+    this.api.sendChatMessage(payload).subscribe({
+      next: () => {
+        this.messages.push(msg);
+        if (this.selectedConversation) {
+          this.selectedConversation.lastMessage = this.newMessage;
+          this.selectedConversation.time = msg.time;
+        }
+        this.newMessage = '';
+        this.snackBar.open('Message envoyé', 'Fermer', { duration: 3000 });
+      },
+      error: () => {
+        this.snackBar.open('Erreur lors de l\'envoi du message', 'Fermer', { duration: 3000 });
+      }
+    });
+  }
+
+  downloadAttachment(att: { name: string; url: string }) {
+    const link = document.createElement('a');
+    link.href = att.url;
+    link.download = att.name;
+    link.target = '_blank';
+    link.click();
   }
 
   saveMessages(societeId: string, msgs: Message[]) {

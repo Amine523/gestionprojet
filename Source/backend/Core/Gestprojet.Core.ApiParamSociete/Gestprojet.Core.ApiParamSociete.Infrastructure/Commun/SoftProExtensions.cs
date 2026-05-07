@@ -31,7 +31,7 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
                 conditions.Add($"TypeUtilisateurId = '{critereRecherche.TypeUtilisateurId}'");
             
             if (!string.IsNullOrEmpty(critereRecherche.Status))
-                conditions.Add($"Status = '{critereRecherche.Status}'");
+                conditions.Add($"Statut = '{critereRecherche.Status}'");
             
             if (!string.IsNullOrEmpty(critereRecherche.Nom))
                 conditions.Add($"Nom LIKE '%{critereRecherche.Nom}%'");

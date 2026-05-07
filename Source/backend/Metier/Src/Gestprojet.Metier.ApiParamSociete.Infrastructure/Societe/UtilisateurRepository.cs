@@ -48,17 +48,20 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
 
             try
             {
-                // Vérification doublon (Nom + Email + CV)
-                if (!string.IsNullOrWhiteSpace(entity.Nom))
+                // Vérification doublon (Nom + Email) - only for new users
+                if (string.IsNullOrWhiteSpace(entity.Id) && !string.IsNullOrWhiteSpace(entity.Email))
                 {
-                    var conditionDoublon = new ConditionRecherche
+                    var criteres = new Dictionary<string, string>();
+                    if (!string.IsNullOrWhiteSpace(entity.Email)) criteres["Email"] = entity.Email;
+                    
+                    if (criteres.Count > 0)
                     {
-                        Criteres = new Dictionary<string, string> { { "Nom", entity.Nom }, { "Email", entity.Email }, { "CV", entity.Cv } }
-                    };
-                    var existants = await ListeParCritereAsync(conditionDoublon);
-                    var doublon = existants?.FirstOrDefault(x => x.Id != entity.Id);
-                    if (doublon != null)
-                        return OperationResult.Fail($"Un(e) Utilisateur avec (Nom + Email + CV) '{entity.Nom} / {entity.Email} / {entity.Cv}' existe déjà.");
+                        var conditionDoublon = new ConditionRecherche { Criteres = criteres };
+                        var existants = await ListeParCritereAsync(conditionDoublon);
+                        var doublon = existants?.FirstOrDefault(x => x.Id != entity.Id);
+                        if (doublon != null)
+                            return OperationResult.Fail($"Un(e) Utilisateur avec cet email '{entity.Email}' existe déjà.");
+                    }
                 }
 
                 // ==========================

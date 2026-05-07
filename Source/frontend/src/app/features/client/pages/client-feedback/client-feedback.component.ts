@@ -66,7 +66,9 @@ interface Projet {
               [(ngModel)]="form.message"
               class="form-textarea"
               rows="5"
-              placeholder="Décrivez votre retour, observation ou validation...">
+              placeholder="Décrivez votre retour, observation ou validation..."
+              required
+              maxlength="500">
             </textarea>
             <div class="char-count">{{ form.message.length }} / 500 caractères</div>
           </div>
@@ -303,16 +305,28 @@ export class ClientFeedbackComponent implements OnInit {
   ];
 
   private get apiBase() {
-    return (this.api as any).baseUrl || 'http://localhost:5221';
+    return (this.api as any).baseUrl || '/api';
   }
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
     const userId = user?.id || user?.Id || '';
     if (userId) {
-      this.http.get<Projet[]>(`${this.apiBase}/api/client-projet/projets/${userId}`)
+      this.http.get<Projet[]>(`${this.apiBase}/client-projet/projets/${userId}`)
         .subscribe({ next: (d) => this.projets = d || [] });
+      
+      this.loadRecentFeedbacks(userId);
     }
+  }
+
+  loadRecentFeedbacks(userId: string) {
+    this.http.get<any[]>(`${this.apiBase}/client-projet/feedback/${userId}`)
+      .subscribe({
+        next: (data) => {
+          this.recentFeedbacks = data || [];
+        },
+        error: (err) => console.error('Erreur chargement feedbacks:', err)
+      });
   }
 
   soumettreFeedback() {
@@ -329,7 +343,7 @@ export class ClientFeedbackComponent implements OnInit {
       message: this.form.message
     };
 
-    this.http.post<any>(`${this.apiBase}/api/client-projet/feedback`, payload)
+    this.http.post<any>(`${this.apiBase}/client-projet/feedback`, payload)
       .subscribe({
         next: () => {
           this.isSubmitting = false;

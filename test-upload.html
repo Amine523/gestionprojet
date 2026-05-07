@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload Attachement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="file"],
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            display: none;
+            margin-top: 10px;
+            color: #666;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test Upload Attachement API</h1>
+        
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="file">Fichier à uploader :</label>
+                <input type="file" id="file" name="file" required>
+                <small>Extensions autorisées : .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png, .gif (max 10 MB)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="referenceId">Reference ID (optionnel) :</label>
+                <input type="text" id="referenceId" name="referenceId" placeholder="Ex: TACHE-001">
+            </div>
+
+            <div class="form-group">
+                <label for="type">Type de fichier (optionnel) :</label>
+                <input type="text" id="type" name="type" placeholder="Ex: Document, CV, Facture">
+            </div>
+
+            <button type="submit" id="submitBtn">📤 Uploader le fichier</button>
+            <div class="loading" id="loading">⏳ Upload en cours...</div>
+        </form>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:4200/api/attachement/upload';
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('file');
+            const referenceId = document.getElementById('referenceId').value;
+            const type = document.getElementById('type').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+
+            // Validation du fichier
+            const file = fileInput.files[0];
+            if (!file) {
+                showResult('error', 'Veuillez sélectionner un fichier');
+                return;
+            }
+
+            // Vérifier la taille (10 MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                showResult('error', `Le fichier est trop volumineux (${(file.size / 1024 / 1024).toFixed(2)} MB). Maximum autorisé : 10 MB`);
+                return;
+            }
+
+            // Vérifier l'extension
+            const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png', '.gif'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            if (!allowedExtensions.includes(fileExtension)) {
+                showResult('error', `Extension de fichier non autorisée (${fileExtension}). Extensions autorisées : ${allowedExtensions.join(', ')}`);
+                return;
+            }
+
+            // Préparer FormData
+            const formData = new FormData();
+            formData.append('file', file);
+            if (referenceId) formData.append('referenceId', referenceId);
+            if (type) formData.append('type', type);
+
+            // Afficher le loading
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            result.style.display = 'none';
+
+            console.log('📤 Envoi de la requête...');
+            console.log('Fichier:', file.name, `(${(file.size / 1024).toFixed(2)} KB)`);
+            console.log('ReferenceId:', referenceId || 'non fourni');
+            console.log('Type:', type || 'non fourni');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('📥 Réponse reçue:', response.status, response.statusText);
+
+                const responseText = await response.text();
+                console.log('📄 Corps de la réponse:', responseText);
+
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    data = { message: responseText };
+                }
+
+                if (response.ok) {
+                    showResult('success', `
+                        <strong>✅ Upload réussi !</strong><br><br>
+                        <strong>URL du fichier :</strong> ${data.url || 'N/A'}<br>
+                        <strong>ID :</strong> ${data.id || 'N/A'}<br><br>
+                        <strong>Réponse complète :</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `);
+                    
+                    // Réinitialiser le formulaire
+                    document.getElementById('uploadForm').reset();
+                } else {
+                    showResult('error', `
+                        <strong>❌ Erreur ${response.status}</strong><br><br>
+                        <strong>Message :</strong> ${data.message || data || 'Erreur inconnue'}<br><br>
+                        <strong>Réponse complète :</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `);
+                }
+            } catch (error) {
+                console.error('❌ Erreur:', error);
+                showResult('error', `
+                    <strong>❌ Erreur de connexion</strong><br><br>
+                    ${error.message}<br><br>
+                    Vérifiez que le serveur est démarré sur http://localhost:4200
+                `);
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+
+        function showResult(type, message) {
+            const result = document.getElementById('result');
+            result.className = `result ${type}`;
+            result.innerHTML = message;
+            result.style.display = 'block';
+        }
+
+        // Afficher les informations du fichier sélectionné
+        document.getElementById('file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                console.log('📁 Fichier sélectionné:', {
+                    nom: file.name,
+                    taille: `${(file.size / 1024).toFixed(2)} KB`,
+                    type: file.type
+                });
+            }
+        });
+    </script>
+</body>
+</html>

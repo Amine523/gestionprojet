@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { LanguageService, Language } from '@core/services/language.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
@@ -9,551 +10,137 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   standalone: true,
   imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
-
-    <div class="dashboard-container">
-      <!-- Header -->
-      <header class="dashboard-header">
-        <div class="header-content">
-          <div class="header-badges">
-            <span class="badge badge-primary">Configuration</span>
-          </div>
-          <h1 class="header-title">
-            System <span class="gradient-text">Nexus.</span>
-          </h1>
-          <p class="header-subtitle">
-            Global Environment Parameters & Security Protocols for {{societeNom}}.
-          </p>
+    <div class="parametres-container">
+      <div class="page-header">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </div>
+        <div class="header-info">
+          <h1 class="header-title">{{lang.translate('settings')}}</h1>
+          <p class="header-subtitle">Configuration Administrateur - {{societeNom}}</p>
         </div>
         <div class="header-actions">
-          <button (click)="saveAll()" class="btn btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-            Commit Global Changes
-          </button>
+           <select class="lang-select" [ngModel]="lang.lang" (ngModelChange)="lang.setLanguage($event)">
+              <option value="fr">FR 🇫🇷</option>
+              <option value="en">EN 🇺🇸</option>
+           </select>
         </div>
-      </header>
+      </div>
 
-      <!-- Settings Grid -->
       <div class="settings-grid">
-         <!-- Left Column -->
-         <div class="settings-main">
-            <section class="card">
-               <div class="card-header">
-                  <div class="header-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M3 21h18"/>
-                      <path d="M5 21V7l7-4 7 4v14"/>
-                      <polyline points="10 9 9 9 8 9"/>
-                    </svg>
-                  </div>
-                  <h3>Identity Matrix</h3>
-               </div>
+        <div class="settings-col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">{{lang.translate('profile')}}</h5>
+              <div class="profile-photo-section">
+                <div class="photo-container" (click)="fileInput.click()">
+                  @if (profil.photo) {
+                    <img [src]="profil.photo" class="profile-img">
+                  } @else {
+                    <div class="photo-placeholder">{{profil.initials}}</div>
+                  }
+                  <div class="photo-overlay"><span>CHANGER</span></div>
+                </div>
+                <input #fileInput type="file" (change)="onPhotoSelected($event)" accept="image/*" hidden>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>{{lang.translate('name')}}</label>
+                  <input type="text" [(ngModel)]="profil.nom" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>{{lang.translate('email')}}</label>
+                  <input type="email" [(ngModel)]="profil.email" class="form-input">
+                </div>
+              </div>
+              <button class="btn btn-primary" (click)="saveProfil()">{{lang.translate('save')}}</button>
+            </div>
+          </div>
+        </div>
 
-               <div class="form-grid">
-                  <div class="form-field">
-                     <label>Entity Nomenclature</label>
-                     <input [(ngModel)]="societe.nom" class="form-input" placeholder="Enterprise Name">
-                  </div>
-                  <div class="form-field">
-                     <label>Transmission Frequency (Email)</label>
-                     <input [(ngModel)]="societe.email" class="form-input" placeholder="contact@nexus.com">
-                  </div>
-                  <div class="form-field">
-                     <label>Communication Line</label>
-                     <input [(ngModel)]="societe.telephone" class="form-input" placeholder="+216 ...">
-                  </div>
-                  <div class="form-field">
-                     <label>Geographical Sector</label>
-                     <input [(ngModel)]="societe.adresse" class="form-input" placeholder="Physical Address">
-                  </div>
-               </div>
-
-               <div class="form-field">
-                  <label>Executive Summary</label>
-                  <textarea [(ngModel)]="societe.description" class="form-input" rows="4" placeholder="Enterprise mission directive..."></textarea>
-               </div>
-            </section>
-
-            <section class="card">
-               <div class="card-header">
-                  <div class="header-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"/>
-                      <polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                  </div>
-                  <h3>Operational Schedule</h3>
-               </div>
-
-               <div class="form-grid">
-                  <div class="form-field">
-                     <label>Standard Start</label>
-                     <input type="time" [(ngModel)]="config.heureDebut" class="form-input">
-                  </div>
-                  <div class="form-field">
-                     <label>Standard End</label>
-                     <input type="time" [(ngModel)]="config.heureFin" class="form-input">
-                  </div>
-                  <div class="form-field">
-                     <label>Temporal Zone</label>
-                     <select class="form-input">
-                        <option>GMT+1 (Tunis/Paris)</option>
-                        <option>UTC (Global Standard)</option>
-                     </select>
-                  </div>
-               </div>
-            </section>
-         </div>
-
-         <!-- Right Column -->
-         <div class="settings-sidebar">
-            <section class="card card-dark">
-               <div class="card-header">
-                  <div class="header-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="13.5" cy="6.5" r=".5"/>
-                      <circle cx="17.5" cy="10.5" r=".5"/>
-                      <circle cx="8.5" cy="7.5" r=".5"/>
-                      <circle cx="6.5" cy="12.5" r=".5"/>
-                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
-                    </svg>
-                  </div>
-                  <h3>Interface Prefs</h3>
-               </div>
-
-               <div class="settings-toggles">
-                  <div class="toggle-item">
-                     <div class="toggle-info">
-                        <p>Cimmerian Mode</p>
-                        <span>Enable high-contrast dark environment</span>
-                     </div>
-                     <button (click)="toggleDarkMode()" class="toggle-btn" [class.active]="isDarkMode">
-                       <span class="toggle-knob"></span>
-                     </button>
-                  </div>
-
-                  <div class="toggle-item">
-                     <div class="toggle-info">
-                        <p>Signal Notifications</p>
-                        <span>Audio-visual operational alerts</span>
-                     </div>
-                     <button class="toggle-btn active">
-                       <span class="toggle-knob"></span>
-                     </button>
-                  </div>
-
-                  <div class="toggle-item">
-                     <div class="toggle-info">
-                        <p>Neural Sync (AI)</p>
-                        <span>Llama 3.2 real-time assistance</span>
-                     </div>
-                     <button class="toggle-btn active">
-                       <span class="toggle-knob"></span>
-                     </button>
-                  </div>
-               </div>
-            </section>
-
-            <section class="card">
-               <div class="card-header">
-                  <div class="header-icon header-icon-danger">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                  </div>
-                  <h3>Security Protocols</h3>
-               </div>
-               
-               <p class="security-text">Unauthorized access attempts will be logged and the originating node will be quarantined. Dual-factor authentication is mandatory for all Command Level entities.</p>
-               
-               <button class="btn btn-danger w-full">
-                  Rotate Encryption Keys
-               </button>
-            </section>
-         </div>
+        <div class="settings-col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Paramètres Société</h5>
+              <div class="form-group">
+                <label>Nom de la société</label>
+                <input type="text" [(ngModel)]="societeNom" class="form-input" disabled>
+              </div>
+              <div class="setting-item">
+                <span class="setting-label">Mode Maintenance</span>
+                <label class="toggle-switch">
+                  <input type="checkbox">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `,
   styles: [`
-    .dashboard-container {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xl);
-      padding-bottom: var(--space-2xl);
-    }
-
-    .dashboard-header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-radius: var(--radius-xl);
-      padding: var(--space-2xl);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--space-lg);
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow-xl);
-    }
-
-    .dashboard-header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(148, 163, 184, 0.1) 0%, transparent 70%);
-      border-radius: 50%;
-    }
-
-    .header-content {
-      position: relative;
-      z-index: 1;
-    }
-
-    .header-badges {
-      display: flex;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-md);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .badge-primary {
-      background: rgba(148, 163, 184, 0.1);
-      color: #94a3b8;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-    }
-
-    .header-title {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      color: white;
-      margin: 0 0 var(--space-sm);
-      letter-spacing: -0.02em;
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, #cbd5e1, #94a3b8, #64748b);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .header-subtitle {
-      color: #94a3b8;
-      font-size: var(--font-size-base);
-      max-width: 600px;
-      line-height: var(--line-height-relaxed);
-      margin: 0;
-    }
-
-    .header-actions {
-      position: relative;
-      z-index: 1;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: var(--radius-md);
-      font-weight: var(--font-weight-semibold);
-      font-size: var(--font-size-sm);
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-base);
-    }
-
-    .btn-primary {
-      background: #94a3b8;
-      color: white;
-      box-shadow: var(--shadow-md);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .btn-danger {
-      background: rgba(239, 68, 68, 0.1);
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .btn-danger:hover {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: #ef4444;
-    }
-
-    .settings-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: var(--space-lg);
-    }
-
-    .settings-main {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-lg);
-    }
-
-    .settings-sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-lg);
-    }
-
-    .card {
-      background: white;
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--color-border);
-      box-shadow: var(--shadow-sm);
-      padding: var(--space-lg);
-    }
-
-    .card-dark {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-color: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      margin-bottom: var(--space-lg);
-      padding-bottom: var(--space-md);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .header-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-md);
-      background: var(--color-surface);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--color-text);
-    }
-
-    .header-icon-danger {
-      background: rgba(239, 68, 68, 0.1);
-      color: #ef4444;
-    }
-
-    .card-header h3 {
-      margin: 0;
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-    }
-
-    .card-dark .card-header h3 {
-      color: white;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-md);
-    }
-
-    .form-field {
-      margin-bottom: var(--space-md);
-    }
-
-    .form-field label {
-      display: block;
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: var(--space-xs);
-    }
-
-    .form-input {
-      width: 100%;
-      padding: var(--space-sm);
-      background: white;
-      border: 2px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-sm);
-      color: var(--color-text);
-      outline: none;
-      transition: border-color var(--transition-base);
-    }
-
-    .form-input:focus {
-      border-color: rgba(148, 163, 184, 0.3);
-    }
-
-    .card-dark .form-input {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
-
-    .card-dark .form-input:focus {
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .card-dark .form-field label {
-      color: #94a3b8;
-    }
-
-    .settings-toggles {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-md);
-    }
-
-    .toggle-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: var(--space-md) 0;
-    }
-
-    .toggle-info p {
-      margin: 0 0 var(--space-xs);
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-    }
-
-    .toggle-info span {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-    }
-
-    .card-dark .toggle-info p {
-      color: white;
-    }
-
-    .card-dark .toggle-info span {
-      color: #94a3b8;
-    }
-
-    .toggle-btn {
-      width: 48px;
-      height: 24px;
-      background: #d1d5db;
-      border-radius: 12px;
-      position: relative;
-      cursor: pointer;
-      transition: background var(--transition-base);
-      border: none;
-    }
-
-    .toggle-btn.active {
-      background: #6366f1;
-    }
-
-    .toggle-knob {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background: white;
-      border-radius: 50%;
-      box-shadow: var(--shadow-sm);
-      transition: transform var(--transition-base);
-    }
-
-    .toggle-btn.active .toggle-knob {
-      transform: translateX(24px);
-    }
-
-    .security-text {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-muted);
-      line-height: var(--line-height-relaxed);
-      margin-bottom: var(--space-md);
-    }
-
-    /* Dark mode */
-    :host-context(.dark) .card {
-      background: var(--color-surface);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .header-icon {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    :host-context(.dark) .card-header h3 {
-      color: var(--color-text);
-    }
-
-    :host-context(.dark) .form-input {
-      background: var(--color-surface);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .toggle-info p {
-      color: var(--color-text);
-    }
-
-    @media (max-width: 1024px) {
-      .settings-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    .parametres-container { padding: var(--space-xl); max-width: 1200px; margin: 0 auto; }
+    .page-header { display: flex; align-items: center; gap: var(--space-lg); margin-bottom: var(--space-2xl); }
+    .header-icon { width: 64px; height: 64px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; color: white; }
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); }
+    .card { background: white; border-radius: var(--radius-2xl); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); }
+    .card-body { padding: var(--space-xl); }
+    .profile-photo-section { display: flex; flex-direction: column; align-items: center; margin-bottom: var(--space-xl); }
+    .photo-container { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; position: relative; cursor: pointer; border: 4px solid white; box-shadow: var(--shadow-md); }
+    .photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 40px; background: #3b82f6; color: white; }
+    .profile-img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; color:white; opacity:0; transition:0.3s; }
+    .photo-container:hover .photo-overlay { opacity:1; }
+    .form-group { margin-bottom: var(--space-md); }
+    .form-input { width: 100%; padding: var(--space-md); border-radius: var(--radius-lg); border: 1px solid var(--color-border); }
+    .btn-primary { width: 100%; padding: var(--space-md); background: #3b82f6; color: white; border: none; border-radius: var(--radius-lg); font-weight: 600; cursor: pointer; }
+    .lang-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); }
+    .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid var(--color-border); }
+    .toggle-switch { position: relative; width: 44px; height: 24px; }
+    .toggle-slider { position: absolute; cursor: pointer; top:0; left:0; right:0; bottom:0; background:#e2e8f0; border-radius: 24px; }
+    .toggle-slider:before { position: absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.4s; }
+    input:checked + .toggle-slider { background: #3b82f6; }
+    input:checked + .toggle-slider:before { transform: translateX(20px); }
   `]
 })
 export class AdminParametresComponent implements OnInit {
   private api = inject(ApiService);
+  public lang = inject(LanguageService);
   private snackBar = inject(MatSnackBar);
-  
-  societe: any = { nom: '', email: '', telephone: '', adresse: '', description: '' };
-  config: any = { heureDebut: '08:00', heureFin: '17:00' };
-  isDarkMode = false;
+
   societeNom = '';
+  profil = { nom: '', email: '', initials: '', photo: '' };
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    const societeId = user?.societeId || '';
-    if (societeId) {
-      this.api.getSocieteById(societeId).subscribe(s => {
-        this.societe = s;
-        this.societeNom = s.nom;
-      });
+    
+    // Fix: Use name instead of ID
+    const rawNom = user?.societe?.nom || user?.SocieteNom || 'Votre Société';
+    this.societeNom = (typeof rawNom === 'string') ? rawNom.replace(/undefined/g, '').trim() : 'Votre Société';
+    if (!this.societeNom) this.societeNom = 'Votre Société';
+
+    this.profil = {
+      nom: ((user?.prenom || '') + ' ' + (user?.nom || '')).replace(/undefined/g, '').trim(),
+      email: user?.email || '',
+      initials: (user?.nom?.charAt(0) || 'A'),
+      photo: user?.photo || ''
+    };
+  }
+
+  onPhotoSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => { this.profil.photo = e.target.result; this.saveProfil(); };
+      reader.readAsDataURL(file);
     }
-    this.api.getUserPreference('apparence').subscribe((p: any) => this.isDarkMode = p === true);
   }
 
-  toggleDarkMode() {
-    this.isDarkMode = !this.isDarkMode;
-    this.api.setUserPreference('apparence', this.isDarkMode);
-    if (this.isDarkMode) document.body.classList.add('dark');
-    else document.body.classList.remove('dark');
-  }
-
-  saveAll() {
-    this.api.updateSociete(this.societe).subscribe(() => {
-      this.snackBar.open('System Nexus Updated Successfully', 'OK', { duration: 3000 });
-    });
+  saveProfil() {
+    this.api.updateCurrentUser({ nom: this.profil.nom, email: this.profil.email, photo: this.profil.photo });
+    this.snackBar.open(this.lang.translate('success_save'), 'OK', { duration: 3000 });
   }
 }

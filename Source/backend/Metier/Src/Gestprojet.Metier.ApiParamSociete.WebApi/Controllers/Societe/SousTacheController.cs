@@ -1,4 +1,4 @@
-ï»¿using Gestprojet.Core.ApiParamSociete.Client.Model;
+using Gestprojet.Core.ApiParamSociete.Client.Model;
 using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Commun;
 using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Business;
 using Gestprojet.Metier.ApiParamSociete.Domain.Models.Societe;
@@ -22,7 +22,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         [HttpPost("AjouterOuModifier")]
         public async Task<IActionResult> AjouterOuModifier([FromBody] SousTacheCore entity)
         {
-            if (entity == null) return BadRequest("DonnÃ©es SousTache invalides");
+            if (entity == null) return BadRequest("Données SousTache invalides");
             var result = await _sousTacheBusiness.AjouterOuModifierAsync(entity);
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
@@ -46,14 +46,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         [HttpPost("ListeParCritere")]
         public async Task<IActionResult> ListeParCritere([FromBody] ConditionRecherche critere)
         {
-            if (critere == null) return BadRequest("CritÃ¨re manquant");
+            if (critere == null) return BadRequest("Critère manquant");
             return Ok(await _sousTacheBusiness.ListeParCritereAsync(critere));
         }
 
         [HttpPost("ListeDetailleParCondition")]
         public async Task<IActionResult> ListeDetailleParCondition([FromBody] ConditionRecherche critere)
         {
-            if (critere == null) return BadRequest("CritÃ¨re manquant");
+            if (critere == null) return BadRequest("Critère manquant");
             return Ok(await _sousTacheBusiness.ListeDetailleParConditionAsync(critere));
         }
 
@@ -68,8 +68,8 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         [HttpDelete("SupprimerParCondition")]
         public async Task<IActionResult> SupprimerParCondition([FromBody] ConditionRecherche critere)
         {
-            if (critere == null) return BadRequest("CritÃ¨re manquant");
-            if (critere.Criteres == null || !critere.Criteres.Any()) return BadRequest("Au moins un critÃ¨re requis");
+            if (critere == null) return BadRequest("Critère manquant");
+            if (critere.Criteres == null || !critere.Criteres.Any()) return BadRequest("Au moins un critère requis");
             var result = await _sousTacheBusiness.SupprimerParConditionAsync(critere);
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
@@ -81,7 +81,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         [HttpPost("ListeParConditionParPage")]
         public async Task<IActionResult> ListeParConditionParPage([FromBody] ConditionRecherche critere, [FromQuery] int pageNumero = 1, [FromQuery] int pageTaille = 20)
         {
-            if (critere == null) return BadRequest("CritÃ¨re manquant");
+            if (critere == null) return BadRequest("Critère manquant");
             return Ok(await _sousTacheBusiness.ListeParConditionParPageAsync(critere, pageNumero, pageTaille));
         }
 

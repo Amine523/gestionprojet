@@ -10,19 +10,22 @@ import { ApiService } from '@core/services/api.service';
   template: `
 
     <div class="plans-container">
-      <!-- Header -->
-      <div class="page-header">
-        <div class="header-left">
-          <h1 class="header-title">Plans de Test</h1>
-          <p class="header-subtitle">Gérez vos plans de test - {{societeNom}}</p>
+      <!-- Premium Header -->
+      <div class="premium-header">
+        <div class="header-banner-overlay"></div>
+        <div class="header-main">
+          <div class="header-content">
+            <h1 class="header-title">Plans de Test</h1>
+            <p class="header-subtitle">Stratégies et planification de l'assurance qualité - {{societeNom}}</p>
+          </div>
+          <button class="btn btn-primary" (click)="createPlan()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nouveau plan
+          </button>
         </div>
-        <button class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Nouveau plan
-        </button>
       </div>
 
       <!-- Plans List -->
@@ -98,17 +101,52 @@ import { ApiService } from '@core/services/api.service';
       flex-direction: column;
     }
 
+    .premium-header {
+      position: relative;
+      padding: 3rem 2rem;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 20px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+      color: white;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .header-banner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('/assets/qa_banner.png') center/cover;
+      opacity: 0.1;
+      z-index: 1;
+    }
+
+    .header-main {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
     .header-title {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
+      font-size: 2.5rem;
+      font-weight: 800;
       margin: 0;
+      letter-spacing: -0.025em;
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .header-subtitle {
-      color: var(--color-text-muted);
-      font-size: var(--font-size-base);
-      margin: var(--space-xs) 0 0;
+      font-size: 1.1rem;
+      color: #94a3b8;
+      margin-top: 0.5rem;
     }
 
     .btn {
@@ -279,10 +317,51 @@ export class QaPlansComponent implements OnInit {
   }
 
   loadPlans() {
-    const data = JSON.parse(localStorage.getItem('app_data') || '{}');
-    const storedPlans = data.qaPlans?.[this.societeId] || [];
-    if (storedPlans.length > 0) {
-      this.plans = storedPlans;
+    if (!this.societeId) return;
+
+    this.api.getProjetsBySociete(this.societeId).subscribe(projets => {
+      const pList = projets || [];
+      const projectIds = new Set(pList.map(p => p.id || p.Id));
+
+      this.api.getTaches().subscribe(all => {
+        // Filtrer les tâches qui sont des plans (titre commençant par [PLAN])
+        this.plans = (all || [])
+          .filter((t: any) => projectIds.has(t.projetId || t.ProjetId) && (t.titre || '').includes('[PLAN]'))
+          .map((t: any) => ({
+            id: t.id || t.Id,
+            nom: (t.titre || '').replace('[PLAN]', '').trim(),
+            description: t.description || '',
+            projet: pList.find(p => (p.id || p.Id) === (t.projetId || t.ProjetId))?.nom || 'Projet',
+            tests: 5, // Mock values for stats as they are not in TacheCore
+            reussis: 4,
+            echecs: 1
+          }));
+      });
+    });
+  }
+
+  createPlan() {
+    // Simple prompt for demonstration, usually would use a form/modal
+    const nom = prompt('Nom du plan de test:');
+    if (nom) {
+      this.api.getProjetsBySociete(this.societeId).subscribe(projets => {
+        if (projets && projets.length > 0) {
+          const firstProject = projets[0];
+          const newPlan = {
+            Titre: `[PLAN] ${nom}`,
+            Description: 'Nouveau plan de test créé depuis l\'interface QA',
+            ProjetId: firstProject.id || firstProject.Id,
+            Statut: 'Open',
+            Priorite: 'Medium'
+          };
+          this.api.saveTache(newPlan).subscribe(() => {
+            this.snackBar.open('Plan de test enregistré dans la base de données', 'OK', { duration: 2000 });
+            this.loadPlans();
+          });
+        } else {
+          this.snackBar.open('Aucun projet disponible pour créer un plan', 'Fermer', { duration: 3000 });
+        }
+      });
     }
   }
 }

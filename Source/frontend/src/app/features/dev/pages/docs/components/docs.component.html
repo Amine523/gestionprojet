@@ -1,0 +1,354 @@
+<div class="docs-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+    </div>
+    <div class="header-info">
+      <h1 class="header-title">Documentation</h1>
+      <p class="header-subtitle">Accédez aux ressources techniques - {{societeNom}}</p>
+    </div>
+    <div class="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" placeholder="Rechercher..." [(ngModel)]="searchQuery" (input)="filterDocs()">
+    </div>
+  </div>
+
+  <!-- Docs Grid -->
+  <div class="docs-grid">
+    @for (doc of filteredDocs; track doc.type) {
+      <div class="doc-card" (click)="openDoc(doc)">
+        <div class="doc-menu">
+          <button class="btn-icon" (click)="$event.stopPropagation()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="1"></circle>
+              <circle cx="12" cy="5" r="1"></circle>
+              <circle cx="12" cy="19" r="1"></circle>
+            </svg>
+          </button>
+        </div>
+        <div class="doc-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <h5 class="doc-title">{{doc.title}}</h5>
+        <p class="doc-description">{{doc.description}}</p>
+      </div>
+    }
+    
+    <div class="doc-card doc-card-add" (click)="addNewDoc()">
+      <div class="doc-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </div>
+      <h5 class="doc-title doc-title-muted">Ajouter</h5>
+      <p class="doc-description doc-description-muted">Ajouter un document</p>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Liens rapides</h5>
+      <div class="quick-links">
+        <a class="quick-link" (click)="openLink('Git')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          Dépôt Git
+        </a>
+        <a class="quick-link" (click)="openLink('Jira')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+          </svg>
+          Jira
+        </a>
+        <a class="quick-link" (click)="openLink('Figma')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13.5" cy="6.5" r=".5"></circle>
+            <circle cx="17.5" cy="10.5" r=".5"></circle>
+            <circle cx="8.5" cy="7.5" r=".5"></circle>
+            <circle cx="6.5" cy="12.5" r=".5"></circle>
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+          </svg>
+          Figma
+        </a>
+        <a class="quick-link" (click)="openLink('Confluence')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          Confluence
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Files Section -->
+  <div class="card">
+    <div class="card-body">
+      <div class="files-header">
+        <h5 class="card-title">Fichiers</h5>
+        <div class="folder-tabs">
+          @for (folder of folders; track folder) {
+            <button class="folder-tab" [class.folder-tab-active]="selectedFolder === folder" (click)="selectedFolder = folder">
+              {{folder}}
+            </button>
+          }
+          <button class="folder-tab folder-tab-add" (click)="addFolder()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Dossier
+          </button>
+        </div>
+        <button class="btn btn-primary" (click)="fileInput.click()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Importer vers {{selectedFolder || 'Tous'}}
+        </button>
+        <input #fileInput type="file" hidden multiple (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.js,.ts,.html,.css,.json,.png,.jpg,.jpeg,.gif">
+      </div>
+      
+      @if (uploadProgress > 0 && uploadProgress < 100) {
+        <div class="progress-bar-container">
+          <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+        </div>
+      }
+
+      <div class="files-grid">
+        @for (file of getFilesInFolder(); track file.name) {
+          <div class="file-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <div class="file-info">
+              <span class="file-name">{{file.name}}</span>
+              <span class="file-size">{{formatFileSize(file.size)}}</span>
+            </div>
+            <div class="file-actions">
+              <button class="btn-icon btn-icon-sm" (click)="downloadFile(file)" title="Télécharger">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </button>
+              <button class="btn-icon btn-icon-sm btn-icon-danger" (click)="deleteFile(file)" title="Supprimer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
+        @if (getFilesInFolder().length === 0) {
+          <div class="empty-files">Aucun fichier dans ce dossier</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Doc Form Modal -->
+  @if (showDocForm) {
+    <div class="modal-overlay" (click)="closeDocForm()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-success">
+          <h3 class="modal-title">{{editingDoc ? 'Modifier' : 'Ajouter'}} un Document</h3>
+          <button class="btn-close btn-close-white" (click)="closeDocForm()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Titre</label>
+            <input type="text" [(ngModel)]="docForm.title" class="form-input" placeholder="Titre du document">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" [(ngModel)]="docForm.description" class="form-input" placeholder="Description">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Icône</label>
+            <select [(ngModel)]="docForm.icon" class="form-select">
+              <option value="api">api</option>
+              <option value="storage">storage</option>
+              <option value="menu_book">menu_book</option>
+              <option value="account_tree">account_tree</option>
+              <option value="code">code</option>
+              <option value="description">description</option>
+              <option value="folder">folder</option>
+              <option value="article">article</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeDocForm()">Annuler</button>
+          <button class="btn btn-success" (click)="saveDoc()">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Doc Detail Modal -->
+  @if (selectedDoc) {
+    <div class="modal-overlay" (click)="selectedDoc = null">
+      <div class="modal-card modal-card-lg" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-success">
+          <h3 class="modal-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            {{selectedDoc.title}}
+          </h3>
+          <button class="btn-close btn-close-white" (click)="selectedDoc = null">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          @switch (selectedDoc.type) {
+            @case ('api') {
+              <div class="doc-section">
+                <h6 class="section-title">Authentification</h6>
+                <pre class="code-block"><code>POST /api/auth/login
+Body: email, password
+Response: token, utilisateur</code></pre>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">Utilisateurs</h6>
+                <pre class="code-block"><code>GET  /api/utilisateurs
+POST /api/utilisateurs
+PUT  /api/utilisateurs/:id
+DELETE /api/utilisateurs/:id</code></pre>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">Sociétés</h6>
+                <pre class="code-block"><code>GET  /api/societes
+POST /api/societes
+PUT  /api/societes/:id</code></pre>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">Projets</h6>
+                <pre class="code-block"><code>GET  /api/projets
+POST /api/projets
+PUT  /api/projets/:id</code></pre>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">Tâches</h6>
+                <pre class="code-block"><code>GET  /api/taches
+POST /api/taches
+PUT  /api/taches/:id</code></pre>
+              </div>
+            }
+            @case ('db') {
+              <div class="doc-section">
+                <h6 class="section-title">societes</h6>
+                <pre class="code-block"><code>id, nom, email, telephone, activite, pays, ville, adresse, dateCreation</code></pre>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">utilisateurs</h6>
+                <pre class="code-block"><code>id, nom, email, password, societeId, typeUtilisateurId, actif</code></pre>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">projets</h6>
+                <pre class="code-block"><code>id, nom, description, societeId, chefId, statut, dateDebut, dateFin</code></pre>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">taches</h6>
+                <pre class="code-block"><code>id, titre, description, projetId, assigneeId, priorite, statut, tempsEstime</code></pre>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">pointages</h6>
+                <pre class="code-block"><code>id, employeId, societeId, date, entre, sortie, totalHeures</code></pre>
+              </div>
+            }
+            @case ('guides') {
+              <div class="doc-section">
+                <h6 class="section-title">Architecture</h6>
+                <p>Frontend: Angular 17 + Material</p>
+                <p>Backend: API REST with JWT auth</p>
+                <p>Storage: LocalStorage + optional API</p>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">Bonnes pratiques</h6>
+                <ul>
+                  <li>Use standalone components</li>
+                  <li>Follow reactive patterns</li>
+                  <li>Filter data by societeId</li>
+                  <li>Handle errors gracefully</li>
+                </ul>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">Code review</h6>
+                <ul>
+                  <li>Vérifier les types TypeScript</li>
+                  <li>Tester les composant</li>
+                  <li>Vérifier le linting</li>
+                </ul>
+              </div>
+            }
+            @case ('workflow') {
+              <div class="doc-section">
+                <h6 class="section-title">Cycle de développement</h6>
+                <ol>
+                  <li>Création tâche (Chef/RH)</li>
+                  <li>Assignment développeur</li>
+                  <li>Implémentation code</li>
+                  <li>Tests unitaires</li>
+                  <li>Pull request</li>
+                  <li>Code review</li>
+                  <li>QA test</li>
+                  <li>Déploiement</li>
+                </ol>
+              </div>
+              <div class="doc-section">
+                <h6 class="section-title">Rôles</h6>
+                <ul>
+                  <li><strong>RH</strong>: Gestion candidats, embauche</li>
+                  <li><strong>Admin Société</strong>: Gestion employés, projets</li>
+                  <li><strong>Chef de Groupe</strong>: Coordination équipe, attribution tâches</li>
+                  <li><strong>Développeur</strong>: Implémentation fonctionnalités</li>
+                  <li><strong>QA</strong>: Tests, rapport bugs</li>
+                </ul>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

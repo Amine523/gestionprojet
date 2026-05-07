@@ -756,10 +756,10 @@ export class QaCongesComponent implements OnInit {
         this.conges = data.map((d: any) => {
             const dDebut = new Date(d.dateDebut || d.DateDebut);
             const dFin = new Date(d.dateFin || d.DateFin);
-            let nj = d.jours || d.Jours || 0;
-            if (!nj && !isNaN(dDebut.getTime()) && !isNaN(dFin.getTime())) {
+            let nj = 0;
+            if (!isNaN(dDebut.getTime()) && !isNaN(dFin.getTime())) {
               const diffTime = Math.abs(dFin.getTime() - dDebut.getTime());
-              nj = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+              nj = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             }
             return {
               ...d,

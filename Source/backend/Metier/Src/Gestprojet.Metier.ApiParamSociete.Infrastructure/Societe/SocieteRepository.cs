@@ -38,8 +38,8 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
 
             try
             {
-                // Vérification doublon (Nom)
-                if (!string.IsNullOrWhiteSpace(entity.Nom))
+                // Vérification doublon (Nom) uniquement en création
+                if (string.IsNullOrWhiteSpace(entity.Id) && !string.IsNullOrWhiteSpace(entity.Nom))
                 {
                     var conditionDoublon = new ConditionRecherche
                     {

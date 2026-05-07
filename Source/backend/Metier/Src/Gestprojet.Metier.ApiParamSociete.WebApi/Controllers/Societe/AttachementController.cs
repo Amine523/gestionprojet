@@ -97,32 +97,79 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         }
 
         [HttpPost("upload")]
+        [Consumes("multipart/form-data")]
         public async Task<IActionResult> Upload([FromForm] Microsoft.AspNetCore.Http.IFormFile file, [FromForm] string referenceId, [FromForm] string type)
         {
-            if (file == null || file.Length == 0) return BadRequest("Fichier manquant");
-            
-            var uploads = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-            if (!System.IO.Directory.Exists(uploads)) System.IO.Directory.CreateDirectory(uploads);
-
-            var fileName = $"{System.Guid.NewGuid()}_{file.FileName}";
-            var filePath = System.IO.Path.Combine(uploads, fileName);
-
-            using (var stream = new System.IO.FileStream(filePath, System.IO.FileMode.Create))
+            try
             {
-                await file.CopyToAsync(stream);
+                // Validation des paramètres
+                if (file == null || file.Length == 0)
+                {
+                    System.Console.WriteLine("[ATTACHEMENT] Erreur: Fichier manquant ou vide");
+                    return BadRequest("Fichier manquant ou vide");
+                }
+
+                // Validation de la taille du fichier (max 10 MB)
+                if (file.Length > 10 * 1024 * 1024)
+                {
+                    System.Console.WriteLine($"[ATTACHEMENT] Erreur: Fichier trop volumineux ({file.Length} bytes)");
+                    return BadRequest("Le fichier dépasse la taille maximale autorisée (10 MB)");
+                }
+
+                // Validation du type de fichier
+                var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png", ".gif" };
+                var fileExtension = System.IO.Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    System.Console.WriteLine($"[ATTACHEMENT] Erreur: Type de fichier non autorisé ({fileExtension})");
+                    return BadRequest($"Type de fichier non autorisé. Extensions autorisées: {string.Join(", ", allowedExtensions)}");
+                }
+
+                System.Console.WriteLine($"[ATTACHEMENT] Upload: FileName={file.FileName}, Size={file.Length}, ReferenceId={referenceId}, Type={type}");
+
+                var uploads = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+                if (!System.IO.Directory.Exists(uploads)) System.IO.Directory.CreateDirectory(uploads);
+
+                // Nettoyer le nom du fichier pour éviter les problèmes de caractères spéciaux
+                var safeFileName = System.IO.Path.GetFileNameWithoutExtension(file.FileName);
+                safeFileName = string.Join("_", safeFileName.Split(System.IO.Path.GetInvalidFileNameChars()));
+                var fileName = $"{System.Guid.NewGuid():N}_{safeFileName}{fileExtension}";
+                var filePath = System.IO.Path.Combine(uploads, fileName);
+
+                using (var stream = new System.IO.FileStream(filePath, System.IO.FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                System.Console.WriteLine($"[ATTACHEMENT] Fichier sauvegardé: {filePath}");
+
+                var attachement = new AttachementCore
+                {
+                    Id = "", // Laisser le repository générer le code ATT-XXX
+                    CheminFichier = $"/uploads/{fileName}",
+                    TypeFichier = type ?? "Document",
+                    TacheId = referenceId,
+                    Actif = true
+                };
+
+                var result = await _attachementBusiness.AjouterOuModifierAsync(attachement);
+                
+                if (result.Success)
+                {
+                    System.Console.WriteLine($"[ATTACHEMENT] Upload réussi: {attachement.CheminFichier}");
+                    return Ok(new { success = true, url = attachement.CheminFichier, id = attachement.Id });
+                }
+                else
+                {
+                    System.Console.WriteLine($"[ATTACHEMENT] Erreur lors de l'enregistrement: {result.Message}");
+                    return BadRequest(result.Message);
+                }
             }
-
-            var attachement = new AttachementCore
+            catch (System.Exception ex)
             {
-                Id = System.Guid.NewGuid().ToString(),
-                CheminFichier = $"/uploads/{fileName}",
-                TypeFichier = type,
-                TacheId = referenceId,
-                Actif = true
-            };
-
-            var result = await _attachementBusiness.AjouterOuModifierAsync(attachement);
-            return result.Success ? Ok(new { success = true, url = attachement.CheminFichier }) : BadRequest(result.Message);
+                System.Console.WriteLine($"[ATTACHEMENT] Exception: {ex.Message}\n{ex.StackTrace}");
+                return BadRequest($"Erreur lors de l'upload: {ex.Message}");
+            }
         }
     }
 }

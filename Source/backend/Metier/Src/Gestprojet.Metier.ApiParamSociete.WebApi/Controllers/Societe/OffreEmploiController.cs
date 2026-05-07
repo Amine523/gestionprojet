@@ -14,7 +14,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
     [Route("api/OffreEmploI")]
     [Route("api/offresemploi")]
     [AllowAnonymous]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     public class OffreEmploiController : ControllerBase
     {
         private readonly IApplicationBusiness _applicationBusiness;

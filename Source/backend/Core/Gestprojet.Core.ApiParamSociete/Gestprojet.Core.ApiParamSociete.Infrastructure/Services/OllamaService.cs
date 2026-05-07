@@ -7,6 +7,7 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure.Services
     public interface IOllamaService
     {
         Task<string> GenerateAsync(string prompt, string model = "llama3.2");
+        Task<string> GenerateTestQuestionsAsync(string topic, int questionCount = 5, string questionType = "QCM");
         Task<string> AnalyzeCandidateAsync(string candidateData, string jobRequirements);
         Task<string> PredictProjectDelayAsync(string projectData);
         Task<string> AnalyzeDeveloperPerformanceAsync(string developerData);
@@ -17,23 +18,37 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure.Services
         private readonly HttpClient _httpClient;
         private readonly string _ollamaUrl;
         private readonly string _defaultModel;
+        private readonly string _fastModel;
+        private readonly string _testModel;
 
         public OllamaService(IConfiguration configuration)
         {
             _httpClient = new HttpClient();
-            _ollamaUrl = configuration["Ollama:Url"] ?? "http://localhost:11434";
-            _defaultModel = configuration["Ollama:Model"] ?? "llama3.2";
+            _ollamaUrl = configuration["AI:Providers:Ollama:Url"] ?? configuration["Ollama:Url"] ?? "http://localhost:11434";
+            _defaultModel = configuration["AI:Generation:DefaultModel"] ?? configuration["AI:Providers:Ollama:Model"] ?? "llama3.2";
+            _fastModel = configuration["AI:Generation:FastModel"] ?? _defaultModel;
+            _testModel = configuration["AI:Generation:TestGenerationModel"] ?? _fastModel;
+            _httpClient.Timeout = TimeSpan.FromSeconds(
+                int.TryParse(configuration["AI:Generation:TimeoutSeconds"], out var timeoutSeconds) ? timeoutSeconds : 12
+            );
         }
 
         public async Task<string> GenerateAsync(string prompt, string model = "llama3.2")
         {
             try
             {
+                var selectedModel = string.IsNullOrWhiteSpace(model) ? _defaultModel : model;
                 var request = new
                 {
-                    model = model,
+                    model = selectedModel,
                     prompt = prompt,
-                    stream = false
+                    stream = false,
+                    options = new
+                    {
+                        temperature = 0.2,
+                        top_p = 0.9,
+                        num_predict = 220
+                    }
                 };
 
                 var response = await _httpClient.PostAsJsonAsync($"{_ollamaUrl}/api/generate", request);
@@ -50,6 +65,52 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure.Services
             {
                 return GetSimulatedResponse(prompt);
             }
+        }
+
+        public async Task<string> GenerateTestQuestionsAsync(string topic, int questionCount = 5, string questionType = "QCM")
+        {
+            var count = Math.Clamp(questionCount, 1, 20);
+            var prompt = $@"[STRICT JSON ONLY]
+Génère {count} questions de type {questionType} sur: {topic}.
+Format exact:
+[
+  {{""q"":""Question?"",""options"":[""A"",""B"",""C"",""D""],""correct"":0}}
+]
+Réponse JSON uniquement, sans texte additionnel.";
+
+            return await GenerateFastAsync(prompt, _testModel, 140 + (count * 25));
+        }
+
+        private async Task<string> GenerateFastAsync(string prompt, string model, int maxTokens)
+        {
+            try
+            {
+                var request = new
+                {
+                    model = string.IsNullOrWhiteSpace(model) ? _fastModel : model,
+                    prompt,
+                    stream = false,
+                    options = new
+                    {
+                        temperature = 0.1,
+                        top_p = 0.85,
+                        num_predict = maxTokens
+                    }
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{_ollamaUrl}/api/generate", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<OllamaResponse>();
+                    return result?.Response ?? "Aucune réponse";
+                }
+            }
+            catch
+            {
+                // Falls back to simulated response
+            }
+
+            return GetSimulatedResponse(prompt);
         }
 
         private string GetSimulatedResponse(string prompt)

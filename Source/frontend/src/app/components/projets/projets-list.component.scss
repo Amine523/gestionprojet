@@ -1,0 +1,238 @@
+.projets-list-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.875rem;
+    font-weight: 700;
+  }
+
+  .filters {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    .search-input {
+      padding: 0.75rem 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      min-width: 250px;
+      transition: all 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+    }
+
+    .filter-select {
+      padding: 0.75rem 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+    }
+  }
+}
+
+.stats-summary {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 1px solid #e5e7eb;
+
+  .stat-item {
+    text-align: center;
+
+    .stat-number {
+      display: block;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 0.875rem;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+}
+
+.projets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+
+  .projet-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    transition: all 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .projet-header {
+      padding: 1.5rem 1.5rem 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+
+      h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        line-height: 1.4;
+        flex: 1;
+      }
+
+      .badge {
+        flex-shrink: 0;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: capitalize;
+
+        &.badge-warning {
+          background: #fef3c7;
+          color: #d97706;
+        }
+
+        &.badge-success {
+          background: #dcfce7;
+          color: #166534;
+        }
+
+        &.badge-info {
+          background: #dbeafe;
+          color: #1e40af;
+        }
+
+        &.badge-danger {
+          background: #fef2f2;
+          color: #dc2626;
+        }
+
+        &.badge-secondary {
+          background: #f3f4f6;
+          color: #374151;
+        }
+      }
+    }
+
+    .projet-body {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+
+      .projet-description {
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin: 0 0 1rem 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .projet-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .info-item {
+          font-size: 0.875rem;
+          color: #374151;
+
+          strong {
+            color: #1f2937;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #6b7280;
+
+  svg {
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1.125rem;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .projets-list-container {
+    padding: 1rem;
+  }
+
+  .list-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+
+    .filters {
+      flex-direction: column;
+
+      .search-input {
+        min-width: auto;
+      }
+    }
+  }
+
+  .stats-summary {
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .projets-grid {
+    grid-template-columns: 1fr;
+  }
+}

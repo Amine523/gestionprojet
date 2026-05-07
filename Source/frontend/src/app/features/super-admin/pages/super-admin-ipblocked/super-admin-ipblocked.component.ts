@@ -524,7 +524,14 @@ export class SuperAdminIpBlockedComponent implements OnInit {
   }
 
   debloquerIp(ip: BlockedIP) {
-    ip.statut = 'debloqué';
-    this.snackBar.open(`IP ${ip.ip} débloquée`, 'Fermer', { duration: 3000 });
+    this.api.unblockIp(ip.id).subscribe({
+      next: () => {
+        ip.statut = 'debloqué';
+        this.snackBar.open(`IP ${ip.ip} débloquée`, 'Fermer', { duration: 3000 });
+      },
+      error: () => {
+        this.snackBar.open(`Erreur lors du déblocage`, 'Fermer', { duration: 3000 });
+      }
+    });
   }
 }

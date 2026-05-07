@@ -311,7 +311,7 @@ export class ClientProjetsComponent implements OnInit {
   filterStatut = '';
 
   private get apiBase() {
-    return (this.api as any).baseUrl || 'http://localhost:5221';
+    return (this.api as any).baseUrl || '/api';
   }
 
   get filteredProjets(): Projet[] {
@@ -333,7 +333,7 @@ export class ClientProjetsComponent implements OnInit {
   }
 
   private loadProjets(userId: string) {
-    this.http.get<Projet[]>(`${this.apiBase}/api/client-projet/projets/${userId}`)
+    this.http.get<Projet[]>(`${this.apiBase}/client-projet/projets/${userId}`)
       .subscribe({
         next: (data) => { this.projets = data || []; this.isLoading = false; },
         error: () => { this.projets = []; this.isLoading = false; }

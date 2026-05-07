@@ -5,87 +5,74 @@ import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from 
 import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-chef-taches',
   standalone: true,
   imports: [CommonModule, FormsModule, DragDropModule, MatSnackBarModule],
   template: `
-
     <div class="taches-container">
-      <!-- Header -->
-      <div class="page-header">
-        <div>
+      <div class="page-header gradient-bg">
+        <div class="header-main">
           <h1 class="header-title">Gestion du Backlog</h1>
-          <p class="header-subtitle">{{societeNom}} • Planification et distribution des sprints</p>
+          <p class="header-subtitle">{{societeNom}} • Planification des Sprints & Distribution</p>
         </div>
-        <button class="btn btn-primary" (click)="openAddTache()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
+        <button class="btn btn-premium" (click)="openAddTache()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
           Nouvelle Tâche
         </button>
       </div>
 
-      <!-- Kanban Board -->
       <div class="kanban-board">
         @for (column of columns; track column.id) {
-          <div class="kanban-column">
+          <div class="kanban-column glass-panel">
             <div class="column-header">
-              <h3 class="column-title">{{column.title}}</h3>
-              <span class="column-count">{{getColumnTasks(column.id).length}}</span>
+              <div class="column-title-group">
+                <div class="column-indicator" [ngClass]="column.id"></div>
+                <h3 class="column-title">{{column.title}}</h3>
+              </div>
+              <span class="column-count-badge">{{getColumnTasks(column.id).length}}</span>
             </div>
             
-            <div class="column-tasks" cdkDropList [cdkDropListData]="getColumnTasks(column.id)" [id]="column.id" [cdkDropListConnectedTo]="connectedLists" (cdkDropListDropped)="drop($event)">
+            <div class="column-tasks-area" cdkDropList [cdkDropListData]="getColumnTasks(column.id)" [id]="column.id" [cdkDropListConnectedTo]="connectedLists" (cdkDropListDropped)="drop($event)">
               @for (tache of getColumnTasks(column.id); track tache.id) {
-                <div class="task-card" cdkDrag>
-                  <div class="task-priority" [ngClass]="'prio-' + (tache.priorite || 'Medium').toLowerCase()"></div>
-                  <div class="task-content">
-                      <div class="task-header">
-                        <span class="task-title">{{tache.titre || tache.nom}}</span>
+                <div class="task-card-premium" cdkDrag>
+                  <div class="task-priority-indicator" [ngClass]="'prio-' + (tache.priorite || 'Medium').toLowerCase()"></div>
+                  
+                  <div class="task-card-content">
+                    <div class="task-card-top">
+                      <span class="project-tag">{{tache.projetNom || 'Projet'}}</span>
+                      <div class="task-actions-overlay">
+                        <button class="icon-btn-sm" (click)="editTache(tache)" title="Modifier">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button class="icon-btn-sm danger" (click)="deleteTache(tache)" title="Supprimer">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
                       </div>
-                      <p class="task-description">{{tache.description}}</p>
-                      
-                      <div class="task-footer">
-                        <div class="task-assignee">
-                          <div class="avatar">
-                            {{ (tache.assignees && tache.assignees.length > 0) ? tache.assignees[0].nom.charAt(0) : '?' }}
-                          </div>
-                          <span class="assignee-name">
-                            {{ (tache.assignees && tache.assignees.length > 0) ? tache.assignees[0].nom + (tache.assignees.length > 1 ? ' +' + (tache.assignees.length - 1) : '') : 'Non assigné' }}
-                          </span>
+                    </div>
+
+                    <h4 class="task-card-title">{{tache.titre || tache.nom}}</h4>
+                    <p class="task-card-desc">{{tache.description}}</p>
+                    
+                    <div class="task-card-bottom">
+                      <div class="task-assignee-box">
+                        <div class="user-avatar-sm">
+                          {{ (tache.assignees && tache.assignees.length > 0) ? tache.assignees[0].nom.charAt(0) : '?' }}
                         </div>
-                        <div class="task-date">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                          </svg>
-                          <span>{{(tache.dateLimite || tache.dateEcheance) | date:'dd/MM/yyyy'}}</span>
-                        </div>
+                        <span class="user-name-sm">
+                          {{ (tache.assignees && tache.assignees.length > 0) ? tache.assignees[0].nom : '-' }}
+                        </span>
                       </div>
 
-                    <div class="task-actions">
-                      <button class="btn-icon" (click)="viewTache(tache)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                      </button>
-                      <button class="btn-icon" (click)="editTache(tache)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                      <button class="btn-icon btn-danger" (click)="deleteTache(tache)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
-                      </button>
+                      <div class="task-due-date" [class.is-late]="isOverdue(tache.dateLimite || tache.dateEcheance)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>{{(tache.dateLimite || tache.dateEcheance) | date:'dd MMM'}}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -95,94 +82,61 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
         }
       </div>
 
-      <!-- Modal -->
       @if (showTacheForm || editingTache || viewingTache) {
-        <div class="modal-overlay" (click)="closeForm()">
-          <div class="modal-card" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <h3 class="modal-title">{{viewingTache ? 'Détails' : (editingTache ? 'Éditer' : 'Créer')}} la Tâche</h3>
-              <button class="btn-close" (click)="closeForm()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
+        <div class="premium-modal-overlay" (click)="closeForm()">
+          <div class="premium-modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-gradient-header">
+              <h3 class="modal-title">{{editingTache ? 'Éditer' : 'Nouvelle'}} Tâche</h3>
+              <button class="modal-close-btn" (click)="closeForm()">&times;</button>
             </div>
 
-            @if (viewingTache) {
-              <div class="modal-body">
-                <div class="info-block">
-                  <label class="info-label">Description</label>
-                  <p>{{viewingTache.description}}</p>
+            <div class="modal-body">
+              <div class="form-grid">
+                <div class="form-field full">
+                  <label>Titre de la tâche</label>
+                  <input type="text" [(ngModel)]="formData.titre" placeholder="Titre descriptif...">
                 </div>
-                <div class="info-block">
-                  <label class="info-label">Assigné à</label>
-                  <div class="badges-list">
-                    @for (a of viewingTache.assignees; track a.id) {
-                      <span class="badge">{{a.nom}}</span>
-                    } @empty {
-                      <span class="text-muted">Aucun assigné</span>
+                <div class="form-field full">
+                  <label>Description</label>
+                  <textarea [(ngModel)]="formData.description" rows="3" placeholder="Détails de la tâche..."></textarea>
+                </div>
+                <div class="form-field">
+                  <label>Priorité</label>
+                  <select [(ngModel)]="formData.priorite">
+                    <option value="Low">Basse</option>
+                    <option value="Medium">Moyenne</option>
+                    <option value="High">Haute</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>Projet</label>
+                  <select [(ngModel)]="formData.projetId">
+                    <option value="">Sélectionner un projet</option>
+                    @for (p of projets; track p.id) {
+                      <option [value]="p.id">{{p.nom}}</option>
                     }
-                  </div>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>Date d'échéance</label>
+                  <input type="date" [(ngModel)]="formData.dateEcheance">
+                </div>
+                <div class="form-field">
+                  <label>Assigner à</label>
+                  <select [(ngModel)]="formData.assigneeId">
+                    <option value="">Non assigné</option>
+                    @for (m of membres; track m.id) {
+                      <option [value]="m.id">{{m.nom}}</option>
+                    }
+                  </select>
                 </div>
               </div>
-            } @else {
-              <div class="modal-body">
-                <div class="form-group">
-                  <label class="form-label">Titre de la tâche</label>
-                  <input type="text" class="form-input" [(ngModel)]="formData.titre" placeholder="ex: Intégration Auth">
-                </div>
+            </div>
 
-                <div class="form-group">
-                  <label class="form-label">Description</label>
-                  <textarea class="form-input" [(ngModel)]="formData.description" rows="3"></textarea>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">Priorité</label>
-                    <select class="form-input" [(ngModel)]="formData.priorite">
-                      <option value="Low">Basse</option>
-                      <option value="Medium">Moyenne</option>
-                      <option value="High">Haute</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Projet</label>
-                    <select class="form-input" [(ngModel)]="formData.projetId">
-                      @for (p of projets; track p.id) {
-                        <option [value]="p.id">{{p.nom}}</option>
-                      }
-                    </select>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">Date d'échéance</label>
-                    <input type="date" class="form-input" [(ngModel)]="formData.dateEcheance">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Assigner à</label>
-                    <select class="form-input" [(ngModel)]="formData.assigneeId">
-                      <option value="">Sélectionner un membre</option>
-                      @for (m of membres; track m.id) {
-                        <option [value]="m.id">{{m.nom}}</option>
-                      }
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button class="btn btn-outline" (click)="closeForm()">Annuler</button>
-                <button class="btn btn-primary" (click)="saveTache()">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  Enregistrer
-                </button>
-              </div>
-            }
+            <div class="modal-actions">
+              <button class="btn-text" (click)="closeForm()">Annuler</button>
+              <button class="btn-save" (click)="saveTache()">Enregistrer</button>
+            </div>
           </div>
         </div>
       }
@@ -190,208 +144,225 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   `,
   styles: [`
     .taches-container {
-      padding: var(--space-lg);
-      height: calc(100vh - 64px);
-      display: flex;
-      flex-direction: column;
+      padding: 24px;
+      background: #f1f5f9;
+      min-height: calc(100vh - 64px);
+      font-family: 'Inter', system-ui, sans-serif;
     }
 
     .page-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: var(--space-xl);
+      align-items: center;
+      margin-bottom: 32px;
+      padding: 24px;
+      border-radius: 16px;
+      color: white;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
     }
 
     .header-title {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin: 0 0 var(--space-sm);
+      font-size: 28px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.5px;
     }
 
     .header-subtitle {
-      color: var(--color-text-muted);
-      font-size: var(--font-size-base);
-      margin: 0;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: var(--radius-md);
-      font-weight: var(--font-weight-semibold);
-      font-size: var(--font-size-sm);
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-base);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-    }
-
-    .btn-primary:hover {
       opacity: 0.9;
+      margin: 4px 0 0;
+      font-size: 14px;
     }
 
-    .btn-outline {
-      background: transparent;
-      color: var(--color-text);
-      border: 1px solid var(--color-border);
-    }
-
-    .btn-outline:hover {
-      background: var(--color-bg);
-    }
-
-    .btn-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border: 1px solid var(--color-border);
-      background: white;
-      border-radius: var(--radius-md);
-      color: var(--color-text-muted);
-      cursor: pointer;
-      transition: all var(--transition-base);
-    }
-
-    .btn-icon:hover {
-      background: var(--color-bg);
-    }
-
-    .btn-icon.btn-danger {
-      color: #ef4444;
-      border-color: #ef4444;
-    }
-
-    .btn-icon.btn-danger:hover {
-      background: #ef4444;
+    .btn-premium {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
       color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.2s;
+    }
+
+    .btn-premium:hover {
+      background: white;
+      color: #4f46e5;
+      transform: translateY(-2px);
     }
 
     .kanban-board {
       display: flex;
-      gap: var(--space-lg);
-      flex: 1;
+      gap: 20px;
       overflow-x: auto;
-      padding-bottom: var(--space-md);
+      padding-bottom: 20px;
       align-items: flex-start;
     }
 
     .kanban-column {
-      min-width: 350px;
+      min-width: 320px;
       flex: 1;
-      max-height: 100%;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 20px;
+      padding: 20px;
+      max-height: calc(100vh - 220px);
       display: flex;
       flex-direction: column;
-      background: rgba(248, 250, 252, 0.5);
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg);
-      border: 1px solid var(--color-border);
     }
 
     .column-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: var(--space-lg);
+      margin-bottom: 20px;
     }
+
+    .column-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .column-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .column-indicator.todo { background: #94a3b8; }
+    .column-indicator.inprogress { background: #3b82f6; }
+    .column-indicator.done { background: #10b981; }
 
     .column-title {
       font-size: 14px;
-      font-weight: var(--font-weight-bold);
+      font-weight: 700;
+      color: #1e293b;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin: 0;
-      color: var(--color-text);
     }
 
-    .column-count {
-      background: rgba(107, 114, 128, 0.1);
-      color: #6b7280;
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
+    .column-count-badge {
+      background: #e2e8f0;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 20px;
     }
 
-    .column-tasks {
+    .column-tasks-area {
       flex: 1;
       overflow-y: auto;
-      min-height: 200px;
+      min-height: 100px;
     }
 
-    .task-card {
+    .task-card-premium {
       background: white;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      margin-bottom: var(--space-md);
-      box-shadow: var(--shadow-sm);
-      cursor: grab;
+      border-radius: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      border: 1px solid #f1f5f9;
       position: relative;
       overflow: hidden;
-      transition: all var(--transition-base);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    .task-card:hover {
-      box-shadow: var(--shadow-md);
+    .task-card-premium:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
 
-    .task-card:hover .task-actions {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .task-priority {
-      width: 4px;
-      height: 100%;
+    .task-priority-indicator {
       position: absolute;
       left: 0;
       top: 0;
+      bottom: 0;
+      width: 4px;
     }
 
-    .task-priority.prio-high {
-      background: #ef4444;
+    .task-priority-indicator.prio-high { background: #ef4444; }
+    .task-priority-indicator.prio-medium { background: #f59e0b; }
+    .task-priority-indicator.prio-low { background: #10b981; }
+
+    .task-card-content {
+      padding: 16px;
     }
 
-    .task-priority.prio-medium {
-      background: #f59e0b;
+    .task-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
     }
 
-    .task-priority.prio-low {
-      background: #10b981;
+    .project-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #6366f1;
+      background: #eef2ff;
+      padding: 2px 8px;
+      border-radius: 4px;
     }
 
-    .task-content {
-      padding: var(--space-md);
-      padding-left: calc(var(--space-md) + 8px);
-      position: relative;
+    .task-actions-overlay {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.2s;
     }
 
-    .task-header {
-      margin-bottom: var(--space-sm);
+    .task-card-premium:hover .task-actions-overlay {
+      opacity: 1;
     }
 
-    .task-title {
-      font-size: 14px;
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
+    .icon-btn-sm {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #64748b;
     }
 
-    .task-description {
-      font-size: 12px;
-      color: var(--color-text-muted);
-      margin: 0 0 var(--space-md);
+    .icon-btn-sm:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .icon-btn-sm.danger:hover {
+      background: #fee2e2;
+      color: #ef4444;
+      border-color: #fecaca;
+    }
+
+    .task-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 8px;
+      line-height: 1.4;
+    }
+
+    .task-card-desc {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0 0 16px;
       line-height: 1.5;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -399,251 +370,156 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       overflow: hidden;
     }
 
-    .task-footer {
+    .task-card-bottom {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid #f8fafc;
     }
 
-    .task-assignee {
+    .task-assignee-box {
       display: flex;
       align-items: center;
-      gap: var(--space-sm);
+      gap: 8px;
     }
 
-    .avatar {
+    .user-avatar-sm {
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background: #667eea;
+      background: #6366f1;
       color: white;
       font-size: 10px;
-      font-weight: 800;
+      font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .assignee-name {
+    .user-name-sm {
       font-size: 12px;
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
+      font-weight: 600;
+      color: #475569;
     }
 
-    .task-date {
+    .task-due-date {
       display: flex;
       align-items: center;
-      gap: var(--space-xs);
+      gap: 4px;
       font-size: 11px;
-      color: var(--color-text-muted);
+      font-weight: 600;
+      color: #94a3b8;
     }
 
-    .task-actions {
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-sm);
-      background: rgba(255, 255, 255, 0.9);
-      opacity: 0;
-      visibility: hidden;
-      transition: all var(--transition-base);
+    .task-due-date.is-late {
+      color: #ef4444;
     }
 
-    .modal-overlay {
+    .premium-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.4);
-      backdrop-filter: blur(8px);
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
     }
 
-    .modal-card {
-      width: 500px;
-      max-width: 90vw;
+    .premium-modal-card {
+      width: 550px;
       background: white;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-xl);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
 
-    .modal-header {
+    .modal-gradient-header {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      padding: 24px;
+      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: var(--space-lg);
-      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    .modal-close-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
       color: white;
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    }
-
-    .modal-title {
-      margin: 0;
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-    }
-
-    .btn-close {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      font-size: 24px;
       width: 32px;
       height: 32px;
-      border: none;
-      background: transparent;
-      color: white;
+      border-radius: 50%;
       cursor: pointer;
-      border-radius: var(--radius-md);
-      transition: background var(--transition-base);
     }
 
-    .btn-close:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
+    .modal-body { padding: 32px; }
 
-    .modal-body {
-      padding: var(--space-lg);
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: var(--space-sm);
-      padding: var(--space-md) var(--space-lg);
-      border-top: 1px solid var(--color-border);
-    }
-
-    .info-block {
-      padding: var(--space-md);
-      background: #f8fafc;
-      border-radius: var(--radius-lg);
-      margin-bottom: var(--space-md);
-    }
-
-    .info-label {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-bold);
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-      margin-bottom: var(--space-sm);
-      display: block;
-    }
-
-    .badges-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-sm);
-    }
-
-    .badge {
-      background: rgba(59, 130, 246, 0.1);
-      color: #3b82f6;
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-    }
-
-    .form-group {
-      margin-bottom: var(--space-md);
-    }
-
-    .form-label {
-      display: block;
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-      margin-bottom: var(--space-xs);
-    }
-
-    .form-input {
-      width: 100%;
-      padding: var(--space-sm) var(--space-md);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-sm);
-      background: white;
-      transition: border-color var(--transition-base);
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-
-    .form-row {
+    .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: var(--space-md);
+      gap: 20px;
     }
 
-    /* Dark mode */
-    :host-context(.dark) .kanban-column,
-    :host-context(.dark) .task-card,
-    :host-context(.dark) .modal-card {
-      background: var(--color-surface);
-      border-color: var(--color-border);
+    .form-field.full { grid-column: span 2; }
+
+    .form-field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 8px;
     }
 
-    :host-context(.dark) .column-title,
-    :host-context(.dark) .task-title,
-    :host-context(.dark) .assignee-name,
-    :host-context(.dark) .modal-title {
-      color: var(--color-text);
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      transition: border-color 0.2s;
     }
 
-    :host-context(.dark) .info-block {
-      background: rgba(255, 255, 255, 0.05);
+    .form-field input:focus { border-color: #6366f1; outline: none; }
+
+    .modal-actions {
+      padding: 24px 32px;
+      background: #f8fafc;
+      display: flex;
+      justify-content: flex-end;
+      gap: 16px;
     }
 
-    :host-context(.dark) .form-input {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-border);
-      color: var(--color-text);
+    .btn-text {
+      background: transparent;
+      border: none;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
     }
 
-    :host-context(.dark) .btn-icon {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    @media (max-width: 1024px) {
-      .kanban-board {
-        flex-direction: column;
-      }
-
-      .kanban-column {
-        min-width: 100%;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .taches-container {
-        padding: var(--space-md);
-      }
-
-      .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--space-md);
-      }
-
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-
-      .modal-card {
-        width: 90vw;
-      }
+    .btn-save {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
     }
   `]
 })
 export class ChefTachesComponent implements OnInit {
+  isOverdue(date: any): boolean {
+    if (!date) return false;
+    const d = new Date(date);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    return d < now;
+  }
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
   private notificationService = inject(NotificationService);
@@ -661,7 +537,8 @@ export class ChefTachesComponent implements OnInit {
   connectedLists = ['todo', 'inprogress', 'done'];
 
   taches: any[] = [];
-  membres: any[] = [];
+  membres: any[] = [];      // filtered for dropdown (devs/testers)
+  allEmployesMap = new Map<string, string>(); // full map for name resolution
   projets: any[] = [];
 
   showTacheForm = false;
@@ -677,113 +554,136 @@ export class ChefTachesComponent implements OnInit {
   }
 
   loadData() {
-    // Load projets for this societe first, then filter tasks by matching projetId
-    this.api.getProjetsBySociete(this.societeId).subscribe({
-      next: (projets) => {
+    forkJoin({
+      projets: this.api.getProjetsBySociete(this.societeId),
+      employes: this.api.getEmployesBySociete(this.societeId),
+      taches: this.api.getTaches(),
+      assignations: this.api.get<any>('tacheassignees/Liste').pipe(catchError(() => of([])))
+    }).subscribe({
+      next: ({ projets, employes, taches, assignations }: any) => {
+        // 1. Map Projets
         this.projets = (projets || [])
           .map((p: any) => ({ id: p.id || p.Id, nom: p.nom || p.Nom || p.titre || p.Titre }));
+        const projetIds = new Set(this.projets.map((p: any) => String(p.id)));
 
-        // Load members FIRST to have them available for task mapping
-        this.api.getEmployesBySociete(this.societeId).subscribe({
-          next: (res: any) => {
-            const list = Array.isArray(res) ? res : (res?.items || []);
-            this.membres = list
-              .filter((e: any) => {
-                const typeId = (e.typeUtilisateurId || e.TypeUtilisateurId || e.typeUtilisateur?.id || e.TypeUtilisateur?.Id || '').toString().toUpperCase();
-                const poste = (e.poste || e.Poste || '').toString().toUpperCase();
-                return typeId === 'T005' || typeId === 'T006' ||
-                  typeId.includes('DEV') || typeId.includes('TEST') || typeId.includes('QA') ||
-                  poste.includes('DEV') || poste.includes('TEST') || poste.includes('QA');
-              })
-              .map((e: any) => ({ id: e.id || e.Id, nom: (e.nom || e.Nom || '') + ' ' + (e.prenom || e.Prenom || '') }));
+        // 2. Map Employees for name resolution
+        const list = employes || [];
+        
+        const isDevOrTester = (e: any): boolean => {
+          const typeId = (e.typeUtilisateurId || e.TypeUtilisateurId || e.typeUtilisateur?.id || e.TypeUtilisateur?.Id || '').toString().toLowerCase();
+          const poste  = (e.poste || e.Poste || '').toString().toLowerCase();
+          return typeId === 't005' || typeId === 't006'
+            || typeId === 'developpeur' || typeId === 'testeur'
+            || typeId.includes('dev') || typeId.includes('test') || typeId.includes('qa')
+            || poste.includes('dev') || poste.includes('test') || poste.includes('qa');
+        };
 
-            // Now load tasks
-            const projetIds = new Set(this.projets.map((p: any) => String(p.id)));
-            this.api.getTaches().subscribe({
-              next: (taches) => {
-                const allTaches = (taches || [])
-                  .filter((t: any) => {
-                    const pId = t.projetId || t.ProjetId;
-                    return projetIds.has(String(pId)) || projetIds.size === 0;
-                  })
-                  .map((t: any) => {
-                    const rawStatus = (t.statut || t.Statut || t.status || t.Status || '').toLowerCase().trim();
-                    let normalizedStatus = 'todo';
-                    if (rawStatus === 'done' || rawStatus === 'terminé' || rawStatus === 'terminee' || rawStatus === 'terminée') normalizedStatus = 'done';
-                    else if (rawStatus === 'in progress' || rawStatus === 'en cours' || rawStatus === 'inprogress') normalizedStatus = 'inprogress';
-                    return {
-                      ...t,
-                      id: t.id || t.Id,
-                      titre: t.titre || t.Titre,
-                      description: t.description || t.Description,
-                      statut: normalizedStatus,
-                      priorite: t.priorite || t.Priorite || 'Medium',
-                      dateLimite: t.dateLimite || t.DateLimite || t.dateFin || t.DateFin,
-                      projetId: t.projetId || t.ProjetId,
-                      assignees: [] // will be filled below
-                    };
-                  });
-
-                this.taches = allTaches;
-
-                // Now enrich each task with its assignees from TacheAssignation
-                this.api.get<any>('tacheassignees/Liste').subscribe({
-                  next: (res: any) => {
-                    const assignations = Array.isArray(res) ? res : (res?.items || []);
-                    const assignationMap = new Map<string, string[]>();
-                    assignations.forEach((a: any) => {
-                      const tid = a.tacheId || a.TacheId || '';
-                      const uid = a.utilisateurId || a.UtilisateurId || '';
-                      if (tid && uid) {
-                        if (!assignationMap.has(tid)) assignationMap.set(tid, []);
-                        assignationMap.get(tid)!.push(uid);
-                      }
-                    });
-
-                    this.taches = this.taches.map((t: any) => {
-                      const userIds = assignationMap.get(t.id) || [];
-                      const assignees = userIds.map((uid: string) => {
-                        const member = this.membres.find((m: any) => String(m.id) === String(uid));
-                        return member ? { id: member.id, nom: member.nom } : { id: uid, nom: 'Inconnu' };
-                      });
-                      return { ...t, assignees };
-                    });
-                  },
-                  error: () => { /* keep assignees empty if endpoint fails */ }
-                });
-              },
-              error: () => { }
-            });
-
-          },
-          error: () => { }
+        this.allEmployesMap.clear();
+        list.forEach((e: any) => {
+          const name = (e.nom || e.Nom || e.prenom || e.Prenom || '').trim() || e.email || e.Email || 'Utilisateur';
+          this.allEmployesMap.set(String(e.id || e.Id), name);
         });
+
+        this.membres = list
+          .filter(isDevOrTester)
+          .map((e: any) => ({ 
+            id: e.id || e.Id, 
+            nom: this.allEmployesMap.get(String(e.id || e.Id)) 
+          }));
+
+        // 3. Build Assignation Map
+        const assigns = Array.isArray(assignations) ? assignations : (assignations?.value || []);
+        const assignationMap = new Map<string, string[]>();
+        assigns.forEach((a: any) => {
+          const tid = String(a.tacheId || a.TacheId || '');
+          const uid = String(a.utilisateurId || a.UtilisateurId || '');
+          if (tid && uid) {
+            if (!assignationMap.has(tid)) assignationMap.set(tid, []);
+            assignationMap.get(tid)!.push(uid);
+          }
+        });
+
+        // 4. Map and Filter Tasks
+        this.taches = (taches || [])
+          .filter((t: any) => {
+            const pId = String(t.projetId || t.ProjetId);
+            return projetIds.has(pId) || projetIds.size === 0;
+          })
+          .map((t: any) => {
+            const taskId = String(t.id || t.Id);
+            const rawStatus = (t.statut || t.Statut || t.status || t.Status || '').toLowerCase().trim();
+            let normalizedStatus = 'todo';
+            if (['done', 'terminé', 'terminee', 'terminée', 'terminÃ©', 'terminÃ©e'].includes(rawStatus)) normalizedStatus = 'done';
+            else if (['in progress', 'en cours', 'inprogress', 'encours', 'in-progress'].includes(rawStatus)) normalizedStatus = 'inprogress';
+
+            // Resolve assignees from both map and direct fields
+            const userIds = new Set(assignationMap.get(taskId) || []);
+            const directId = t.assigneeId || t.AssigneeId || t.utilisateurId || t.UtilisateurId;
+            if (directId) userIds.add(String(directId));
+
+            const assignees = Array.from(userIds).map(uid => ({
+              id: uid,
+              nom: this.allEmployesMap.get(String(uid)) || uid
+            }));
+
+            const pId = t.projetId || t.ProjetId;
+            const proj = this.projets.find((p: any) => String(p.id) === String(pId));
+
+            return {
+              ...t,
+              id: taskId,
+              titre: t.titre || t.Titre || t.nom || t.Nom || 'Tâche sans titre',
+              description: t.description || t.Description || '',
+              statut: normalizedStatus,
+              priorite: t.priorite || t.Priorite || 'Medium',
+              dateLimite: t.dateLimite || t.DateLimite || t.dateFin || t.DateFin,
+              projetId: pId,
+              projetNom: proj ? proj.nom : 'Projet',
+              assignees
+            };
+          });
       },
-      error: () => { }
+      error: (err) => {
+        console.error('ChefTaches - Erreur chargement données:', err);
+      }
     });
   }
 
   getColumnTasks(columnId: string): any[] {
-    return this.taches.filter(t => {
-      const s = (t.statut || t.status || '').toLowerCase().trim().replace(/ /g, '');
-      switch (columnId) {
-        case 'todo': return s === 'todo' || s === 'todo' || s === 'todo';
-        case 'inprogress': return s === 'inprogress' || s === 'encours';
-        case 'done': return s === 'done' || s === 'termin\u00e9' || s === 'terminee';
-        default: return s === columnId;
-      }
-    });
+    return this.taches.filter(t => (t.statut || 'todo') === columnId);
   }
 
   drop(event: CdkDragDrop<any[]>) {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
+      const task = event.previousContainer.data[event.previousIndex];
+      const newStatus = event.container.id;
+      
       transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
-      const task = event.container.data[event.currentIndex];
-      task.statut = event.container.id;
-      task.status = event.container.id;
-      this.api.saveTache(task).subscribe();
+      
+      // Update local state
+      task.statut = newStatus;
+      task.status = newStatus;
+
+      // Map to backend expected values
+      let backendStatus = 'To Do';
+      if (newStatus === 'inprogress') backendStatus = 'In Progress';
+      else if (newStatus === 'done') backendStatus = 'Done';
+
+      // Send to backend
+      const payload = { ...task, statut: backendStatus, Statut: backendStatus };
+      this.api.saveTache(payload).subscribe({
+        next: () => {
+          this.snackBar.open(`Statut mis à jour : ${backendStatus}`, 'Fermer', { duration: 2000 });
+        },
+        error: (err) => {
+          console.error('ChefTaches - Erreur drag drop:', err);
+          this.snackBar.open('Erreur lors de la mise à jour du statut', 'Fermer', { duration: 3000 });
+          // Optionnel: On pourrait recharger les données pour annuler visuellement le changement
+          this.loadData();
+        }
+      });
     }
   }
 
@@ -801,7 +701,7 @@ export class ChefTachesComponent implements OnInit {
   }
   deleteTache(t: any) {
     if (confirm('Supprimer cette tâche?')) {
-      this.api.saveTache({ ...t, Actif: false, Id: t.id }).subscribe({
+      this.api.deleteTache(t.id).subscribe({
         next: () => {
           this.taches = this.taches.filter((x: any) => x.id !== t.id);
           this.snackBar.open('Tâche supprimée', 'Fermer', { duration: 3000 });
@@ -832,13 +732,12 @@ export class ChefTachesComponent implements OnInit {
       return;
     }
 
-    // Mapping frontend data to backend Tache entity
     // Normalize statut from internal kanban ids to backend expected values
     let statutValue = 'To Do';
     if (this.editingTache) {
       const rawS = (this.editingTache.statut || this.editingTache.status || '').toLowerCase();
-      if (rawS === 'done' || rawS === 'terminé' || rawS === 'terminée') statutValue = 'Done';
-      else if (rawS === 'inprogress' || rawS === 'in progress' || rawS === 'en cours') statutValue = 'In Progress';
+      if (['done', 'terminé', 'terminee', 'terminée', 'terminÃ©', 'terminÃ©e'].includes(rawS)) statutValue = 'Done';
+      else if (['inprogress', 'in progress', 'en cours', 'in-progress'].includes(rawS)) statutValue = 'In Progress';
       else statutValue = 'To Do';
     }
 
@@ -847,10 +746,11 @@ export class ChefTachesComponent implements OnInit {
       description: this.formData.description || '',
       priorite: this.formData.priorite || 'Medium',
       statut: statutValue,
+      Statut: statutValue, // Both just in case
       dateFin: (this.formData.dateEcheance && !isNaN(new Date(this.formData.dateEcheance).getTime())) ? new Date(this.formData.dateEcheance).toISOString() : null,
       projetId: this.formData.projetId,
       societeId: this.societeId,
-      // Send null when no assignee selected — empty string causes backend issues
+      // Send null when no assignee selected â€” empty string causes backend issues
       utilisateurId: this.formData.assigneeId ? this.formData.assigneeId : null,
       devComment: '',
       testComment: '',
@@ -932,7 +832,7 @@ export class ChefTachesComponent implements OnInit {
                     // Reload again to show assignee name
                     this.loadData();
                   },
-                  error: (e: any) => console.warn('Assignation nouvelle tâche:', e?.error || e)
+                  error: (e: any) => console.warn('Assignation nouvelle tÃ¢che:', e?.error || e)
                 });
               }
             }, 800);

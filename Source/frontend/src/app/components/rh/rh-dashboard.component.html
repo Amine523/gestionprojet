@@ -1,0 +1,550 @@
+<div class="rh-dashboard-container">
+  <!-- Header -->
+  <header class="page-header gradient-bg">
+    <div class="header-main">
+      <h1 class="header-title">Tableau de Bord <span class="gradient-text">RH.</span></h1>
+      <p class="header-subtitle">{{currentUser()?.societeNom || 'Société'}} • Gestion des Ressources Humaines</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-premium" (click)="openRecrutementModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="8.5" cy="7" r="4"/>
+          <line x1="20" y1="8" x2="16.65" y2="16.65"/>
+        </svg>
+        Recruter
+      </button>
+      <button class="btn btn-secondary" (click)="openCongeModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Gérer Congés
+      </button>
+    </div>
+  </header>
+
+  <!-- Stats Overview -->
+  <div class="stats-overview">
+    <div class="stat-card">
+      <div class="stat-icon employees">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().totalEmployes}}</h3>
+        <p>Total Employés</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon active">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().employesActifs}}</h3>
+        <p>Employés Actifs</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon pending">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().demandesConges}}</h3>
+        <p>Demandes en Attente</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon candidates">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().nouvellesCandidatures}}</h3>
+        <p>Nouvelles Candidatures</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="selectedTab() === 'overview'"
+      (click)="selectTab('overview')"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <line x1="9" y1="9" x2="15" y2="15"/>
+        <line x1="15" y1="9" x2="9" y2="15"/>
+      </svg>
+      Vue d'Ensemble
+    </button>
+    
+    <button 
+      class="tab-btn" 
+      [class.active]="selectedTab() === 'employes'"
+      (click)="selectTab('employes')"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Employés
+    </button>
+    
+    <button 
+      class="tab-btn" 
+      [class.active]="selectedTab() === 'recrutement'"
+      (click)="selectTab('recrutement')"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      Recrutement
+    </button>
+    
+    <button 
+      class="tab-btn" 
+      [class.active]="selectedTab() === 'conges'"
+      (click)="selectTab('conges')"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      Congés
+    </button>
+    
+    <button 
+      class="tab-btn" 
+      [class.active]="selectedTab() === 'formations'"
+      (click)="selectTab('formations')"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H2z"/>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h6z"/>
+        <path d="M15 7l-3-3-3 3"/>
+        <path d="M9 7l3 3 3-3"/>
+      </svg>
+      Formations
+    </button>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-section">
+    <div class="search-box">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher...">
+    </div>
+  </div>
+
+  <!-- Overview Tab Content -->
+  @if (selectedTab() === 'overview') {
+    <div class="overview-content">
+      <div class="overview-grid">
+        <div class="overview-card">
+          <h3>Employés Récents</h3>
+          <div class="recent-list">
+            @for (employe of filteredEmployes().slice(0, 5); track employe.id) {
+              <div class="recent-item">
+                <div class="recent-avatar">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div class="recent-info">
+                  <h4>{{employe.nom}} {{employe.prenom}}</h4>
+                  <p>{{employe.email}}</p>
+                  <span class="recent-role">{{getTypeUtilisateurLabel(employe.typeUtilisateurId)}}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+        
+        <div class="overview-card">
+          <h3>Demandes de Congés</h3>
+          <div class="recent-list">
+            @for (conge of filteredConges().slice(0, 3); track conge.id) {
+              <div class="recent-item">
+                <div class="conge-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+                <div class="recent-info">
+                  <h4>{{conge.employeNom}}</h4>
+                  <p>{{getCongeTypeLabel(conge.type)}} - {{calculateDuree(conge.dateDebut, conge.dateFin)}} jours</p>
+                  <span [class]="'status-badge ' + getCongeStatutClass(conge.statut)">
+                    {{getCongeStatutLabel(conge.statut)}}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+        
+        <div class="overview-card">
+          <h3>Candidatures Récentes</h3>
+          <div class="recent-list">
+            @for (candidat of filteredRecrutements().slice(0, 3); track candidat.id) {
+              <div class="recent-item">
+                <div class="candidat-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div class="recent-info">
+                  <h4>{{candidat.nom}} {{candidat.prenom}}</h4>
+                  <p>{{candidat.experience}}</p>
+                  <span [class]="'status-badge ' + getRecrutementStatutClass(candidat.statut)">
+                    {{getRecrutementStatutLabel(candidat.statut)}}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Employees Tab Content -->
+  @if (selectedTab() === 'employes') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h2>Liste des Employés</h2>
+        <button class="btn btn-primary" (click)="navigateToEmployes()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14"/>
+            <path d="M5 12h14"/>
+          </svg>
+          Voir tous
+        </button>
+      </div>
+      
+      <div class="employees-grid">
+        @for (employe of filteredEmployes().slice(0, 8); track employe.id) {
+          <div class="employee-card">
+            <div class="employee-avatar">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="employee-info">
+              <h4>{{employe.nom}} {{employe.prenom}}</h4>
+              <p>{{employe.email}}</p>
+              <span class="employee-role">{{getTypeUtilisateurLabel(employe.typeUtilisateurId)}}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Recruitment Tab Content -->
+  @if (selectedTab() === 'recrutement') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h2>Processus de Recrutement</h2>
+        <button class="btn btn-primary" (click)="navigateToRecrutement()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14"/>
+            <path d="M5 12h14"/>
+          </svg>
+          Gérer le processus
+        </button>
+      </div>
+      
+      <div class="recruitment-grid">
+        @for (candidat of filteredRecrutements().slice(0, 6); track candidat.id) {
+          <div class="candidate-card">
+            <div class="candidate-header">
+              <h4>{{candidat.nom}} {{candidat.prenom}}</h4>
+              <span [class]="'status-badge ' + getRecrutementStatutClass(candidat.statut)">
+                {{getRecrutementStatutLabel(candidat.statut)}}
+              </span>
+            </div>
+            <div class="candidate-info">
+              <p><strong>Email:</strong> {{candidat.email}}</p>
+              <p><strong>Téléphone:</strong> {{candidat.telephone || 'N/A'}}</p>
+              <p><strong>Expérience:</strong> {{candidat.experience}}</p>
+              <div class="candidate-skills">
+                <strong>Compétences:</strong>
+                <div class="skills-tags">
+                  @for (skill of candidat.competences; track $index) {
+                    <span class="skill-tag">{{skill}}</span>
+                  }
+                </div>
+              </div>
+            </div>
+            <div class="candidate-actions">
+              <button class="action-btn" (click)="openRecrutementModal(candidat)">Voir détails</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Leave Requests Tab Content -->
+  @if (selectedTab() === 'conges') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h2>Demandes de Congés</h2>
+        <button class="btn btn-primary" (click)="navigateToConges()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14"/>
+            <path d="M5 12h14"/>
+          </svg>
+          Gérer les congés
+        </button>
+      </div>
+      
+      <div class="leave-requests">
+        @for (conge of filteredConges(); track conge.id) {
+          <div class="leave-card">
+            <div class="leave-header">
+              <h4>{{conge.employeNom}}</h4>
+              <div class="leave-actions">
+                @if (conge.statut === 'en_attente') {
+                  <button class="action-btn approve" (click)="approuverConge(conge)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                      <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    Approuver
+                  </button>
+                  <button class="action-btn reject" (click)="refuserConge(conge)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    Refuser
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="leave-details">
+              <p><strong>Type:</strong> {{getCongeTypeLabel(conge.type)}}</p>
+              <p><strong>Durée:</strong> {{calculateDuree(conge.dateDebut, conge.dateFin)}} jours</p>
+              <p><strong>Période:</strong> {{formatDate(conge.dateDebut)}} - {{formatDate(conge.dateFin)}}</p>
+              @if (conge.motif) {
+                <p><strong>Motif:</strong> {{conge.motif}}</p>
+              }
+            </div>
+            <div class="leave-footer">
+              <span class="leave-date">Demandé le: {{formatDate(conge.dateDemande)}}</span>
+              <span [class]="'status-badge ' + getCongeStatutClass(conge.statut)">
+                {{getCongeStatutLabel(conge.statut)}}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Training Tab Content -->
+  @if (selectedTab() === 'formations') {
+    <div class="tab-content">
+      <div class="content-header">
+        <h2>Formations et Développement</h2>
+        <button class="btn btn-primary" (click)="navigateToFormations()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h6z"/>
+            <path d="M15 7l-3-3-3 3"/>
+            <path d="M9 7l3 3 3-3"/>
+          </svg>
+          Planifier des formations
+        </button>
+      </div>
+      
+      <div class="training-placeholder">
+        <div class="placeholder-icon">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h6z"/>
+            <path d="M15 7l-3-3-3 3"/>
+            <path d="M9 7l3 3 3-3"/>
+          </svg>
+        </div>
+        <h3>Module de Formations</h3>
+        <p>Gérez les plans de formation, suivez les progrès des employés et organisez des sessions de développement des compétences.</p>
+        <button class="btn btn-secondary">Configurer les formations</button>
+      </div>
+    </div>
+  }
+
+  <!-- Leave Modal -->
+  @if (showCongeModal()) {
+    <div class="modal-overlay" (click)="closeCongeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{selectedConge() ? 'Modifier la demande de congé' : 'Nouvelle demande de congé'}}</h2>
+          <button class="btn-icon" (click)="closeCongeModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        <form [formGroup]="congeForm" (ngSubmit)="submitConge()">
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Employé *</label>
+              <select formControlName="employeId">
+                <option value="">Sélectionner un employé</option>
+                @for (employe of employes(); track employe.id) {
+                  <option [value]="employe.id">{{employe.nom}} {{employe.prenom}}</option>
+                }
+              </select>
+            </div>
+            
+            <div class="form-field">
+              <label>Type de congé *</label>
+              <select formControlName="type">
+                <option value="conge_paye">Congé Payé</option>
+                <option value="maladie">Maladie</option>
+                <option value="personnel">Personnel</option>
+              </select>
+            </div>
+            
+            <div class="form-field">
+              <label>Date de début *</label>
+              <input formControlName="dateDebut" type="date">
+            </div>
+            
+            <div class="form-field">
+              <label>Date de fin *</label>
+              <input formControlName="dateFin" type="date">
+            </div>
+            
+            <div class="form-field full-width">
+              <label>Motif</label>
+              <textarea formControlName="motif" rows="3" placeholder="Motif du congé..."></textarea>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" (click)="closeCongeModal()" class="btn btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="congeForm.invalid" class="btn btn-primary">
+              {{selectedConge() ? 'Mettre à jour' : 'Créer la demande'}}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Recruitment Modal -->
+  @if (showRecrutementModal()) {
+    <div class="modal-overlay" (click)="closeRecrutementModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{selectedRecrutement() ? 'Modifier la candidature' : 'Nouvelle candidature'}}</h2>
+          <button class="btn-icon" (click)="closeRecrutementModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        <form [formGroup]="recrutementForm" (ngSubmit)="submitRecrutement()">
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Nom *</label>
+              <input formControlName="nom" type="text" placeholder="Nom du candidat">
+            </div>
+            
+            <div class="form-field">
+              <label>Prénom *</label>
+              <input formControlName="prenom" type="text" placeholder="Prénom du candidat">
+            </div>
+            
+            <div class="form-field">
+              <label>Email *</label>
+              <input formControlName="email" type="email" placeholder="Email professionnel">
+            </div>
+            
+            <div class="form-field">
+              <label>Téléphone</label>
+              <input formControlName="telephone" type="tel" placeholder="Numéro de téléphone">
+            </div>
+            
+            <div class="form-field">
+              <label>Type de poste *</label>
+              <select formControlName="typeUtilisateurId">
+                <option value="">Sélectionner un type</option>
+                <option value="T005">Développeur</option>
+                <option value="T006">Testeur/QA</option>
+                <option value="T004">Chef de Projet</option>
+                <option value="T003">RH</option>
+                <option value="T002">Admin Société</option>
+              </select>
+            </div>
+            
+            <div class="form-field full-width">
+              <label>Expérience *</label>
+              <textarea formControlName="experience" rows="3" placeholder="Années d'expérience et domaines..."></textarea>
+            </div>
+            
+            <div class="form-field full-width">
+              <label>Compétences *</label>
+              <input formControlName="competences" type="text" placeholder="Angular, TypeScript, Node.js...">
+            </div>
+            
+            <div class="form-field full-width">
+              <label>Notes</label>
+              <textarea formControlName="notes" rows="3" placeholder="Notes sur le candidat..."></textarea>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" (click)="closeRecrutementModal()" class="btn btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="recrutementForm.invalid" class="btn btn-primary">
+              {{selectedRecrutement() ? 'Mettre à jour' : 'Créer la candidature'}}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

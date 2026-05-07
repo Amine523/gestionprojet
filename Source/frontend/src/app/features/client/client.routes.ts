@@ -4,7 +4,7 @@ import { ClientProjetsComponent } from './pages/client-projets/client-projets.co
 import { ClientRapportsComponent } from './pages/client-rapports/client-rapports.component';
 import { ClientFeedbackComponent } from './pages/client-feedback/client-feedback.component';
 import { AdminChatComponent } from '../admin/pages/admin-chat/admin-chat.component';
-import { DevParametresComponent } from '../dev/pages/dev-parametres/dev-parametres.component';
+import { ParametresComponent } from '../dev/pages/parametres/components/parametres.component';
 import { NotificationsComponent } from '@shared/components/notifications/notifications.component';
 import { ProfileComponent } from '@shared/components/profile/profile.component';
 
@@ -16,6 +16,6 @@ export const CLIENT_ROUTES: Routes = [
   { path: 'chat', component: AdminChatComponent },
   { path: 'notifications', component: NotificationsComponent },
   { path: 'profil', component: ProfileComponent },
-  { path: 'parametres', component: DevParametresComponent },
+  { path: 'parametres', component: ParametresComponent },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];

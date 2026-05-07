@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-chef-bugs',
@@ -273,6 +274,15 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                 <select class="form-select" [(ngModel)]="formData.projetId">
                   @for (p of projets; track p.nom) {
                     <option [value]="p.nom">{{p.nom}}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Assigner à</label>
+                <select class="form-select" [(ngModel)]="formData.assignee">
+                  <option value="">Non assigné</option>
+                  @for (m of membres; track m.id) {
+                    <option [value]="m.nomComplet">{{m.nomComplet}}</option>
                   }
                 </select>
               </div>
@@ -894,7 +904,7 @@ export class ChefBugsComponent implements OnInit {
 
   showAddBug = false;
   editingBug: any = null;
-  formData: any = { titre: '', description: '', priorite: 'Medium', projetId: '', etapes: '' };
+  formData: any = { titre: '', description: '', priorite: 'Medium', projetId: '', etapes: '', assignee: '' };
 
   bugsOuverts = 0;
   bugsEnCours = 0;
@@ -909,19 +919,20 @@ export class ChefBugsComponent implements OnInit {
   }
   
   loadData() {
-    this.api.getProjetsBySociete(this.societeId).subscribe({
-      next: (projets) => {
+    forkJoin({
+      projets: this.api.getProjetsBySociete(this.societeId),
+      employes: this.api.getEmployesBySociete(this.societeId)
+    }).subscribe({
+      next: ({ projets, employes }) => {
         this.projets = projets.map((p: any) => ({ nom: p.nom }));
+        this.membres = employes.map((e: any) => ({
+          id: e.id || e.Id,
+          // Backend stores full name in "nom" (prenom is always empty)
+          nomComplet: (e.nom || e.Nom || e.prenom || e.Prenom || '').trim() || e.email || e.Email
+        }));
         this.generateBugs();
       },
       error: () => { this.generateBugs(); }
-    });
-    
-    this.api.getEmployesBySociete(this.societeId).subscribe({
-      next: (employes) => {
-        this.membres = employes.map((e: any) => e.nom);
-      },
-      error: () => {}
     });
   }
   
@@ -933,7 +944,7 @@ export class ChefBugsComponent implements OnInit {
       titre: `Bug ${i + 1}`,
       priorite: priorites[Math.floor(Math.random() * 4)],
       statut: statuts[Math.floor(Math.random() * 3)],
-      assignee: this.membres.length > 0 ? this.membres[Math.floor(Math.random() * this.membres.length)] : '',
+      assignee: this.membres.length > 0 ? this.membres[Math.floor(Math.random() * this.membres.length)].nomComplet : '',
       projet: this.projets.length > 0 ? this.projets[Math.floor(Math.random() * this.projets.length)].nom : 'Projet',
       date: new Date().toLocaleDateString('fr-FR')
     }));
@@ -976,7 +987,7 @@ export class ChefBugsComponent implements OnInit {
   }
 
   openAddBug() {
-    this.formData = { titre: '', description: '', priorite: 'Medium', projet: '', etapes: '' };
+    this.formData = { titre: '', description: '', priorite: 'Medium', projet: '', etapes: '', assignee: '' };
     this.showAddBug = true;
   }
 

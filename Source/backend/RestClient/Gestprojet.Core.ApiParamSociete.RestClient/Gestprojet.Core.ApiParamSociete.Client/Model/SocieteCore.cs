@@ -39,13 +39,21 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
         /// <param name="adresse">adresse.</param>
         /// <param name="planAbonnement">planAbonnement.</param>
         /// <param name="actif">actif.</param>
-        public SocieteCore(string id = default(string), string nom = default(string), string adresse = default(string), string planAbonnement = default(string), bool? actif = default(bool?))
+        public SocieteCore(string id = default(string), string nom = default(string), string adresse = default(string), string planAbonnement = default(string), bool? actif = default(bool?), string telephoneContact = default(string), string email = default(string), string codePostale = default(string), string ville = default(string), string pays = default(string), string personneContact = default(string), string fax = default(string), string siteWeb = default(string))
         {
             this.Id = id;
             this.Nom = nom;
             this.Adresse = adresse;
             this.PlanAbonnement = planAbonnement;
             this.Actif = actif;
+            this.TelephoneContact = telephoneContact;
+            this.Email = email;
+            this.CodePostale = codePostale;
+            this.Ville = ville;
+            this.Pays = pays;
+            this.PersonneContact = personneContact;
+            this.Fax = fax;
+            this.SiteWeb = siteWeb;
         }
 
         /// <summary>
@@ -79,6 +87,54 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
         public bool? Actif { get; set; }
 
         /// <summary>
+        /// Gets or Sets TelephoneContact
+        /// </summary>
+        [DataMember(Name = "telephoneContact", EmitDefaultValue = true)]
+        public string TelephoneContact { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Email
+        /// </summary>
+        [DataMember(Name = "email", EmitDefaultValue = true)]
+        public string Email { get; set; }
+
+        /// <summary>
+        /// Gets or Sets CodePostale
+        /// </summary>
+        [DataMember(Name = "codePostale", EmitDefaultValue = true)]
+        public string CodePostale { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Ville
+        /// </summary>
+        [DataMember(Name = "ville", EmitDefaultValue = true)]
+        public string Ville { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Pays
+        /// </summary>
+        [DataMember(Name = "pays", EmitDefaultValue = true)]
+        public string Pays { get; set; }
+
+        /// <summary>
+        /// Gets or Sets PersonneContact
+        /// </summary>
+        [DataMember(Name = "personneContact", EmitDefaultValue = true)]
+        public string PersonneContact { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Fax
+        /// </summary>
+        [DataMember(Name = "fax", EmitDefaultValue = true)]
+        public string Fax { get; set; }
+
+        /// <summary>
+        /// Gets or Sets SiteWeb
+        /// </summary>
+        [DataMember(Name = "siteWeb", EmitDefaultValue = true)]
+        public string SiteWeb { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -91,6 +147,10 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
             sb.Append("  Adresse: ").Append(Adresse).Append("\n");
             sb.Append("  PlanAbonnement: ").Append(PlanAbonnement).Append("\n");
             sb.Append("  Actif: ").Append(Actif).Append("\n");
+            sb.Append("  TelephoneContact: ").Append(TelephoneContact).Append("\n");
+            sb.Append("  Email: ").Append(Email).Append("\n");
+            sb.Append("  Ville: ").Append(Ville).Append("\n");
+            sb.Append("  Pays: ").Append(Pays).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -149,6 +209,26 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
                     this.Actif == input.Actif ||
                     (this.Actif != null &&
                     this.Actif.Equals(input.Actif))
+                ) &&
+                (
+                    this.Email == input.Email ||
+                    (this.Email != null &&
+                    this.Email.Equals(input.Email))
+                ) &&
+                (
+                    this.TelephoneContact == input.TelephoneContact ||
+                    (this.TelephoneContact != null &&
+                    this.TelephoneContact.Equals(input.TelephoneContact))
+                ) &&
+                (
+                    this.Ville == input.Ville ||
+                    (this.Ville != null &&
+                    this.Ville.Equals(input.Ville))
+                ) &&
+                (
+                    this.Pays == input.Pays ||
+                    (this.Pays != null &&
+                    this.Pays.Equals(input.Pays))
                 );
         }
 
@@ -171,6 +251,14 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
                     hashCode = hashCode * 59 + this.PlanAbonnement.GetHashCode();
                 if (this.Actif != null)
                     hashCode = hashCode * 59 + this.Actif.GetHashCode();
+                if (this.Email != null)
+                    hashCode = hashCode * 59 + this.Email.GetHashCode();
+                if (this.TelephoneContact != null)
+                    hashCode = hashCode * 59 + this.TelephoneContact.GetHashCode();
+                if (this.Ville != null)
+                    hashCode = hashCode * 59 + this.Ville.GetHashCode();
+                if (this.Pays != null)
+                    hashCode = hashCode * 59 + this.Pays.GetHashCode();
                 return hashCode;
             }
         }

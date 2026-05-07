@@ -349,7 +349,11 @@ get groupMembreCount(): number {
     
     this.api.getUtilisateurs().subscribe({
       next: (users) => {
-        const usersOfSociete = users.filter((u: any) => u.societeId === this.societeId && u.id !== currentUserId);
+        const usersOfSociete = users.filter((u: any) => 
+          u.societeId === this.societeId && 
+          u.id !== currentUserId && 
+          (u.typeUtilisateurId || '').toUpperCase() !== 'T008'
+        );
         this.contacts = usersOfSociete.map((u: any) => ({
           id: u.id,
           nom: u.nom,
@@ -426,7 +430,19 @@ get groupMembreCount(): number {
 
   selectContact(contact: Contact) {
     this.selectedContact = contact;
-    this.messages = this.getStoredMessages(contact.id);
+    const roomId = this.getRoomId(this.currentUserId, contact.id);
+    this.api.getChatMessages(roomId).subscribe({
+      next: (data: any) => {
+        this.messages = data.map((m: any) => ({
+          id: m.id,
+          text: m.text,
+          from: m.from,
+          fromName: m.fromName || (m.from == this.currentUserId ? 'Me' : contact.nom),
+          time: m.time,
+          attachments: m.attachments
+        }));
+      }
+    });
     
     const idx = this.contacts.findIndex(c => c.id === contact.id);
     if (idx >= 0) {
@@ -435,102 +451,36 @@ get groupMembreCount(): number {
   }
 
   sendMessage() {
-    if (!this.newMessage.trim() && this.pendingAttachments.length === 0) return;
-    if (!this.selectedContact) return;
+    if (!this.newMessage.trim() || !this.selectedContact) return;
     
     const now = new Date();
-    const message: Message = {
-      id: this.generateId('MSG_'),
+    const isoTimestamp = now.toISOString();
+    const roomId = this.getRoomId(this.currentUserId, this.selectedContact.id);
+    
+    const msg: Message = {
+      id: Date.now().toString(),
       text: this.newMessage,
       from: this.currentUserId,
-      fromName: this.currentUserNom,
+      fromName: 'Moi',
       time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     };
     
-    if (this.pendingAttachments.length > 0) {
-      message.attachments = this.pendingAttachments.map(a => ({
-        name: a.name,
-        type: a.type,
-        url: a.data
-      }));
-    }
-    
-    this.messages.push(message);
-    this.saveMessage(this.selectedContact.id, message);
-    
-    this.newMessage = '';
-    this.pendingAttachments = [];
-  }
+    const payload = { ...msg, chatRoomId: roomId, timestamp: isoTimestamp };
 
-  onFileSelected(event: any) {
-    const files = event.target.files;
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.pendingAttachments.push({
-          name: file.name,
-          type: file.type,
-          data: reader.result as string
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-    event.target.value = '';
-  }
-
-  downloadAttachment(att: { name: string; type: string; url: string }) {
-    const link = document.createElement('a');
-    link.href = att.url;
-    link.download = att.name;
-    link.click();
-  }
-
-  saveMessage(contactId: string, message: Message) {
-    if (contactId === 'SUPER_ADMIN') {
-      const storage = this.api.getRawStorage();
-      if (!storage.conversations) storage.conversations = {};
-      
-      const key = this.societeId || 'SUPER';
-      
-      if (!storage.conversations[key]) storage.conversations[key] = [];
-      
-      const msgToSave = {
-        id: message.id,
-        text: message.text,
-        from: message.from,
-        fromName: message.fromName,
-        fromRole: 'Admin Société',
-        time: message.time,
-        date: new Date().toISOString()
-      };
-      
-      storage.conversations[key].push(msgToSave);
-      localStorage.setItem('app_data', JSON.stringify(storage));
-    } else {
-      const messages = this.getStoredMessages(contactId);
-      messages.push(message);
-      localStorage.setItem('app_chat_' + contactId, JSON.stringify(messages));
-    }
-  }
-
-  getStoredMessages(contactId: string): Message[] {
-    if (contactId === 'SUPER_ADMIN') {
-      const storage = this.api.getRawStorage();
-      const conversations = storage.conversations || {};
-      const key = this.societeId || 'SUPER';
-      const msgs = conversations[key] || [];
-      return msgs.map((m: any) => ({
-        id: m.id,
-        text: m.text,
-        from: m.from,
-        fromName: m.fromName,
-        time: m.time
-      }));
-    }
-    
-    const data = localStorage.getItem('app_chat_' + contactId);
-    return data ? JSON.parse(data) : [];
+    this.api.sendChatMessage(payload).subscribe({
+      next: () => {
+        this.messages.push(msg);
+        this.messages = [...this.messages];
+        if (this.selectedContact) {
+          this.selectedContact.dernierMessage = msg.text;
+          this.selectedContact.time = msg.time;
+        }
+        this.newMessage = '';
+      },
+      error: () => {
+        this.snackBar.open('Erreur lors de l\'envoi', 'Fermer', { duration: 3000 });
+      }
+    });
   }
 
   getStoredGroups(): ChatGroup[] {
@@ -626,6 +576,59 @@ get groupMembreCount(): number {
         }
       });
     }
+  }
+
+  onFileSelected(e: any) {
+    const files: FileList = e.target.files;
+    if (!files || files.length === 0 || !this.selectedContact) return;
+
+    this.snackBar.open('Téléchargement en cours...', 'Fermer', { duration: 2000 });
+    const roomId = this.getRoomId(this.currentUserId, this.selectedContact.id);
+
+    Array.from(files).forEach(file => {
+      this.api.uploadFile(file, roomId, 'ChatAttachment').subscribe({
+        next: (res: any) => {
+          const now = new Date();
+          const msg: Message = {
+            id: Date.now().toString(),
+            text: `Document envoyé : ${file.name}`,
+            from: this.currentUserId,
+            fromName: 'Moi',
+            time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+            attachments: [{ name: file.name, type: file.type, url: res.url }]
+          };
+
+          this.api.sendChatMessage({ ...msg, chatRoomId: roomId }).subscribe({
+            next: () => {
+              this.messages.push(msg);
+              this.messages = [...this.messages]; // Trigger change detection
+              if (this.selectedContact) {
+                this.selectedContact.dernierMessage = msg.text;
+                this.selectedContact.time = msg.time;
+              }
+              this.snackBar.open('Fichier envoyé avec succès', 'Fermer', { duration: 2000 });
+            }
+          });
+        },
+        error: () => {
+          this.snackBar.open('Erreur lors du téléchargement de ' + file.name, 'Fermer', { duration: 3000 });
+        }
+      });
+    });
+    e.target.value = '';
+  }
+
+  getRoomId(id1: any, id2: any): string {
+    const ids = [id1.toString(), id2.toString()].sort();
+    return `room_${ids[0]}_${ids[1]}`;
+  }
+
+  downloadAttachment(att: { name: string; url: string }) {
+    const link = document.createElement('a');
+    link.href = att.url;
+    link.download = att.name;
+    link.target = '_blank';
+    link.click();
   }
 
   generateId(prefix: string): string {

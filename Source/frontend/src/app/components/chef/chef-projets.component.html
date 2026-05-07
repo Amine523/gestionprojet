@@ -1,0 +1,227 @@
+<div class="chef-projets-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1>Mes <span class="gradient-text">Projets.</span></h1>
+      <p class="header-subtitle">Gérez et suivez tous vos projets en cours.</p>
+    </div>
+  </header>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().total}}</h3>
+        <p>Total Projets</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon warning">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().enCours}}</h3>
+        <p>En Cours</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon success">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().termines}}</h3>
+        <p>Terminés</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon danger">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().enRetard}}</h3>
+        <p>En Retard</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-input">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher un projet...">
+    </div>
+    <div class="filter-selects">
+      <select [(ngModel)]="filterStatut">
+        <option value="">Tous les statuts</option>
+        <option value="en_cours">En Cours</option>
+        <option value="termine">Terminé</option>
+        <option value="en_pause">En Pause</option>
+        <option value="annule">Annulé</option>
+      </select>
+      <select [(ngModel)]="filterClient">
+        <option value="">Tous les clients</option>
+        <option value="client1">Client A</option>
+        <option value="client2">Client B</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Projects Grid -->
+  <div class="projets-grid">
+    @for (projet of filteredProjets(); track projet.id) {
+      <div class="projet-card" [class.en-retard]="isEnRetard(projet.dateFin!)">
+        <div class="projet-header">
+          <div class="projet-info">
+            <h3>{{projet.nom}}</h3>
+            <span [class]="'badge ' + getStatutClass(projet.statut)">
+              {{getStatutLabel(projet.statut)}}
+            </span>
+          </div>
+          <button (click)="openDetails(projet)" class="btn-icon" title="Voir les détails">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="19" cy="12" r="1"/>
+              <circle cx="5" cy="12" r="1"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="projet-body">
+          <p class="projet-description">{{projet.description}}</p>
+          
+          <div class="projet-meta">
+            <div class="meta-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <span>{{projet.dateDebut | date:'dd MMM yyyy'}}</span>
+            </div>
+            
+            @if (projet.dateFin) {
+              <div class="meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>{{projet.dateFin | date:'dd MMM yyyy'}}</span>
+                @if (isEnRetard(projet.dateFin)) {
+                  <span class="retard-badge">En retard</span>
+                } @else {
+                  <span class="jours-restants">{{getJoursRestants(projet.dateFin)}} jours restants</span>
+                }
+              </div>
+            }
+            
+            @if (projet.budget) {
+              <div class="meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17"/>
+                </svg>
+                <span>{{projet.budget}} €</span>
+              </div>
+            }
+          </div>
+          
+          @if (projet.progression !== undefined) {
+            <div class="progress-section">
+              <div class="progress-header">
+                <span>Progression</span>
+                <span class="progress-value">{{projet.progression}}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" 
+                     [class]="getProgressionClass(projet.progression)"
+                     [style.width.%]="projet.progression">
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (filteredProjets().length === 0) {
+    <div class="empty-state">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      <p>Aucun projet trouvé</p>
+    </div>
+  }
+
+  <!-- Details Modal -->
+  @if (showDetailsModal() && selectedProjet()) {
+    <div class="modal-overlay" (click)="closeDetails()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{selectedProjet()!.nom}}</h2>
+          <button class="btn-icon" (click)="closeDetails()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        <form [formGroup]="updateForm" (ngSubmit)="updateProjet()">
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Statut</label>
+              <select formControlName="statut">
+                <option value="en_cours">En Cours</option>
+                <option value="termine">Terminé</option>
+                <option value="en_pause">En Pause</option>
+                <option value="annule">Annulé</option>
+              </select>
+            </div>
+            
+            <div class="form-field">
+              <label>Progression (%)</label>
+              <input formControlName="progression" type="number" min="0" max="100">
+            </div>
+            
+            <div class="form-field full-width">
+              <label>Notes</label>
+              <textarea formControlName="notes" rows="4" placeholder="Notes sur le projet..."></textarea>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" (click)="closeDetails()" class="btn btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="updateForm.invalid" class="btn btn-primary">Mettre à jour</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

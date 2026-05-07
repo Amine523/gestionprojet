@@ -5,3 +5,4 @@ export { TableComponent } from './table/table.component';
 export { BadgeComponent } from './badge/badge.component';
 export { InputComponent } from './input/input.component';
 export { ModalComponent } from './modal/modal.component';
+export { ValidationErrorComponent } from './validation-error/validation-error.component';

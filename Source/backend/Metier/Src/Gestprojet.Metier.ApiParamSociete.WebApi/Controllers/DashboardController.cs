@@ -1,5 +1,6 @@
 using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Business;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -7,13 +8,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
 {
     [ApiController]
     [Route("api/dashboard")]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     public class DashboardController : ControllerBase
     {
         private readonly ISocieteBusiness _societeBusiness;
         private readonly IUtilisateurBusiness _utilisateurBusiness;
         private readonly IProjetBusiness _projetBusiness;
         private readonly ITacheBusiness _tacheBusiness;
+        private readonly IApplicationBusiness _applicationBusiness;
         private readonly Gestprojet.Metier.ApiParamSociete.WebApi.Services.RHCalculationService _rhCalculationService;
         private readonly Gestprojet.Metier.ApiParamSociete.WebApi.Services.CalculationService _calculationService;
 
@@ -22,6 +24,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             IUtilisateurBusiness utilisateurBusiness, 
             IProjetBusiness projetBusiness,
             ITacheBusiness tacheBusiness,
+            IApplicationBusiness applicationBusiness,
             Gestprojet.Metier.ApiParamSociete.WebApi.Services.RHCalculationService rhCalculationService,
             Gestprojet.Metier.ApiParamSociete.WebApi.Services.CalculationService calculationService)
         {
@@ -29,6 +32,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             _utilisateurBusiness = utilisateurBusiness;
             _projetBusiness = projetBusiness;
             _tacheBusiness = tacheBusiness;
+            _applicationBusiness = applicationBusiness;
             _rhCalculationService = rhCalculationService;
             _calculationService = calculationService;
         }
@@ -39,14 +43,16 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             var societes = await _societeBusiness.ListeAsync();
             var utilisateurs = await _utilisateurBusiness.ListeAsync();
             var projets = await _projetBusiness.ListeAsync();
+            var candidatures = await _applicationBusiness.ListeAsync();
 
             return Ok(new
             {
                 TotalSocietes = societes.Count(),
                 TotalUtilisateurs = utilisateurs.Count(),
                 TotalProjets = projets.Count(),
+                TotalCandidatures = candidatures.Count(c => c.Type == "Candidature"),
                 SocietesActives = societes.Count(s => s.Actif.GetValueOrDefault(true)),
-                RevenusMensuels = 12500 // Mock value
+                RevenusMensuels = societes.Count(s => s.Actif.GetValueOrDefault(true)) * 99 // Hypothetical $99 per active company
             });
         }
 
@@ -83,7 +89,17 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
         {
             try
             {
-                var targetDate = string.IsNullOrEmpty(date) ? (DateTime?)null : DateTime.Parse(date);
+                DateTime? targetDate = null;
+                if (!string.IsNullOrWhiteSpace(date))
+                {
+                    if (!DateTime.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed)
+                        && !DateTime.TryParse(date, CultureInfo.CurrentCulture, DateTimeStyles.None, out parsed))
+                    {
+                        return BadRequest(new { error = "Paramètre date invalide", date });
+                    }
+                    targetDate = parsed;
+                }
+
                 var stats = await _rhCalculationService.CalculateRHStatsAsync(societeId, targetDate);
                 return Ok(stats);
             }

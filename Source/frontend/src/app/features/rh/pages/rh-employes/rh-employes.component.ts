@@ -155,12 +155,12 @@ import { ExportService } from '@core/services/export.service';
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Nom complet</th>
-                  <th>Email</th>
-                  <th>Poste</th>
+                  <th>Identité</th>
+                  <th>Email de Transmission</th>
+                  <th>Unité Fonctionnelle</th>
                   <th>Département</th>
                   <th>Contrat</th>
-                  <th>Statut</th>
+                  <th>État du Nœud</th>
                   <th class="text-right">Gestion</th>
                 </tr>
               </thead>
@@ -256,29 +256,29 @@ import { ExportService } from '@core/services/export.service';
       <div class="modal-backdrop" (click)="closeDialog()">
         <div class="modal-box" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ editingEmploye ? 'Modifier' : 'Ajouter un employé' }}</h2>
+            <h2>{{ editingEmploye ? 'Mise à jour Protocole de Ressource Stratégique' : 'Initialisation de Ressource Stratégique' }}</h2>
             <button class="btn-close" (click)="closeDialog()">✕</button>
           </div>
           <div class="modal-body">
             <div class="form-grid">
               <div class="form-group">
-                <label>Nom complet *</label>
+                <label>Identité *</label>
                 <input type="text" [(ngModel)]="formData.nom" placeholder="Ex: Amine Ben Salah" class="form-input">
               </div>
               <div class="form-group">
-                <label>Email *</label>
+                <label>Email de Transmission *</label>
                 <input type="email" [(ngModel)]="formData.email" placeholder="email@entreprise.com" class="form-input">
               </div>
               <div class="form-group">
-                <label>Mot de passe</label>
+                <label>Clé de Sécurité</label>
                 <input type="password" [(ngModel)]="formData.motDePasse" placeholder="••••••••" class="form-input">
               </div>
               <div class="form-group">
-                <label>Téléphone</label>
+                <label>Ligne de Communication (Tel)</label>
                 <input type="text" [(ngModel)]="formData.telephone" placeholder="+216 XX XXX XXX" class="form-input">
               </div>
               <div class="form-group">
-                <label>Poste</label>
+                <label>Unité Fonctionnelle</label>
                 <select [(ngModel)]="formData.poste" class="form-input">
                   <option>Développeur</option><option>Chef de projet</option>
                   <option>Testeur QA</option><option>RH</option>
@@ -299,7 +299,7 @@ import { ExportService } from '@core/services/export.service';
                 </select>
               </div>
               <div class="form-group">
-                <label>Rôle système</label>
+                <label>Droits d'Accès Système</label>
                 <select [(ngModel)]="formData.typeUtilisateurId" class="form-input">
                   <option value="T002">Admin</option>
                   <option value="T003">RH</option>
@@ -310,7 +310,7 @@ import { ExportService } from '@core/services/export.service';
               </div>
             </div>
             <label class="checkbox-row" style="margin-top:16px;display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer">
-              <input type="checkbox" [(ngModel)]="formData.actif"> Compte actif
+              <input type="checkbox" [(ngModel)]="formData.actif"> Autoriser la synchronisation du nœud
             </label>
           </div>
           <div class="modal-footer">
@@ -979,6 +979,9 @@ export class RhEmployesComponent implements OnInit {
     const stat = this.filterStatut();
     
     return list.filter(e => {
+      const isClient = (e.typeUtilisateurId || '').toUpperCase() === 'T008';
+      if (isClient) return false;
+
       const matchesSearch = !q || e.nom.toLowerCase().includes(q) || e.email.toLowerCase().includes(q);
       const matchesDept = !dept || e.departement?.toLowerCase() === dept;
       const matchesStatut = !stat || 
@@ -1158,7 +1161,8 @@ export class RhEmployesComponent implements OnInit {
       id: this.editingEmploye ? (this.editingEmploye.id || this.editingEmploye.Id) : '',
       nom: this.formData.nom,
       email: this.formData.email,
-      motDePasse: this.formData.motDePasse || '123456',
+      motDePasse: this.formData.motDePasse ? this.formData.motDePasse : (this.editingEmploye ? null : 'Pass@1234'),
+      telephone: (this.formData.telephone && this.formData.telephone.length > 5) ? this.formData.telephone : null,
       typeUtilisateurId: this.formData.typeUtilisateurId || 'T005',
       societeId: this.societeId,
       actif: this.formData.actif !== undefined ? this.formData.actif : true,

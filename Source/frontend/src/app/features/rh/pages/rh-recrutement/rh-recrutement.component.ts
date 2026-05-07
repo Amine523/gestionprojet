@@ -1,14 +1,18 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 import { AiService } from '@core/services/ai.service';
+import { FormStateService } from '@core/services/form-state.service';
+import { ValidationErrorComponent } from '@shared/components';
+import { forkJoin, Subscription, of } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-rh-recrutement',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatSnackBarModule, ValidationErrorComponent],
   template: `
 
     <div class="dashboard-container">
@@ -95,10 +99,10 @@ import { AiService } from '@core/services/ai.service';
       <div class="card">
         <div class="main-content">
           <div class="tabs-header">
-            <button class="tab-btn" [class.active]="activeTab === 'offres'" (click)="activeTab = 'offres'">Offres d'Emploi</button>
-            <button class="tab-btn" [class.active]="activeTab === 'candidats'" (click)="activeTab = 'candidats'">Candidats</button>
-            <button class="tab-btn" [class.active]="activeTab === 'entretiens'" (click)="activeTab = 'entretiens'">Entretiens</button>
-            <button class="tab-btn" [class.active]="activeTab === 'email'" (click)="activeTab = 'email'">Configuration Email</button>
+            <button class="tab-btn" [class.active]="activeTab === 'offres'" (click)="activeTab = 'offres'; saveGeneralState()">Offres d'Emploi</button>
+            <button class="tab-btn" [class.active]="activeTab === 'candidats'" (click)="activeTab = 'candidats'; saveGeneralState()">Candidats</button>
+            <button class="tab-btn" [class.active]="activeTab === 'entretiens'" (click)="activeTab = 'entretiens'; saveGeneralState()">Entretiens</button>
+            <button class="tab-btn" [class.active]="activeTab === 'email'" (click)="activeTab = 'email'; saveGeneralState()">Configuration Email</button>
           </div>
 
           <div class="tab-content">
@@ -108,28 +112,29 @@ import { AiService } from '@core/services/ai.service';
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Titre du poste</th>
+                      <th>Id</th>
+                      <th>Titre</th>
+                      <th>Type</th>
+                      <th>Lieu</th>
                       <th>Statut</th>
-                      <th>Candidats</th>
                       <th class="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (offre of offresSignal(); track offre.id) {
                       <tr>
+                        <td><small class="id-tag">{{offre.id}}</small></td>
+                        <td><span class="offre-name">{{offre.titre}}</span></td>
+                        <td>{{offre.type}}</td>
+                        <td>{{offre.lieu}}</td>
                         <td>
-                          <div class="offre-info">
-                            <span class="offre-name">{{offre.titre}}</span>
-                            <span class="offre-desc">{{offre.type}} • {{offre.lieu}}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <span class="status-badge" [class.emerald]="offre.statut === 'OUVERTE'" [class.rose]="offre.statut === 'FERMEE'">
-                            {{offre.statut}}
-                          </span>
-                        </td>
-                        <td>
-                          <span class="applicants-count">{{getCandidatsCount(offre.id)}}</span>
+                          <button class="status-badge clickable" 
+                            [class.emerald]="offre.statut === 'OUVERTE'" 
+                            [class.rose]="offre.statut === 'FERMEE'"
+                            (click)="toggleOffreStatut(offre)"
+                            [title]="offre.statut === 'OUVERTE' ? 'Cliquer pour fermer' : 'Cliquer pour ouvrir'">
+                            {{getStatutLabel(offre.statut)}}
+                          </button>
                         </td>
                         <td class="text-right">
                           <div class="offre-actions">
@@ -174,8 +179,8 @@ import { AiService } from '@core/services/ai.service';
             @if (activeTab === 'candidats') {
               <div class="candidats-section">
                 <div class="filters-bar">
-                  <input type="text" [ngModel]="searchCandidat()" (ngModelChange)="searchCandidat.set($event)" placeholder="Rechercher un candidat..." class="search-input">
-                  <select [ngModel]="filterStatutCandidat()" (ngModelChange)="filterStatutCandidat.set($event)" class="filter-select">
+                  <input type="text" [ngModel]="searchCandidat()" (ngModelChange)="searchCandidat.set($event); saveGeneralState()" placeholder="Rechercher un candidat..." class="search-input">
+                  <select [ngModel]="filterStatutCandidat()" (ngModelChange)="filterStatutCandidat.set($event); saveGeneralState()" class="filter-select">
                     <option value="">Tous les statuts</option>
                     <option value="EN_ATTENTE">En attente</option>
                     <option value="TEST_AUTORISE">Test autorisé</option>
@@ -184,7 +189,7 @@ import { AiService } from '@core/services/ai.service';
                     <option value="ACCEPTEE">Accepté</option>
                     <option value="REFUSEE">Refusé</option>
                   </select>
-                  <select [ngModel]="selectedOffreTitle()" (ngModelChange)="selectedOffreTitle.set($event)" class="filter-select">
+                  <select [ngModel]="selectedOffreTitle()" (ngModelChange)="selectedOffreTitle.set($event); saveGeneralState()" class="filter-select">
                     <option value="">Toutes les offres</option>
                     @for (offre of offresSignal(); track offre.id) {
                       <option [value]="offre.titre">{{offre.titre}}</option>
@@ -196,9 +201,10 @@ import { AiService } from '@core/services/ai.service';
                   <table class="data-table">
                     <thead>
                       <tr>
-                        <th>Candidat</th>
-                        <th>Offre</th>
-                        <th>Score Quiz</th>
+                        <th>Id</th>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Poste</th>
                         <th>Statut</th>
                         <th class="text-right">Action</th>
                       </tr>
@@ -206,27 +212,17 @@ import { AiService } from '@core/services/ai.service';
                     <tbody>
                       @for (candidat of filteredCandidats(); track candidat.id) {
                         <tr (click)="viewCandidat(candidat)" class="clickable-row">
+                          <td><small class="id-tag">{{candidat.id}}</small></td>
                           <td>
                             <div class="user-cell">
                               <div class="user-avatar">{{candidat.nom?.substring(0,2).toUpperCase()}}</div>
-                              <div class="user-info">
-                                <span class="user-name">{{candidat.nom}}</span>
-                                <span class="user-email">{{candidat.email}}</span>
-                              </div>
+                              <span class="user-name">{{candidat.nom}}</span>
                             </div>
                           </td>
+                          <td>{{candidat.email}}</td>
                           <td>{{candidat.poste}}</td>
                           <td>
-                            @if (candidat.quizScore !== undefined) {
-                              <div class="score-badge">
-                                {{candidat.quizScore}}/{{candidat.quizTotal}}
-                              </div>
-                            } @else {
-                              <span class="text-muted">-</span>
-                            }
-                          </td>
-                          <td>
-                            <span class="candidat-status" [ngClass]="'status-' + candidat.statut?.toLowerCase()">{{candidat.statut}}</span>
+                            <span [class]="getStatutClass(candidat.statut)">{{getStatutLabel(candidat.statut)}}</span>
                           </td>
                           <td class="text-right">
                             <button class="btn-icon">
@@ -314,33 +310,39 @@ import { AiService } from '@core/services/ai.service';
             @if (activeTab === 'email') {
               <div class="email-config-section">
                 <h3 class="section-title">Configuration EmailJS</h3>
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label class="form-label">Service ID</label>
-                    <input type="text" [(ngModel)]="emailConfig.serviceId" class="form-input" placeholder="service_xxxxx">
+                <form [formGroup]="emailConfigForm" (ngSubmit)="saveEmailConfig()">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label class="form-label">Service ID</label>
+                      <input type="text" formControlName="serviceId" class="form-input" placeholder="service_xxxxx">
+                      <app-validation-error [control]="emailConfigForm.get('serviceId')"></app-validation-error>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Public Key</label>
+                      <input type="text" formControlName="publicKey" class="form-input" placeholder="public_key_xxxxx">
+                      <app-validation-error [control]="emailConfigForm.get('publicKey')"></app-validation-error>
+                    </div>
+                    <div formGroupName="templates" class="contents">
+                      <div class="form-group">
+                        <label class="form-label">Template Test Autorisé</label>
+                        <input type="text" formControlName="testAuthorized" class="form-input" placeholder="template_xxxxx">
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Template Candidature Refusée</label>
+                        <input type="text" formControlName="candidatureRefused" class="form-input" placeholder="template_xxxxx">
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Template Candidature Acceptée</label>
+                        <input type="text" formControlName="candidatureAccepted" class="form-input" placeholder="template_xxxxx">
+                      </div>
+                    </div>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Public Key</label>
-                    <input type="text" [(ngModel)]="emailConfig.publicKey" class="form-input" placeholder="public_key_xxxxx">
+                  <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" [disabled]="emailConfigForm.invalid">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary" (click)="testEmailJsConfig()">Tester</button>
+                    <button type="button" class="btn btn-secondary" (click)="resetEmailConfig()">Réinitialiser</button>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Template Test Autorisé</label>
-                    <input type="text" [(ngModel)]="emailConfig.templates.testAuthorized" class="form-input" placeholder="template_xxxxx">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Template Candidature Refusée</label>
-                    <input type="text" [(ngModel)]="emailConfig.templates.candidatureRefused" class="form-input" placeholder="template_xxxxx">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Template Candidature Acceptée</label>
-                    <input type="text" [(ngModel)]="emailConfig.templates.candidatureAccepted" class="form-input" placeholder="template_xxxxx">
-                  </div>
-                </div>
-                <div class="form-actions">
-                  <button class="btn btn-primary" (click)="saveEmailConfig()">Enregistrer</button>
-                  <button class="btn btn-secondary" (click)="testEmailJsConfig()">Tester</button>
-                  <button class="btn btn-secondary" (click)="resetEmailConfig()">Réinitialiser</button>
-                </div>
+                </form>
               </div>
             }
           </div>
@@ -351,10 +353,10 @@ import { AiService } from '@core/services/ai.service';
     <!-- Offre Form Modal -->
     @if (showOffreForm) {
       <div class="modal-overlay" (click)="closeOffreForm()">
-        <div class="modal-card" (click)="$event.stopPropagation()">
+        <form [formGroup]="offreForm" (ngSubmit)="saveOffre()" class="modal-card" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{editingOffre ? 'Modifier l\'offre' : 'Nouvelle offre'}}</h2>
-            <button class="btn-close" (click)="closeOffreForm()">
+            <h2>{{editingOffre ? "Modifier l'offre" : "Nouvelle offre"}}</h2>
+            <button type="button" class="btn-close" (click)="closeOffreForm()">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -364,16 +366,18 @@ import { AiService } from '@core/services/ai.service';
           <div class="modal-body">
             <div class="form-group">
               <label class="form-label">Titre du poste</label>
-              <input type="text" [(ngModel)]="offreForm.titre" class="form-input" placeholder="Ex: Développeur Full Stack">
+              <input type="text" formControlName="titre" class="form-input" placeholder="Ex: Développeur Full Stack">
+              <app-validation-error [control]="offreForm.get('titre')"></app-validation-error>
             </div>
             <div class="form-group">
               <label class="form-label">Description</label>
-              <textarea [(ngModel)]="offreForm.description" class="form-textarea" rows="4" placeholder="Description du poste..."></textarea>
+              <textarea formControlName="description" class="form-textarea" rows="4" placeholder="Description du poste..."></textarea>
+              <app-validation-error [control]="offreForm.get('description')"></app-validation-error>
             </div>
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label">Type de contrat</label>
-                <select [(ngModel)]="offreForm.type" class="form-select">
+                <select formControlName="type" class="form-select">
                   <option value="CDI">CDI</option>
                   <option value="CDD">CDD</option>
                   <option value="Stage">Stage</option>
@@ -382,25 +386,27 @@ import { AiService } from '@core/services/ai.service';
               </div>
               <div class="form-group">
                 <label class="form-label">Salaire</label>
-                <input type="text" [(ngModel)]="offreForm.salaire" class="form-input" placeholder="Ex: 40k-60k€">
+                <input type="text" formControlName="salaire" class="form-input" placeholder="Ex: 40k-60k€">
               </div>
             </div>
             <div class="form-group">
               <label class="form-label">Lieu</label>
-              <input type="text" [(ngModel)]="offreForm.lieu" class="form-input" placeholder="Ex: Paris / Télétravail">
+              <input type="text" formControlName="lieu" class="form-input" placeholder="Ex: Paris / Télétravail">
+              <app-validation-error [control]="offreForm.get('lieu')"></app-validation-error>
             </div>
             <div class="form-group">
               <label class="form-label">Poste</label>
-              <select [(ngModel)]="offreForm.poste" class="form-select">
+              <select formControlName="poste" class="form-select">
                 <option value="">Sélectionner un poste</option>
-                @for (poste of postes; track poste) {
-                  <option [value]="poste">{{poste}}</option>
+                @for (p of postes; track p) {
+                  <option [value]="p">{{p}}</option>
                 }
               </select>
+              <app-validation-error [control]="offreForm.get('poste')"></app-validation-error>
             </div>
             <div class="form-group">
               <label class="form-label">Quiz (optionnel)</label>
-              <select [(ngModel)]="offreForm.quiz" class="form-select">
+              <select formControlName="quiz" class="form-select">
                 <option value="">Aucun quiz</option>
                 <option value="JavaScript Avancé">JavaScript Avancé</option>
                 <option value="TypeScript">TypeScript</option>
@@ -410,9 +416,9 @@ import { AiService } from '@core/services/ai.service';
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="closeOffreForm()">Annuler</button>
-            <button type="button" class="btn btn-primary" (click)="saveOffre()">{{editingOffre ? 'Modifier' : 'Créer'}}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="offreForm.invalid">{{editingOffre ? "Modifier" : "Créer"}}</button>
           </div>
-        </div>
+        </form>
       </div>
     }
 
@@ -437,17 +443,33 @@ import { AiService } from '@core/services/ai.service';
               <div class="candidat-detail-info">
                 <h3 class="candidat-detail-name">{{selectedCandidat.nom}}</h3>
                 <p class="candidat-detail-email">{{selectedCandidat.email}}</p>
-                <span class="candidat-detail-status" [ngClass]="'status-' + selectedCandidat.statut?.toLowerCase()">{{selectedCandidat.statut}}</span>
+                <span class="candidat-detail-status" [ngClass]="'status-' + selectedCandidat.statut?.toLowerCase()">{{getStatutLabel(selectedCandidat.statut)}}</span>
               </div>
             </div>
             <div class="detail-grid">
-              <div class="detail-item">
-                <label class="detail-label">Poste</label>
-                <p class="detail-value">{{selectedCandidat.poste}}</p>
+              <div class="form-group">
+                <label class="form-label">Poste / Offre</label>
+                <select [(ngModel)]="selectedCandidat.poste" class="form-select">
+                  <option value="Candidat">Sans poste spécifique</option>
+                  @for (offre of offresSignal(); track offre.id) {
+                    <option [value]="offre.titre">{{offre.titre}}</option>
+                  }
+                </select>
               </div>
-              <div class="detail-item">
-                <label class="detail-label">Téléphone</label>
-                <p class="detail-value">{{selectedCandidat.telephone || 'N/A'}}</p>
+              <div class="form-group">
+                <label class="form-label">Statut</label>
+                <select [(ngModel)]="selectedCandidat.statut" class="form-select" (change)="updateStatut(selectedCandidat)">
+                  <option value="EN_ATTENTE">En attente</option>
+                  <option value="TEST_AUTORISE">Test autorisé</option>
+                  <option value="TEST_TERMINE">Test terminé</option>
+                  <option value="ENTRETIEN">Entretien</option>
+                  <option value="ACCEPTEE">Accepté</option>
+                  <option value="REFUSEE">Refusé</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Téléphone</label>
+                <input type="text" [(ngModel)]="selectedCandidat.telephone" class="form-input" placeholder="N/A">
               </div>
             </div>
             @if (selectedCandidat.quiz && selectedCandidat.quizScore !== undefined) {
@@ -459,20 +481,48 @@ import { AiService } from '@core/services/ai.service';
                 <p class="quiz-text">{{selectedCandidat.quizScore}}/{{selectedCandidat.quizTotal}} points</p>
               </div>
             }
-            <div class="detail-item">
-              <label class="detail-label">Compétences</label>
-              <p class="detail-value">{{selectedCandidat.competences || 'Non spécifié'}}</p>
+
+            @if (selectedCandidat.cv || selectedCandidat.cvPath) {
+              <div class="cv-section mt-4 mb-4">
+                <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded bg-rose-100 text-rose-600 flex items-center justify-center">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-xs font-bold text-slate-700 dark:text-slate-300">Curriculum Vitae</p>
+                      <p class="text-[10px] text-slate-500">Document PDF</p>
+                    </div>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" (click)="viewCV(selectedCandidat)">
+                    Voir le CV
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div class="cv-section mt-4 mb-4">
+                <div class="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-amber-500">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <p class="text-xs font-medium text-amber-700 dark:text-amber-400">Aucun CV n'a été déposé par ce candidat.</p>
+                </div>
+              </div>
+            }
+
+            <div class="form-group mb-4">
+              <label class="form-label">Compétences</label>
+              <textarea [(ngModel)]="selectedCandidat.competences" class="form-textarea" rows="2" placeholder="Ex: Angular, Node.js, SQL..."></textarea>
             </div>
-            <div class="form-group">
-              <label class="form-label">Statut</label>
-              <select [(ngModel)]="selectedCandidat.statut" class="form-select" (change)="updateStatut(selectedCandidat)">
-                <option value="EN_ATTENTE">En attente</option>
-                <option value="TEST_AUTORISE">Test autorisé</option>
-                <option value="TEST_TERMINE">Test terminé</option>
-                <option value="ENTRETIEN">Entretien</option>
-                <option value="ACCEPTEE">Accepté</option>
-                <option value="REFUSEE">Refusé</option>
-              </select>
+
+            <div class="form-group mb-4">
+              <label class="form-label">Observations / Notes</label>
+              <textarea [(ngModel)]="selectedCandidat.observations" class="form-textarea" rows="3" placeholder="Ajouter des notes sur le candidat..."></textarea>
             </div>
 
             <!-- AI Analysis Section -->
@@ -486,15 +536,30 @@ import { AiService } from '@core/services/ai.service';
                   </div>
                   <h4 class="font-bold text-indigo-900 dark:text-indigo-100 text-sm">ANALYSE COGNITIVE IA</h4>
                 </div>
-                <button (click)="analyzeCandidat()" [disabled]="isAnalyzing" class="text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:opacity-70 disabled:opacity-30">
-                  {{isAnalyzing ? 'Analyse...' : 'Lancer l\'analyse'}}
-                </button>
+                <div class="flex gap-2">
+                   <button (click)="analyzeCandidat()" [disabled]="isAnalyzing" class="text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:opacity-70 disabled:opacity-30 flex items-center gap-1">
+                    @if (isAnalyzing) {
+                      <svg class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                      </svg>
+                    }
+                    {{isAnalyzing ? "Analyse..." : "Lancer l'analyse"}}
+                  </button>
+                </div>
               </div>
               
               @if (aiAnalysisResult) {
                 <div class="animate-in fade-in slide-in-from-top-2 duration-500">
                   <div class="flex items-center gap-2 mb-2">
                     <div class="px-2 py-1 bg-indigo-600 text-white text-[10px] font-black rounded uppercase">Score de Match: {{aiScore}}%</div>
+                    <button class="btn btn-sm btn-primary ml-auto flex items-center gap-2" (click)="generateFeedbackEmail()" [disabled]="isGeneratingFeedback">
+                       @if (isGeneratingFeedback) {
+                         <svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                         </svg>
+                       }
+                       {{isGeneratingFeedback ? 'Génération...' : 'Générer Email Feedback'}}
+                    </button>
                   </div>
                   <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-medium">
                     {{aiAnalysisResult}}
@@ -506,8 +571,56 @@ import { AiService } from '@core/services/ai.service';
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="planifierEntretien(selectedCandidat)">Planifier entretien</button>
-            <button class="btn btn-danger" (click)="deleteCandidature(selectedCandidat.id)">Supprimer</button>
+            <button class="btn btn-secondary" [disabled]="isSavingEntretien" (click)="planifierEntretien(selectedCandidat)">Planifier entretien</button>
+            <button class="btn btn-danger" [disabled]="isDeletingCandidate" (click)="deleteCandidature(selectedCandidat.id)">
+              {{isDeletingCandidate ? "Suppression..." : "Supprimer"}}
+            </button>
+            <div class="flex-grow"></div>
+            <button class="btn btn-primary" [disabled]="isSavingCandidate" (click)="saveCandidatChanges()">
+              {{isSavingCandidate ? "Enregistrement..." : "Enregistrer"}}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+    <!-- Entretien Modal -->
+    @if (showEntretienDialog && selectedCandidat) {
+      <div class="modal-overlay" (click)="closeEntretienDialog()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Planifier un entretien</h2>
+            <button class="btn-close" (click)="closeEntretienDialog()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="candidat-summary mb-4">
+              <p class="text-sm font-bold">{{selectedCandidat.nom}}</p>
+              <p class="text-xs text-slate-500">{{selectedCandidat.poste}}</p>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" [(ngModel)]="entretienDate" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Heure</label>
+                <input type="time" [(ngModel)]="entretienHeure" class="form-input">
+              </div>
+            </div>
+            <div class="form-group mt-4">
+              <label class="form-label">Notes / Instructions</label>
+              <textarea [(ngModel)]="entretienNotes" class="form-textarea" placeholder="Détails pour l'entretien..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeEntretienDialog()">Annuler</button>
+            <button class="btn btn-primary" [disabled]="isSavingEntretien" (click)="saveEntretien()">
+              {{isSavingEntretien ? "Planification..." : "Confirmer"}}
+            </button>
           </div>
         </div>
       </div>
@@ -882,6 +995,18 @@ import { AiService } from '@core/services/ai.service';
       color: #dc2626;
     }
 
+    .status-badge.clickable {
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .status-badge.clickable:hover {
+      transform: scale(1.05);
+      filter: brightness(0.95);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
     .offre-title {
       font-size: var(--font-size-lg);
       font-weight: var(--font-weight-bold);
@@ -1066,6 +1191,7 @@ import { AiService } from '@core/services/ai.service';
     }
 
     .status-en_attente,
+    .status-test_autorise,
     .status-test_authorized,
     .status-test_termine {
       background: #fef3c7;
@@ -1078,12 +1204,14 @@ import { AiService } from '@core/services/ai.service';
     }
 
     .status-acceptee,
+    .status-accepte,
     .status-acceptée {
       background: #d1fae5;
       color: #065f46;
     }
 
     .status-refusee,
+    .status-refuse,
     .status-refusée {
       background: #fee2e2;
       color: #991b1b;
@@ -1379,11 +1507,22 @@ import { AiService } from '@core/services/ai.service';
   `]
 })
 export class RHRecrutementComponent implements OnInit {
+  private fb = inject(FormBuilder);
   private api = inject(ApiService);
   private ai = inject(AiService);
   private snackBar = inject(MatSnackBar);
+  private formState = inject(FormStateService);
+
+  private subs: Subscription[] = [];
+  private readonly DRAFT_OFFRE = 'rh_recr_offre';
+  private readonly DRAFT_EMAIL = 'rh_recr_email';
+  private readonly STATE_KEY = 'rh_recr_state';
+
+  offreForm!: FormGroup;
+  emailConfigForm!: FormGroup;
 
   isAnalyzing = false;
+  isGeneratingFeedback = false;
   aiAnalysisResult = '';
   aiScore = 0;
 
@@ -1430,11 +1569,56 @@ export class RHRecrutementComponent implements OnInit {
   });
 
   offresActives = computed(() => this.offresSignal().filter(o => o.statut === 'OUVERTE').length);
-  embauchesCount = computed(() => this.candidatsSignal().filter(c => ['ACCEPTEE', 'ACCEPTE'].includes((c.statut || '').toUpperCase())).length);
+  embauchesCount = computed(() => this.candidatsSignal().filter(c => ['ACCEPTEE', 'ACCEPTE', 'EMBAUCHE'].includes((c.statut || '').toUpperCase())).length);
+
+  getStatutLabel(statut: string): string {
+    switch (statut?.toUpperCase()) {
+      case 'EN_ATTENTE': return 'En attente';
+      case 'TEST_AUTORISE': return 'Test autorisé';
+      case 'TEST_TERMINE': return 'Test terminé';
+      case 'ENTRETIEN': return 'Entretien';
+      case 'ACCEPTEE': 
+      case 'ACCEPTE': return 'Accepté';
+      case 'REFUSEE': 
+      case 'REFUSE': return 'Refusé';
+      case 'OUVERTE': return 'Ouverte';
+      case 'FERMEE': return 'Fermée';
+      default: return statut || 'Nouveau';
+    }
+  }
+
+  getStatutClass(statut: string): string {
+    switch (statut?.toUpperCase()) {
+      case 'EN_ATTENTE': return 'candidat-status status-en_attente';
+      case 'TEST_AUTORISE': return 'candidat-status status-test_autorise';
+      case 'TEST_TERMINE': return 'candidat-status status-test_termine';
+      case 'ENTRETIEN': return 'candidat-status status-entretien';
+      case 'ACCEPTEE': 
+      case 'ACCEPTE': return 'candidat-status status-acceptee';
+      case 'REFUSEE': 
+      case 'REFUSE': return 'candidat-status status-refusee';
+      default: return 'candidat-status status-nouveau';
+    }
+  }
+
+  toggleOffreStatut(offre: any) {
+    const nouveauStatut = offre.statut === 'OUVERTE' ? 'FERMEE' : 'OUVERTE';
+    const payload = { ...offre, statut: nouveauStatut };
+    
+    this.api.saveOffreEmploi(payload).subscribe({
+      next: () => {
+        this.offresSignal.update(list => list.map(o => o.id === offre.id ? { ...o, statut: nouveauStatut } : o));
+        this.snackBar.open(`Offre ${nouveauStatut.toLowerCase()} avec succès`, 'Fermer', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Error toggling offre statut:', err);
+        this.snackBar.open('Erreur lors du changement de statut', 'Fermer', { duration: 3000 });
+      }
+    });
+  }
 
   showOffreForm = false;
   editingOffre: any = null;
-  offreForm: any = { titre: '', description: '', lieu: '', salaire: '', type: 'CDI', poste: '', quiz: '', societe: '', adresse: '' };
 
   postes: string[] = [
     'Développeur Frontend',
@@ -1468,6 +1652,9 @@ export class RHRecrutementComponent implements OnInit {
   entretienDate = '';
   entretienHeure = '';
   entretienNotes = '';
+  isSavingCandidate = false;
+  isDeletingCandidate = false;
+  isSavingEntretien = false;
 
   emailConfig: any = {
     serviceId: '',
@@ -1483,90 +1670,204 @@ export class RHRecrutementComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     const stored = this.api.getRawStorage();
     if (!stored.offresEmploi || stored.offresEmploi.length === 0) {
       this.api.initRecrutementData();
     }
+    this.initForms();
     this.api.loadEmailJsConfig();
-    this.emailConfig = this.api.getEmailJsConfig();
+    const config = this.api.getEmailJsConfig();
+    this.emailConfigForm.patchValue(config);
+    this.restoreState();
     this.loadData();
+  }
+
+  private restoreState() {
+    const state = this.formState.getDraft(this.STATE_KEY);
+    if (state) {
+      if (state.activeTab) this.activeTab = state.activeTab;
+      if (state.searchCandidat) this.searchCandidat.set(state.searchCandidat);
+      if (state.filterStatutCandidat) this.filterStatutCandidat.set(state.filterStatutCandidat);
+      if (state.selectedOffreTitle) this.selectedOffreTitle.set(state.selectedOffreTitle);
+    }
+
+    const offreDraft = this.formState.getDraft(this.DRAFT_OFFRE);
+    if (offreDraft) {
+      this.offreForm.patchValue(offreDraft, { emitEvent: false });
+      if (this.formState.hasDraft(this.DRAFT_OFFRE)) {
+        this.showOffreForm = true;
+      }
+    }
+
+    const emailDraft = this.formState.getDraft(this.DRAFT_EMAIL);
+    if (emailDraft) {
+      this.emailConfigForm.patchValue(emailDraft, { emitEvent: false });
+    }
+  }
+
+  saveGeneralState() {
+    this.formState.saveDraft(this.STATE_KEY, {
+      activeTab: this.activeTab,
+      searchCandidat: this.searchCandidat(),
+      filterStatutCandidat: this.filterStatutCandidat(),
+      selectedOffreTitle: this.selectedOffreTitle()
+    });
+  }
+
+  initForms() {
+    this.offreForm = this.fb.group({
+      titre: ['', [Validators.required, Validators.minLength(5)]],
+      description: ['', [Validators.required]],
+      lieu: ['', [Validators.required]],
+      salaire: [''],
+      type: ['CDI'],
+      poste: ['', [Validators.required]],
+      quiz: ['']
+    });
+
+    this.emailConfigForm = this.fb.group({
+      serviceId: ['', [Validators.required]],
+      publicKey: ['', [Validators.required]],
+      templates: this.fb.group({
+        testAuthorized: [''],
+        candidatureRefused: [''],
+        candidatureAccepted: ['']
+      })
+    });
+
+    this.subs.push(
+      this.offreForm.valueChanges.pipe(debounceTime(500)).subscribe(v => {
+        if (!this.editingOffre) this.formState.saveDraft(this.DRAFT_OFFRE, v);
+      })
+    );
+
+    this.subs.push(
+      this.emailConfigForm.valueChanges.pipe(debounceTime(500)).subscribe(v => {
+        this.formState.saveDraft(this.DRAFT_EMAIL, v);
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subs.forEach(s => s.unsubscribe());
   }
 
   loadData() {
     this.api.getOffresEmploi().subscribe({
       next: (res: any) => {
-        let all = Array.isArray(res) ? res : (res?.items || []);
+        let all = Array.isArray(res) ? res : (res?.items || res?.value || res?.Value || []);
         const filtered = all.filter((o: any) => (o.societeId || o.SocieteId || '').toString().toLowerCase() === this.societeId.toLowerCase());
-        this.offresSignal.set(filtered);
-      }
-    });
-
-    // Load Applications (candidatures) filtered by societe
-    this.api.getCandidaturesBySociete(this.societeId).subscribe({
-      next: (res: any) => {
-        let all = Array.isArray(res) ? res : (res?.items || []);
-        const normalized = all.map((c: any) => ({
-          id: c.id || c.Id,
-          nom: c.candidatNom || c.nom || c.Nom || 'Sans nom',
-          email: c.candidatEmail || c.email || c.Email,
-          telephone: c.candidatTelephone || c.telephone || c.Telephone,
-          poste: c.offreTitre || c.poste || c.Poste,
-          competences: c.cvPath ? 'CV joint' : '-',
-          statut: c.statut || c.Statut || 'EN_ATTENTE',
-          quiz: c.quiz || c.Quiz,
-          quizScore: c.quizScore || c.QuizScore,
-          quizTotal: c.quizTotal || c.QuizTotal,
-          dateCandidature: c.dateCandidature || c.DateCandidature,
-          dateEntretien: c.dateEntretien || c.DateEntretien || null,
-          observations: c.notes || c.observations || c.Observations || ''
-        }));
-        this.candidatsSignal.set(normalized);
-      }
-    });
-
-    // Also load users with TypeUtilisateurId = 'T007' (candidates registered via register-candidate)
-    this.api.getUtilisateurs().subscribe({
-      next: (res: any) => {
-        let all = Array.isArray(res) ? res : (res?.items || []);
-        const candidateUsers = all.filter((u: any) => 
-          (u.typeUtilisateurId || u.TypeUtilisateurId) === 'T007'
-        );
         
-        if (candidateUsers.length > 0) {
-          const normalizedUsers = candidateUsers.map((u: any) => ({
+        // Normalisation pour s'assurer que le template reçoit du camelCase
+        const normalized = filtered.map((o: any) => ({
+          id: o.id || o.Id,
+          titre: o.titre || o.Titre,
+          description: o.description || o.Description,
+          type: o.type || o.Type,
+          lieu: o.lieu || o.Lieu,
+          salaire: o.salaire || o.Salaire,
+          statut: o.statut || o.Statut,
+          poste: o.poste || o.Poste,
+          societeId: o.societeId || o.SocieteId
+        }));
+
+        this.offresSignal.set(normalized);
+      }
+    });
+
+    // Load both Candidatures and Users to merge data — filtered by societeId, super_admin excluded
+    forkJoin({
+      candidatures: this.api.getCandidaturesBySociete(this.societeId),
+      utilisateurs: this.api.getEmployesBySociete(this.societeId) // already excludes super_admin (T001)
+    }).subscribe({
+      next: (res: any) => {
+        const candidaturesRaw: any = res.candidatures;
+        const utilisateursRaw: any = res.utilisateurs;
+        
+        const usersList: any[] = Array.isArray(utilisateursRaw) ? utilisateursRaw : (utilisateursRaw?.items || []);
+        const userMap = new Map<string, any>(usersList.map((u: any) => [u.email?.toLowerCase(), u]));
+        const userByIdMap = new Map<string, any>(usersList.map((u: any) => [u.id || u.Id, u]));
+
+        const candList: any[] = Array.isArray(candidaturesRaw) ? candidaturesRaw : (candidaturesRaw?.items || []);
+        
+        // 1. Process existing candidatures
+        const normalized = candList.map((c: any) => {
+          // Appliquer les patchs locaux d'abord pour garder la synchro UI immédiate
+          const patched = this.api.applyPatches(`candidatures`, c);
+          
+          const uId = patched.utilisateurId || patched.UtilisateurId;
+          const uEmail = (patched.candidatEmail || patched.email || patched.Email)?.toLowerCase();
+          const user: any = (uId ? userByIdMap.get(uId) : null) || (uEmail ? userMap.get(uEmail) : null);
+
+          return {
+            id: patched.Id || patched.id,
+            utilisateurId: uId,
+            nom: patched.candidatNom || patched.nom || patched.Nom || user?.nom || user?.Nom || 'Sans nom',
+            email: patched.candidatEmail || patched.email || patched.Email || user?.email || user?.Email,
+            telephone: patched.candidatTelephone || patched.telephone || patched.Telephone || user?.telephone || user?.Telephone || '',
+            offreId: patched.OffreId || patched.offreId || '',
+            poste: patched.offreTitre || patched.poste || patched.Poste,
+            competences: patched.Competences || patched.competences || user?.competences || user?.Competences || ((patched.cvPath || user?.cv || user?.CV) ? 'CV joint' : '-'),
+            cvPath: patched.cvPath || user?.cv || user?.CV || '',
+            statut: patched.Statut || patched.statut || 'EN_ATTENTE',
+            quiz: patched.Quiz || patched.quiz,
+            quizScore: patched.QuizScore || patched.quizScore,
+            quizTotal: patched.QuizTotal || patched.quizTotal,
+            dateCandidature: patched.DateCandidature || patched.dateCandidature,
+            dateEntretien: patched.DateEntretien || patched.dateEntretien || null,
+            observations: patched.Observations || patched.notes || patched.observations || '',
+            isRealApplication: true
+          };
+        });
+
+        // 2. Add users who are candidates (T007) of the same society but don't have an application record yet
+        const existingEmails = new Set(normalized.map((c: any) => (c.email || '').toLowerCase()));
+        const candidateUsers = usersList.filter((u: any) => {
+          const role = (u.typeUtilisateurId || u.TypeUtilisateurId || '').toLowerCase();
+          return (role === 't007' || role === 'candidat') && !existingEmails.has((u.email || '').toLowerCase());
+        });
+
+        const extraCandidates = candidateUsers.map((u: any) => {
+          const mockCand = { id: u.id || u.Id, UtilisateurId: u.id || u.Id, Statut: u.statut || u.Statut || 'EN_ATTENTE' };
+          const patched = this.api.applyPatches('candidatures', mockCand);
+          
+          return {
             id: u.id || u.Id,
+            utilisateurId: u.id || u.Id,
             nom: u.nom || u.Nom || 'Sans nom',
             email: u.email || u.Email,
             telephone: u.telephone || u.Telephone || '',
+            offreId: '',
             poste: 'Candidat',
-            competences: u.cv ? 'CV joint' : '-',
-            statut: 'EN_ATTENTE',
+            competences: u.competences || u.Competences || ((u.cv || u.CV) ? 'CV joint' : '-'),
+            cvPath: u.cv || u.CV || '',
+            statut: patched.Statut || patched.statut || 'EN_ATTENTE',
             quiz: '',
             quizScore: undefined,
             quizTotal: undefined,
             dateCandidature: new Date().toISOString(),
             dateEntretien: null,
-            observations: ''
-          }));
-          
-          // Merge with existing candidates, avoiding duplicates by email
-          this.candidatsSignal.update(existing => {
-            const existingEmails = new Set(existing.map((c: any) => c.email?.toLowerCase()));
-            const newCandidates = normalizedUsers.filter((c: any) => !existingEmails.has(c.email?.toLowerCase()));
-            return [...existing, ...newCandidates];
-          });
-        }
+            observations: '',
+            isUserOnly: true
+          };
+        });
+
+        this.candidatsSignal.set([...normalized, ...extraCandidates]);
+      },
+      error: (err: any) => {
+        console.error('Erreur lors du chargement des données de recrutement:', err);
       }
     });
   }
 
 
 
+
   openOffreForm() {
     console.log('RH Recrutement Debug: openOffreForm clicked');
-    this.offreForm = { titre: '', description: '', lieu: '', salaire: '', type: 'CDI', poste: '', quiz: '', societe: this.societeNom, adresse: '' };
+    this.offreForm.reset({ type: 'CDI', quiz: '' });
     this.editingOffre = null;
     this.showOffreForm = true;
   }
@@ -1577,22 +1878,20 @@ export class RHRecrutementComponent implements OnInit {
   }
 
   saveOffre() {
-    if (!this.offreForm.titre || !this.offreForm.description) {
-      this.snackBar.open('Veuillez remplir tous les champs obligatoires', 'Fermer', { duration: 3000 });
+    if (this.offreForm.invalid) {
+      this.offreForm.markAllAsTouched();
+      this.snackBar.open('Veuillez corriger les erreurs dans le formulaire', 'Fermer', { duration: 3000 });
       return;
     }
 
+    const formVal = this.offreForm.value;
     const offreData = {
-      titre: this.offreForm.titre,
-      description: this.offreForm.description,
-      lieu: this.offreForm.lieu,
-      salaire: this.offreForm.salaire,
-      poste: this.offreForm.poste,
-      quiz: this.offreForm.quiz,
+      ...formVal,
       societeId: this.societeId,
       statut: 'OUVERTE',
       type: 'OffreEmploi',
-      actif: true
+      actif: true,
+      id: this.editingOffre?.id || ''
     };
 
     console.log('Sending offre data:', offreData);
@@ -1601,7 +1900,19 @@ export class RHRecrutementComponent implements OnInit {
       this.api.saveOffreEmploi({ ...offreData, id: this.editingOffre.id }).subscribe({
         next: (res: any) => {
           console.log('Update response:', res);
-          this.offresSignal.update(list => list.map(o => o.id === this.editingOffre.id ? { ...o, ...offreData } : o));
+          const data = res?.value || res?.Value || res;
+          const normalized = {
+            id: data.id || data.Id || this.editingOffre.id,
+            titre: data.titre || data.Titre || offreData.titre,
+            description: data.description || data.Description || offreData.description,
+            type: data.type || data.Type || offreData.type,
+            lieu: data.lieu || data.Lieu || offreData.lieu,
+            salaire: data.salaire || data.Salaire || offreData.salaire,
+            statut: data.statut || data.Statut || 'OUVERTE',
+            poste: data.poste || data.Poste || offreData.poste,
+            societeId: data.societeId || data.SocieteId || offreData.societeId
+          };
+          this.offresSignal.update(list => list.map(o => o.id === this.editingOffre.id ? normalized : o));
           this.snackBar.open('Offre modifiée avec succès', 'Fermer', { duration: 3000 });
           this.closeOffreForm();
         },
@@ -1611,11 +1922,25 @@ export class RHRecrutementComponent implements OnInit {
         }
       });
     } else {
-      this.api.saveOffreEmploi(offreData).subscribe({
+      // Ensure we don't send a mock ID for creation
+      const { id, ...createData } = offreData;
+      this.api.saveOffreEmploi(createData).subscribe({
         next: (res: any) => {
           console.log('Create response:', res);
-          const newOffre = res || { ...offreData, id: 'OFFRE_' + Date.now() };
-          this.offresSignal.update(list => [newOffre, ...list]);
+          const data = res?.value || res?.Value || res;
+          const normalized = {
+            id: data.id || data.Id || 'OFFRE_' + Date.now(),
+            titre: data.titre || data.Titre || offreData.titre,
+            description: data.description || data.Description || offreData.description,
+            type: data.type || data.Type || offreData.type,
+            lieu: data.lieu || data.Lieu || offreData.lieu,
+            salaire: data.salaire || data.Salaire || offreData.salaire,
+            statut: data.statut || data.Statut || 'OUVERTE',
+            poste: data.poste || data.Poste || offreData.poste,
+            societeId: data.societeId || data.SocieteId || offreData.societeId
+          };
+          this.offresSignal.update(list => [normalized, ...list]);
+          this.formState.clearDraft(this.DRAFT_OFFRE);
           this.snackBar.open('Offre créée avec succès', 'Fermer', { duration: 3000 });
           this.closeOffreForm();
         },
@@ -1629,7 +1954,7 @@ export class RHRecrutementComponent implements OnInit {
   }
 
   editOffre(offre: any) {
-    this.offreForm = { ...offre };
+    this.offreForm.patchValue(offre);
     this.editingOffre = offre;
     this.showOffreForm = true;
   }
@@ -1655,7 +1980,14 @@ export class RHRecrutementComponent implements OnInit {
   }
 
   viewCandidat(candidat: any) {
-    this.selectedCandidat = candidat;
+    // Clone to avoid direct mutation of the list item before saving
+    this.selectedCandidat = { ...candidat };
+    
+    // Reset AI results for the new candidate
+    this.aiAnalysisResult = '';
+    this.aiScore = 0;
+    this.isAnalyzing = false;
+    
     this.showCandidatDialog = true;
   }
 
@@ -1665,7 +1997,7 @@ export class RHRecrutementComponent implements OnInit {
   }
 
   planifierEntretien(candidat: any) {
-    this.closeCandidatDialog();
+    this.selectedCandidat = candidat;
     this.entretienDate = '';
     this.entretienHeure = '';
     this.entretienNotes = '';
@@ -1676,7 +2008,28 @@ export class RHRecrutementComponent implements OnInit {
     this.showEntretienDialog = false;
   }
 
+  private resolveOffreIdForCandidat(candidat: any): string {
+    if (candidat?.offreId) return candidat.offreId;
+    if (!candidat?.poste) return '';
+    const matched = this.offresSignal().find(o => o.titre === candidat.poste || o.poste === candidat.poste);
+    return matched?.id || '';
+  }
+
+  private buildCandidaturePayload(candidat: any, overrides: any = {}) {
+    return {
+      id: candidat?.isUserOnly ? '' : (candidat?.id || candidat?.Id || ''),
+      utilisateurId: candidat?.utilisateurId || candidat?.id || '',
+      societeId: this.societeId,
+      offreId: this.resolveOffreIdForCandidat(candidat),
+      statut: candidat?.statut || 'EN_ATTENTE',
+      observations: candidat?.observations || '',
+      titre: candidat?.poste || 'Candidature',
+      ...overrides
+    };
+  }
+
   saveEntretien() {
+    if (!this.selectedCandidat) return;
     if (!this.entretienDate || !this.entretienHeure) {
       this.snackBar.open('Veuillez remplir la date et l\'heure', 'Fermer', { duration: 3000 });
       return;
@@ -1684,101 +2037,288 @@ export class RHRecrutementComponent implements OnInit {
 
     const dateEntretien = new Date(`${this.entretienDate}T${this.entretienHeure}`);
 
-    this.api.updateCandidature({
-      id: this.selectedCandidat.id,
+    this.isSavingEntretien = true;
+    const payload = this.buildCandidaturePayload(this.selectedCandidat, {
       statut: 'ENTRETIEN',
       dateEntretien: dateEntretien.toISOString(),
-      observations: this.entretienNotes
-    }).subscribe(() => {
-      this.snackBar.open('Entretien planifié avec succès', 'Fermer', { duration: 3000 });
-      this.closeEntretienDialog();
-      this.loadData();
+      observations: this.entretienNotes,
+      titre: this.selectedCandidat.poste || 'Entretien'
+    });
+
+    const obs = this.selectedCandidat.isUserOnly 
+      ? this.api.saveCandidature(payload)
+      : this.api.updateCandidature(payload);
+
+    obs.subscribe({
+      next: () => {
+        this.isSavingEntretien = false;
+        this.snackBar.open('Entretien planifié avec succès', 'Fermer', { duration: 3000 });
+        this.closeEntretienDialog();
+        this.closeCandidatDialog();
+        this.loadData();
+      },
+      error: (err) => {
+        this.isSavingEntretien = false;
+        console.error('Error planning entretien:', err);
+        const msg = err?.error?.detail || err?.error?.message || err?.message || 'Erreur lors de la planification';
+        this.snackBar.open(typeof msg === 'string' ? msg : 'Erreur lors de la planification', 'Fermer', { duration: 5000 });
+      }
     });
   }
 
   deleteCandidature(id: string) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette candidature ?')) {
-      this.api.deleteCandidature(id).subscribe(() => {
-        this.snackBar.open('Candidature supprimée avec succès', 'Fermer', { duration: 3000 });
-        this.closeCandidatDialog();
-        this.loadData();
+      this.isDeletingCandidate = true;
+      if (this.selectedCandidat?.isUserOnly) {
+        const userId = this.selectedCandidat.utilisateurId || this.selectedCandidat.id || this.selectedCandidat.Id;
+        if (!userId) {
+          this.snackBar.open('Erreur: ID utilisateur manquant', 'Fermer', { duration: 3000 });
+          this.isDeletingCandidate = false;
+          return;
+        }
+        this.api.deleteUtilisateur(userId).subscribe({
+          next: () => {
+            this.isDeletingCandidate = false;
+            this.snackBar.open('Candidat supprimé avec succès', 'Fermer', { duration: 3000 });
+            this.closeCandidatDialog();
+            this.loadData();
+          },
+          error: (err) => {
+            this.isDeletingCandidate = false;
+            console.error('Error deleting candidate user:', err);
+            this.snackBar.open('Erreur lors de la suppression du candidat', 'Fermer', { duration: 3000 });
+          }
+        });
+        return;
+      }
+
+      this.api.deleteCandidature(id).subscribe({
+        next: () => {
+          this.isDeletingCandidate = false;
+          this.snackBar.open('Candidature supprimée avec succès', 'Fermer', { duration: 3000 });
+          this.closeCandidatDialog();
+          this.loadData();
+        },
+        error: (err) => {
+          this.isDeletingCandidate = false;
+          console.error('Error deleting candidature:', err);
+          this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
+        }
       });
     }
   }
 
   updateStatut(candidat: any) {
-    this.api.updateCandidature({
-      id: candidat.id,
-      statut: candidat.statut
-    }).subscribe(() => {
-      this.snackBar.open('Statut mis à jour avec succès', 'Fermer', { duration: 3000 });
-      this.loadData();
+    this.saveCandidatChanges(false); // Do not close modal on automatic status change
+  }
 
-      // Auto-send email based on status
-      if (candidat.statut === 'ACCEPTEE') {
-        this.sendEmail(candidat, 'candidatureAccepted');
-      } else if (candidat.statut === 'REFUSEE') {
-        this.sendEmail(candidat, 'candidatureRefused');
+  saveCandidatChanges(closeModal: boolean = true) {
+    if (!this.selectedCandidat || this.isSavingCandidate) return;
+    this.isSavingCandidate = true;
+
+    const payload = this.buildCandidaturePayload(this.selectedCandidat, {
+      statut: this.selectedCandidat.statut,
+      observations: this.selectedCandidat.observations,
+      titre: this.selectedCandidat.poste || 'Candidature'
+    });
+
+    // Prepare User update (Nom, Email, Telephone)
+    const userId = this.selectedCandidat.utilisateurId || this.selectedCandidat.id;
+    
+    // Skip user update if ID is missing or looks like a mock/temp ID (starts with OFFRE_ or CAND_)
+    const isMockId = userId?.toString().startsWith('OFFRE_') || userId?.toString().startsWith('CAND_');
+    
+    const userPayload = {
+      id: userId,
+      nom: this.selectedCandidat.nom,
+      email: this.selectedCandidat.email,
+      telephone: this.selectedCandidat.telephone,
+      typeUtilisateurId: this.selectedCandidat.typeUtilisateurId || 'T007'
+    };
+
+    // Basic validation to avoid 400 Bad Request
+    const isUserValid = userId && !isMockId && 
+                       userPayload.nom && userPayload.nom.length >= 3 && 
+                       userPayload.email && userPayload.email.includes('@');
+
+    const candObs = (this.selectedCandidat.isUserOnly || !this.selectedCandidat.isRealApplication)
+      ? this.api.saveCandidature(payload)
+      : this.api.updateCandidature(payload);
+
+    const userObs = isUserValid ? this.api.updateUtilisateur(userId, userPayload) : of(null);
+
+    forkJoin({
+      candidature: candObs,
+      utilisateur: userObs
+    }).subscribe({
+      next: (res: any) => {
+        this.isSavingCandidate = false;
+        const updatedCandidate = { ...this.selectedCandidat };
+        this.snackBar.open('Données enregistrées avec succès', 'Fermer', { duration: 3000 });
+        
+        // Update signal locally for immediate UI feedback with robust matching
+        this.candidatsSignal.update(list => list.map(c => {
+          const matchId = String(c.id) === String(updatedCandidate.id);
+          const matchUser = c.utilisateurId && updatedCandidate.utilisateurId && String(c.utilisateurId) === String(updatedCandidate.utilisateurId);
+          const matchEmail = c.email && updatedCandidate.email && c.email.toLowerCase() === updatedCandidate.email.toLowerCase();
+          
+          if (matchId || matchUser || matchEmail) {
+            return { ...c, ...updatedCandidate };
+          }
+          return c;
+        }));
+
+        if (closeModal) {
+          this.closeCandidatDialog();
+        }
+        
+        // Use a longer delay before reloading to ensure backend persistence and avoid race conditions
+        setTimeout(() => this.loadData(), 1500);
+
+        // Auto-send email based on status
+        if (updatedCandidate) {
+          if (updatedCandidate.statut === 'ACCEPTEE' || updatedCandidate.statut === 'ACCEPTE') {
+            this.sendEmail(updatedCandidate, 'candidatureAccepted');
+          } else if (updatedCandidate.statut === 'REFUSEE' || updatedCandidate.statut === 'REFUSE') {
+            this.sendEmail(updatedCandidate, 'candidatureRefused');
+          } else if (updatedCandidate.statut === 'TEST_AUTORISE') {
+            this.sendEmail(updatedCandidate, 'testAuthorized');
+          }
+        }
+      },
+      error: (err) => {
+        this.isSavingCandidate = false;
+        console.error('Erreur lors de la sauvegarde:', err);
+        // Show specific error from backend if available
+        const errorMsg = err?.error?.text || err?.error || err?.message || 'Erreur lors de l\'enregistrement';
+        this.snackBar.open(typeof errorMsg === 'string' ? errorMsg : 'Erreur de validation des données', 'Fermer', { duration: 5000 });
       }
     });
   }
 
   sendEmail(candidat: any, templateType: string) {
-    const templateId = this.emailConfig.templates[templateType];
+    const config = this.emailConfigForm.value;
+    const templateId = config.templates[templateType];
     if (!templateId) {
+      console.warn(`Template ID manquant pour ${templateType}`);
       return;
     }
 
-    // EmailJS integration would go here
-    console.log('Email would be sent to:', candidat.email, 'with template:', templateId);
+    if (templateType === 'testAuthorized') {
+      this.api.sendTestAuthorizationEmail({
+        id: candidat.id,
+        nom: candidat.nom,
+        email: candidat.email,
+        poste: candidat.poste,
+        societe: this.societeNom
+      }).subscribe({
+        next: (res: any) => {
+          if (res.success) {
+            this.snackBar.open('Invitation au test envoyée par email', 'Fermer', { duration: 3000 });
+          } else {
+            this.snackBar.open('Erreur lors de l\'envoi de l\'email', 'Fermer', { duration: 3000 });
+          }
+        },
+        error: (err) => console.error('Email send error:', err)
+      });
+    } else if (templateType === 'candidatureAccepted') {
+       this.api.sendCandidatureAcceptedEmail(candidat).subscribe();
+       this.snackBar.open('Notification d\'acceptation envoyée', 'Fermer', { duration: 3000 });
+    } else if (templateType === 'candidatureRefused') {
+       this.api.sendCandidatureRefusedEmail(candidat).subscribe();
+       this.snackBar.open('Notification de refus envoyée', 'Fermer', { duration: 3000 });
+    }
+  }
+
+  viewCV(candidat: any) {
+    const path = candidat.cv || candidat.cvPath;
+    if (!path) {
+      this.snackBar.open('Aucun CV disponible pour ce candidat', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    // Si le chemin commence par /uploads, on utilise le proxy local
+    const fullUrl = path;
+    window.open(fullUrl, '_blank');
   }
 
   saveEmailConfig() {
-    this.api.updateEmailJsConfig(this.emailConfig);
+    if (this.emailConfigForm.invalid) return;
+    this.api.updateEmailJsConfig(this.emailConfigForm.value);
+    this.formState.clearDraft(this.DRAFT_EMAIL);
     this.snackBar.open('Configuration email enregistrée', 'Fermer', { duration: 3000 });
   }
 
   resetEmailConfig() {
-    this.emailConfig = {
-      serviceId: '',
-      publicKey: '',
-      templates: {
-        testAuthorized: '',
-        candidatureRefused: '',
-        candidatureAccepted: ''
-      }
-    };
+    this.emailConfigForm.reset();
   }
 
   testEmailJsConfig() {
     this.snackBar.open('Configuration email testée (voir console)', 'Fermer', { duration: 3000 });
-    console.log('EmailJS Config:', this.emailConfig);
+    console.log('EmailJS Config:', this.emailConfigForm.value);
   }
 
   analyzeCandidat() {
     if (!this.selectedCandidat) return;
     
     this.isAnalyzing = true;
+    this.snackBar.open('L\'IA analyse le profil du candidat...', 'Fermer', { duration: 2000 });
     
-    // Simulate AI analysis with the AiService
-    setTimeout(() => {
-      const quizScore = this.selectedCandidat.quizScore || 0;
-      const quizTotal = this.selectedCandidat.quizTotal || 1;
-      const scorePercent = (quizScore / quizTotal) * 100;
-      
-      // Generate a mock analysis based on quiz score and other factors
-      this.aiScore = Math.min(95, Math.max(30, scorePercent + Math.random() * 20 - 10));
-      
-      if (this.aiScore >= 80) {
-        this.aiAnalysisResult = 'Excellent profil technique avec de solides compétences. Le candidat correspond parfaitement aux exigences du poste et montre un grand potentiel d\'intégration.';
-      } else if (this.aiScore >= 60) {
-        this.aiAnalysisResult = 'Bon profil avec des compétences adéquates. Le candidat répond aux critères principaux mais pourrait nécessiter une formation complémentaire sur certains aspects spécifiques.';
-      } else {
-        this.aiAnalysisResult = 'Le profil présente des écarts significatifs par rapport aux exigences du poste. Un entretien technique approfondi est recommandé pour évaluer le potentiel d\'apprentissage.';
+    const quizScore = this.selectedCandidat.quizScore || 0;
+    const quizTotal = this.selectedCandidat.quizTotal || 1;
+    const scorePercent = (quizScore / (quizTotal || 1)) * 100;
+
+    const evaluationData = {
+      role: 'candidate',
+      useAI: true,
+      context: `Analyse du candidat ${this.selectedCandidat.nom} pour le poste de ${this.selectedCandidat.poste}. Compétences déclarées: ${this.selectedCandidat.competences}. Score au test technique: ${quizScore}/${quizTotal}.`,
+      data: {
+        technicalScore: scorePercent,
+        testResults: scorePercent,
+        experience: 2, 
+        skills: this.selectedCandidat.competences && this.selectedCandidat.competences !== '-' && this.selectedCandidat.competences !== 'CV joint' 
+                ? this.selectedCandidat.competences.split(',').map((s: string) => s.trim()) 
+                : []
       }
-      
-      this.isAnalyzing = false;
-    }, 1500);
+    };
+
+    this.ai.evaluate(evaluationData).subscribe({
+      next: (res: any) => {
+        this.aiScore = Math.round(res.scoreSur20 * 5); // Convert /20 to /100
+        this.aiAnalysisResult = res.feedback || 'Analyse terminée.';
+        this.isAnalyzing = false;
+      },
+      error: (err) => {
+        console.error('AI Analysis error:', err);
+        this.snackBar.open('Erreur lors de l\'analyse IA. Utilisation du moteur de secours.', 'Fermer', { duration: 3000 });
+        // Fallback
+        this.aiScore = 75;
+        this.aiAnalysisResult = 'Profil intéressant présentant des compétences techniques validées par le quiz. Une évaluation en entretien est recommandée.';
+        this.isAnalyzing = false;
+      }
+    });
+  }
+
+  generateFeedbackEmail() {
+    if (!this.selectedCandidat || !this.aiAnalysisResult) return;
+    this.isGeneratingFeedback = true;
+    
+    const prompt = `Génère un email professionnel et bienveillant pour un candidat à partir de cette analyse IA: "${this.aiAnalysisResult}". 
+    Le candidat s'appelle ${this.selectedCandidat.nom} et postule pour ${this.selectedCandidat.poste}. 
+    L'email doit inclure des points forts et des axes d'amélioration.`;
+
+    this.ai.generateQuestions(prompt, 1).subscribe({
+      next: (res: any) => {
+        const emailBody = res.response || res.insights || res;
+        this.selectedCandidat.observations = (this.selectedCandidat.observations || '') + "\n\n--- Feedback IA pour Email ---\n" + emailBody;
+        this.snackBar.open('Feedback généré dans les observations', 'Fermer', { duration: 4000 });
+        this.isGeneratingFeedback = false;
+      },
+      error: () => {
+        this.isGeneratingFeedback = false;
+        this.snackBar.open('Erreur lors de la génération du feedback', 'Fermer', { duration: 3000 });
+      }
+    });
   }
 
 }

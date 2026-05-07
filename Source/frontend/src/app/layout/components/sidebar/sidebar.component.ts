@@ -555,8 +555,12 @@ export class SidebarComponent {
   loadUserInfo() {
     const user = this.api.getCurrentUser();
     if (user) {
-      this.userName = `${user.prenom || ''} ${user.nom || ''}`.trim();
-      this.userInitials = (user.prenom?.charAt(0) || '') + (user.nom?.charAt(0) || '');
+      const sanitize = (val: any) => (val && typeof val === 'string') ? val.replace(/undefined/g, '').trim() : (val || '');
+      const prenom = sanitize(user.prenom || user.Prenom);
+      const nom = sanitize(user.nom || user.Nom);
+      
+      this.userName = `${prenom} ${nom}`.trim() || 'Utilisateur';
+      this.userInitials = (prenom?.charAt(0) || '') + (nom?.charAt(0) || '');
     }
   }
 
@@ -570,7 +574,6 @@ export class SidebarComponent {
         { name: 'Sociétés', icon: s('building'), path: '/superadmin/societes' },
         { name: 'Utilisateurs', icon: s('users'), path: '/superadmin/utilisateurs' },
         { name: 'Abonnements', icon: s('credit'), path: '/superadmin/abonnements' },
-        { name: 'Modules Système', icon: s('package'), path: '/superadmin/modules' },
         { name: 'Rôles', icon: s('users'), path: '/superadmin/roles' },
         { name: 'Sécurité', icon: s('shield'), path: '/superadmin/alertes' },
         { name: 'IP Bloquées', icon: s('shield'), path: '/superadmin/ipblocked' },
@@ -587,12 +590,14 @@ export class SidebarComponent {
         { name: 'Tableau de bord', icon: s('grid'), path: '/admin/dashboard' },
         { name: 'Projets', icon: s('rocket'), path: '/admin/projets' },
         { name: 'Employés', icon: s('users'), path: '/admin/employes' },
+        { name: 'Clients', icon: s('briefcase'), path: '/admin/clients' },
         { name: 'Talent Metrics', icon: s('activity'), path: '/rh/talent-metrics' },
         { name: 'Ressources Humaines', icon: s('users'), path: '/admin/rh' },
         { name: 'Pointage Équipe', icon: s('clock'), path: '/admin/pointage' },
         { name: 'Congés', icon: s('calendarCheck'), path: '/admin/conges' },
         { name: 'Paiements', icon: s('credit'), path: '/admin/paiements' },
         { name: 'Communication', icon: s('chat'), path: '/admin/chat' },
+        { name: 'Modules', icon: s('package'), path: '/admin/modules' },
         { name: 'Notifications', icon: s('bell'), path: '/admin/notifications' },
         { name: 'Paramètres', icon: s('settings'), path: '/admin/parametres' },
         { name: 'Mon Profil', icon: s('user'), path: '/admin/profil' }
@@ -616,7 +621,6 @@ export class SidebarComponent {
         { name: 'Projets', icon: s('folder'), path: '/chef/projets' },
         { name: 'Tâches', icon: s('list'), path: '/chef/taches' },
         { name: 'Équipe', icon: s('users'), path: '/chef/equipe' },
-        { name: 'Pointage', icon: s('clock'), path: '/chef/pointage' },
         { name: 'Congés', icon: s('calendarCheck'), path: '/chef/conges' },
         { name: 'Suivi & Stats', icon: s('activity'), path: '/chef/suivi' },
         { name: 'Bugs', icon: s('bug'), path: '/chef/bugs' },
@@ -631,7 +635,6 @@ export class SidebarComponent {
         { name: 'Dashboard', icon: s('grid'), path: '/dev/dashboard' },
         { name: 'Mes Tâches', icon: s('list'), path: '/dev/taches' },
         { name: 'Projets', icon: s('folder'), path: '/dev/projets' },
-        { name: 'Pointage', icon: s('clock'), path: '/dev/pointage' },
         { name: 'Congés', icon: s('calendarCheck'), path: '/dev/conges' },
         { name: 'Bugs', icon: s('bug'), path: '/dev/bugs' },
         { name: 'Time Tracking', icon: s('clock'), path: '/dev/time' },
@@ -644,7 +647,6 @@ export class SidebarComponent {
       ],
       'testeur': [
         { name: 'Dashboard', icon: s('grid'), path: '/qa/dashboard' },
-        { name: 'Pointage', icon: s('clock'), path: '/qa/pointage' },
         { name: 'Congés', icon: s('calendarCheck'), path: '/qa/conges' },
         { name: 'Tests & QA', icon: s('clipboard'), path: '/qa/tests' },
         { name: 'Plans de Test', icon: s('map'), path: '/qa/plans' },

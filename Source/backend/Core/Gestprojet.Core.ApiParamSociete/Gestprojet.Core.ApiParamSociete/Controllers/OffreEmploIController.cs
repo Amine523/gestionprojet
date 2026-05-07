@@ -44,6 +44,16 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
             return result ? Ok(entity) : BadRequest(new { success = false, message = "Erreur lors de l'ajout" });
         }
 
+        [HttpPut("modifier")]
+        public async Task<IActionResult> Modifier([FromBody] ApplicationCore entity)
+        {
+            if (entity == null || string.IsNullOrEmpty(entity.Id)) return BadRequest(new { success = false, message = "Données ou ID invalides" });
+            
+            entity.Type = "OffreEmploi";
+            var result = await _applicationBusiness.ModifierApplicationAsync(entity);
+            return result ? Ok(entity) : BadRequest(new { success = false, message = "Erreur lors de la modification" });
+        }
+
         [HttpDelete("supprimer/id/{id}")]
         public async Task<IActionResult> Supprimer(string id)
         {

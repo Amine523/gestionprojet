@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
+import { AiService } from '@core/services/ai.service';
+import { forkJoin, of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-rh-tests',
@@ -150,12 +153,18 @@ import { ApiService } from '@core/services/api.service';
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                       <circle cx="12" cy="12" r="3"></circle>
                     </svg>
-                    Présentation
+                    Détails
                   </button>
-                  <button class="btn-icon" (click)="editQuiz(quiz)">
+                  <button class="btn-icon" (click)="editQuiz(quiz)" title="Modifier">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button class="btn-icon btn-danger" (click)="deleteQuiz(quiz.id)" title="Supprimer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                   </button>
                 </div>
@@ -301,9 +310,26 @@ import { ApiService } from '@core/services/api.service';
             </button>
           </div>
           <div class="modal-body">
-            <div class="form-group">
-              <label class="form-label">Titre du test</label>
-              <input type="text" [(ngModel)]="newQuiz.titre" class="form-input" placeholder="ex: React Avancé">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Titre / Sujet</label>
+                <input type="text" class="form-input" [(ngModel)]="newQuiz.titre" placeholder="ex: JavaScript, SQL, Management...">
+              </div>
+              <div class="form-group" style="display: flex; align-items: flex-end;">
+                <button class="btn btn-secondary w-full" (click)="generateWithIA()" [disabled]="isGeneratingIA || !newQuiz.titre">
+                  @if (isGeneratingIA) {
+                    <svg class="spin mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                       <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                    </svg>
+                    <span>Génération...</span>
+                  } @else {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mr-2">
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                    <span>Générer avec l'IA</span>
+                  }
+                </button>
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">Description</label>
@@ -555,8 +581,14 @@ import { ApiService } from '@core/services/api.service';
 
     .btn-icon:hover {
       background: var(--color-surface);
-      color: var(--color-primary);
-      border-color: var(--color-primary);
+      color: #6366f1;
+      border-color: #6366f1;
+    }
+
+    .btn-icon.btn-danger:hover {
+      color: #dc2626;
+      border-color: #dc2626;
+      background: #fef2f2;
     }
 
     .quizzes-grid {
@@ -1001,24 +1033,26 @@ import { ApiService } from '@core/services/api.service';
 export class RhTestsComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private api = inject(ApiService);
-  
+  private aiService = inject(AiService);
+
   societeId = '';
   societeNom = 'Votre société';
-  
+
   evaluations: any[] = [];
   filteredResultats: any[] = [];
   noteMoyenne = 0;
-  
+
   showAssignDialog = false;
   selectedTest: any = null;
   assignableCandidates: any[] = [];
-  
+
   showEmbaucherDialog = false;
   selectedResult: any = null;
   selectedRole = 'developpeur';
 
   selectedQuizRole = 'developpeur';
   roleQuizzes: any[] = [];
+  isGeneratingIA = false;
 
   roleQuizData: { [key: string]: any[] } = {
     developpeur: [
@@ -1042,9 +1076,9 @@ export class RhTestsComponent implements OnInit {
   showEditQuizDialog = false;
   showCreateQuizDialog = false;
   sampleQuestions: any[] = [];
-  
+
   iconOptions = ['code', 'science', 'engineering', 'gavel', 'psychology', 'terminal', 'data_object', 'bug_report', 'cloud', 'storage', 'security', 'analytics'];
-  
+
   newQuiz: any = {
     titre: '',
     description: '',
@@ -1058,37 +1092,77 @@ export class RhTestsComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
+    this.societeId = user?.societeId || user?.SocieteId || '';
     this.societeNom = user?.societe?.nom || 'Votre société';
     this.loadData();
     this.loadRoleQuizzes();
   }
-  
+
+  /** Normalise les champs renvoyés par l’API (PascalCase / camelCase) pour le template. */
+  private normalizeQuizRow(raw: any): any {
+    if (!raw || typeof raw !== 'object') return raw;
+    const titre = raw.titre ?? raw.Titre ?? 'Sans titre';
+    const description = raw.description ?? raw.Description ?? '';
+    const typeTest = raw.typeTest ?? raw.TypeTest ?? '';
+    const duree = raw.duree ?? raw.dureeMinutes ?? raw.DureeMinutes ?? 30;
+    return {
+      ...raw,
+      id: raw.id ?? raw.Id,
+      titre,
+      description,
+      niveau: typeTest || raw.niveau || 'Intermédiaire',
+      nbQuestions: raw.nbQuestions ?? 0,
+      duree,
+      tauxReussite: raw.tauxReussite ?? 0,
+      nbAttempts: raw.nbAttempts ?? 0,
+      poste: raw.poste ?? raw.Poste ?? ''
+    };
+  }
+
+  /** Filtre léger par filière ; si vide, on garde tous les tests société. */
+  private quizMatchesRole(quiz: any, role: string): boolean {
+    const r = (role || '').toLowerCase();
+    const poste = String(quiz.poste || '').toLowerCase();
+    const typ = String(quiz.niveau || quiz.typeTest || '').toLowerCase();
+    if (r === 'developpeur') return poste.includes('dev') || typ.includes('dev') || typ.includes('dév');
+    if (r === 'testeur') return poste.includes('test') || typ.includes('test') || typ.includes('qa');
+    if (r === 'chef_projet') return poste.includes('chef') || typ.includes('chef') || typ.includes('projet');
+    if (r === 'rh') return poste.includes('rh') || typ.includes('rh') || typ.includes('humain');
+    return true;
+  }
+
   loadData() {
-    this.api.getEmployesBySociete(this.societeId).subscribe({
-      next: (employes) => {
-        const candidateUsers = (employes || []).filter((e: any) => e.typeUtilisateurId === 'candidat');
-        this.evaluations = candidateUsers.map((e: any, idx: number) => ({
-          id: idx + 1,
-          candidat: e.nom,
-          test: 'Test Technique',
-          date: '10/04/2026',
-          note: Math.floor(Math.random() * 10) + 10
-        }));
+    this.api.post('application/ListeParCritere', { Criteres: { 'Type': 'Candidature' } }).subscribe({
+      next: (res: any) => {
+        const all = Array.isArray(res) ? res : (res?.value || res?.items || []);
+        this.evaluations = all.filter((a: any) => a.societeId === this.societeId || a.SocieteId === this.societeId);
         this.filteredResultats = [...this.evaluations];
-        this.calculateStats();
-      },
-      error: () => {
-        this.filteredResultats = [];
         this.calculateStats();
       }
     });
   }
-  
+
   loadRoleQuizzes() {
-    this.roleQuizzes = this.roleQuizData[this.selectedQuizRole] || [];
+    if (!this.societeId) {
+      this.roleQuizzes = this.roleQuizData[this.selectedQuizRole] || [];
+      return;
+    }
+    this.api.getTestsBySociete(this.societeId).subscribe({
+      next: (tests) => {
+        const arr = Array.isArray(tests) ? tests : [];
+        const mapped = arr.map((t: any) => this.normalizeQuizRow(t));
+        let filtered = mapped.filter((t: any) => this.quizMatchesRole(t, this.selectedQuizRole));
+        if (filtered.length === 0 && mapped.length > 0) {
+          filtered = mapped;
+        }
+        this.roleQuizzes = filtered.length > 0 ? filtered : (this.roleQuizData[this.selectedQuizRole] || []);
+      },
+      error: () => {
+        this.roleQuizzes = this.roleQuizData[this.selectedQuizRole] || [];
+      }
+    });
   }
-  
+
   calculateStats() {
     if (this.evaluations.length > 0) {
       const total = this.evaluations.reduce((sum: number, r: any) => sum + r.note, 0);
@@ -1099,7 +1173,8 @@ export class RhTestsComponent implements OnInit {
   viewQuizDetails(quiz: any) {
     this.selectedQuiz = quiz;
     this.showQuizDetailsDialog = true;
-    this.sampleQuestions = this.getSampleQuestions(quiz.titre);
+    const title = quiz?.titre || quiz?.Titre || '';
+    this.sampleQuestions = this.getSampleQuestions(title);
   }
 
   getSampleQuestions(quizTitre: string): any[] {
@@ -1124,9 +1199,39 @@ export class RhTestsComponent implements OnInit {
   }
 
   saveQuiz() {
-    this.loadRoleQuizzes();
-    this.snackBar.open('Quiz modifié localement', 'Fermer', { duration: 2000 });
-    this.closeEditQuiz();
+    const id = this.selectedQuiz?.id || this.selectedQuiz?.Id;
+    if (!id) return;
+    const payload = {
+      id,
+      titre: this.selectedQuiz.titre ?? this.selectedQuiz.Titre,
+      description: this.selectedQuiz.description ?? this.selectedQuiz.Description ?? '',
+      typeTest: this.selectedQuiz.niveau ?? this.selectedQuiz.typeTest ?? this.selectedQuiz.TypeTest ?? 'Intermédiaire',
+      dureeMinutes: Number(this.selectedQuiz.duree ?? this.selectedQuiz.dureeMinutes ?? this.selectedQuiz.DureeMinutes ?? 30),
+      scoreMinimum: 50,
+      societeId: this.societeId,
+      actif: true
+    };
+    this.api.updateTest(payload).subscribe({
+      next: () => {
+        this.snackBar.open('Test mis à jour avec succès', 'Fermer', { duration: 3000 });
+        this.loadRoleQuizzes();
+        this.closeEditQuiz();
+      },
+      error: () => {
+        this.snackBar.open('Erreur lors de la mise à jour', 'Fermer', { duration: 3000 });
+      }
+    });
+  }
+
+  deleteQuiz(id: string) {
+    if (confirm('Voulez-vous vraiment supprimer ce test ?')) {
+      this.api.deleteTest(id).subscribe({
+        next: () => {
+          this.snackBar.open('Test supprimé', 'Fermer', { duration: 3000 });
+          this.loadRoleQuizzes();
+        }
+      });
+    }
   }
 
   cancelAssign() {
@@ -1146,7 +1251,7 @@ export class RhTestsComponent implements OnInit {
     this.snackBar.open('Candidat embauché (local)', 'Fermer', { duration: 2000 });
     this.showEmbaucherDialog = false;
   }
-  
+
   openCreateQuiz() {
     this.newQuiz = {
       titre: '',
@@ -1160,28 +1265,178 @@ export class RhTestsComponent implements OnInit {
     };
     this.showCreateQuizDialog = true;
   }
-  
+
   closeCreateQuiz() {
     this.showCreateQuizDialog = false;
   }
-  
+
   createQuiz() {
     if (!this.newQuiz.titre) {
       this.snackBar.open('Veuillez saisir un titre', 'Fermer', { duration: 2000 });
       return;
     }
-    
-    const role = this.selectedQuizRole;
-    if (!this.roleQuizData[role]) {
-      this.roleQuizData[role] = [];
+
+    const testId = 'TEST_' + Date.now();
+    const payload = {
+      id: testId,
+      titre: this.newQuiz.titre,
+      description: this.newQuiz.description,
+      typeTest: this.newQuiz.niveau, // Mapping niveau to typeTest
+      dureeMinutes: this.newQuiz.duree || 30,
+      scoreMinimum: 50,
+      societeId: this.societeId,
+      creeParId: this.api.getCurrentUser()?.id || '',
+      actif: true,
+      dateCreation: new Date().toISOString()
+    };
+
+    this.api.createTest(payload).subscribe({
+      next: () => {
+        // Save questions and options sequentially/parallel with forkJoin to avoid race conditions
+        const questionsToSave = this.sampleQuestions || [];
+        if (questionsToSave.length > 0) {
+          const questionRequests = questionsToSave.map((qObj: any, index: number) => {
+            const questionPayload = {
+              id: `Q_${testId}_${index}`,
+              testId: testId,
+              texte: qObj.q || qObj.texte,
+              ordre: index,
+              points: 1,
+              typeQuestion: 'QCM',
+              actif: true
+            };
+
+            return this.api.createQuestion(questionPayload).pipe(
+              switchMap(() => {
+                const options = qObj.options || [];
+                if (options.length === 0) return of(true);
+
+                const reponseRequests = options.map((optText: string, optIndex: number) => {
+                  return this.api.createReponse({
+                    id: `R_${testId}_${index}_${optIndex}`,
+                    questionId: questionPayload.id,
+                    texte: optText,
+                    estCorrecte: optIndex === qObj.correct,
+                    ordre: optIndex
+                  });
+                });
+                return forkJoin(reponseRequests);
+              }),
+              catchError(err => {
+                console.error('Erreur lors de la sauvegarde d\'une question:', err);
+                return of(null);
+              })
+            );
+          });
+
+          forkJoin(questionRequests).subscribe({
+            next: () => {
+              this.snackBar.open('Test "' + this.newQuiz.titre + '" créé avec succès en base de données', 'Fermer', { duration: 3000 });
+              this.loadRoleQuizzes();
+              this.closeCreateQuiz();
+            },
+            error: () => {
+              this.loadRoleQuizzes();
+              this.closeCreateQuiz();
+            }
+          });
+        } else {
+          this.snackBar.open('Test "' + this.newQuiz.titre + '" créé sans questions', 'Fermer', { duration: 3000 });
+          this.loadRoleQuizzes();
+          this.closeCreateQuiz();
+        }
+      },
+      error: () => {
+        // Fallback local
+        const role = this.selectedQuizRole;
+        if (!this.roleQuizData[role]) this.roleQuizData[role] = [];
+        this.roleQuizData[role].push({ ...this.newQuiz, id: testId });
+        this.loadRoleQuizzes();
+        this.snackBar.open('Test créé localement (backend indisponible)', 'Fermer', { duration: 3000 });
+        this.closeCreateQuiz();
+      }
+    });
+  }
+
+  generateWithIA() {
+    if (!this.newQuiz.titre) {
+      this.snackBar.open('Veuillez d\'abord donner un titre ou sujet au test', 'Fermer', { duration: 3000 });
+      return;
     }
+
+    this.isGeneratingIA = true;
+    this.snackBar.open('L\'IA prépare vos questions techniques...', 'Fermer', { duration: 2000 });
     
-    const newId = Math.max(0, ...this.roleQuizData[role].map((q: any) => q.id)) + 1;
-    this.roleQuizData[role].push({ ...this.newQuiz, id: newId });
-    this.loadRoleQuizzes();
-    
-    this.snackBar.open('Test "' + this.newQuiz.titre + '" créé avec succès', 'Fermer', { duration: 3000 });
-    this.closeCreateQuiz();
+    this.aiService.generateQuestions(this.newQuiz.titre, 5).subscribe({
+      next: (res: any) => {
+        try {
+          const rawResponse = res.response || res.insights || res;
+          const questions = this.extractJson(typeof rawResponse === 'string' ? rawResponse : JSON.stringify(rawResponse));
+          
+          if (Array.isArray(questions) && questions.length > 0) {
+            this.sampleQuestions = questions;
+            this.newQuiz.nbQuestions = questions.length;
+            this.snackBar.open(`Intelligence Artificielle : ${questions.length} questions générées avec succès !`, 'Fermer', { duration: 4000 });
+          } else {
+            throw new Error('Format JSON invalide ou tableau vide');
+          }
+        } catch (e) {
+          console.error('Error parsing AI response:', e);
+          this.snackBar.open('Format de réponse IA non standard. Réessai automatique ou mode simulation actif.', 'Fermer', { duration: 3000 });
+          // Fallback if AI response is weird
+          this.sampleQuestions = this.getSampleQuestions(this.newQuiz.titre);
+        }
+        this.isGeneratingIA = false;
+      },
+      error: (err) => {
+        console.error('AI Service error:', err);
+        this.snackBar.open('Service IA momentanément indisponible. Utilisation du moteur de secours.', 'Fermer', { duration: 3000 });
+        this.sampleQuestions = this.getSampleQuestions(this.newQuiz.titre);
+        this.isGeneratingIA = false;
+      }
+    });
+  }
+
+  private extractJson(text: string): any {
+    if (!text) return null;
+
+    try {
+      // 1. Try direct parse first
+      try { return JSON.parse(text.trim()); } catch (e) { }
+
+      // 2. Try markdown blocks
+      const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (jsonMatch && jsonMatch[1]) {
+        try { return JSON.parse(jsonMatch[1].trim()); } catch (e) { }
+      }
+
+      // 3. Try finding array or object boundaries
+      const firstBracket = text.indexOf('[');
+      const lastBracket = text.lastIndexOf(']');
+      if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+        const possibleJson = text.substring(firstBracket, lastBracket + 1);
+        try { return JSON.parse(possibleJson); } catch (e) { }
+      }
+
+      const firstBrace = text.indexOf('{');
+      const lastBrace = text.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        const possibleJson = text.substring(firstBrace, lastBrace + 1);
+        try { return JSON.parse(possibleJson); } catch (e) { }
+      }
+      
+      // 4. Try to fix common JSON errors (trailing commas, etc.)
+      const cleanedText = text.trim()
+        .replace(/,\s*([\]}])/g, '$1') // Trailing commas
+        .replace(/([{,])\s*(\w+)\s*:/g, '$1"$2":'); // Unquoted keys
+      
+      try { return JSON.parse(cleanedText); } catch (e) { }
+
+    } catch (e) {
+      console.error('All JSON extraction attempts failed', e);
+    }
+
+    return null;
   }
 }
 

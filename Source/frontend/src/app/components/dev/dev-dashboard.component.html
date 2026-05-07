@@ -1,0 +1,220 @@
+<div class="dev-dashboard-container">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1>Tableau de Bord <span class="gradient-text">Développeur.</span></h1>
+      <p class="header-subtitle">Vue d'ensemble de vos projets et activités de développement.</p>
+    </div>
+    <div class="header-actions">
+      <div class="search-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher un projet...">
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats Overview -->
+  <div class="stats-overview">
+    <div class="stat-card primary">
+      <div class="stat-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().total}}</h3>
+        <p>Total Projets</p>
+      </div>
+    </div>
+    
+    <div class="stat-card warning">
+      <div class="stat-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().actifs}}</h3>
+        <p>En Cours</p>
+      </div>
+    </div>
+    
+    <div class="stat-card success">
+      <div class="stat-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().termines}}</h3>
+        <p>Terminés</p>
+      </div>
+    </div>
+    
+    <div class="stat-card info">
+      <div class="stat-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().enPause}}</h3>
+        <p>En Pause</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h2>Actions Rapides</h2>
+    <div class="actions-grid">
+      <button (click)="navigateToTasks()" class="action-card">
+        <div class="action-icon">📋</div>
+        <div class="action-content">
+          <h3>Tâches</h3>
+          <p>Gérer vos tâches</p>
+        </div>
+      </button>
+      
+      <button (click)="navigateToBugs()" class="action-card">
+        <div class="action-icon">🐛</div>
+        <div class="action-content">
+          <h3>Bugs</h3>
+          <p>Suivre les bugs</p>
+        </div>
+      </button>
+      
+      <button (click)="navigateToApi()" class="action-card">
+        <div class="action-icon">🔧</div>
+        <div class="action-content">
+          <h3>API</h3>
+          <p>Documentation API</p>
+        </div>
+      </button>
+      
+      <button (click)="navigateToDocs()" class="action-card">
+        <div class="action-icon">📚</div>
+        <div class="action-content">
+          <h3>Docs</h3>
+          <p>Documentation</p>
+        </div>
+      </button>
+      
+      <button (click)="navigateToDiagrams()" class="action-card">
+        <div class="action-icon">📊</div>
+        <div class="action-content">
+          <h3>Diagrammes</h3>
+          <p>Architecture système</p>
+        </div>
+      </button>
+      
+      <button (click)="navigateToPointage()" class="action-card">
+        <div class="action-icon">⏰</div>
+        <div class="action-content">
+          <h3>Pointage</h3>
+          <p>Suivi du temps</p>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="content-grid">
+    <!-- My Projects -->
+    <section class="projects-section">
+      <div class="section-header">
+        <h2>Mes Projets</h2>
+        <button (click)="navigateToTasks()" class="btn-link">Voir tout</button>
+      </div>
+      
+      <div class="projects-list">
+        @for (projet of filteredProjets().slice(0, 3); track projet.id) {
+          <div class="project-item" (click)="navigateToProjet(projet)">
+            <div class="project-header">
+              <h3>{{projet.nom}}</h3>
+              <span [class]="'badge ' + getStatutClass(projet.statut)">
+                {{getStatutLabel(projet.statut)}}
+              </span>
+            </div>
+            <p class="project-description">{{projet.description}}</p>
+            <div class="project-meta">
+              <span class="meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {{projet.dateDebut | date:'dd MMM yyyy'}}
+              </span>
+              @if (projet.dateFin) {
+                <span class="meta-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  {{projet.dateFin | date:'dd MMM yyyy'}}
+                </span>
+              }
+            </div>
+            @if (projet.progression !== undefined) {
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="projet.progression"></div>
+                <span class="progress-text">{{projet.progression}}%</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Recent Activities -->
+    <section class="activities-section">
+      <div class="section-header">
+        <h2>Activités Récentes</h2>
+        <button class="btn-link">Voir tout</button>
+      </div>
+      
+      <div class="activities-list">
+        @for (activity of recentActivities(); track activity.id) {
+          <div class="activity-item" [class]="getActivityClass(activity.type)">
+            <div class="activity-icon">
+              {{getActivityIcon(activity.type)}}
+            </div>
+            <div class="activity-content">
+              <p class="activity-message">{{activity.message}}</p>
+              <div class="activity-meta">
+                <span class="activity-project">{{activity.projet}}</span>
+                <span class="activity-time">{{activity.time}}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+
+  @if (filteredProjets().length === 0) {
+    <div class="empty-state">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      <h3>Aucun projet trouvé</h3>
+      <p>Commencez par rejoindre un projet ou créez-en un nouveau.</p>
+    </div>
+  }
+</div>

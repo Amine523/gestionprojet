@@ -24,13 +24,13 @@ import { ApiService } from '@core/services/api.service';
                    <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
                      <i class="bi bi-cpu text-2xl"></i>
                    </div>
-                   <span class="text-[10px] font-black uppercase tracking-[4px] text-indigo-400 italic">Neural Validation</span>
+                   <span class="text-[10px] font-black uppercase tracking-[4px] text-indigo-400 italic">Validation Technique</span>
                  </div>
                  <h2 class="text-3xl font-black text-white tracking-tighter uppercase italic">{{selectedCandidature.quiz}}</h2>
-                 <p class="text-slate-400 font-bold text-sm mt-2">Mission: {{selectedCandidature.offreTitre}}</p>
+                 <p class="text-slate-400 font-bold text-sm mt-2">Mission : {{selectedCandidature.offreTitre}}</p>
                </div>
                <div class="flex flex-col items-center gap-2">
-                 <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Buffer Sync</div>
+                 <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progression</div>
                  <div class="text-4xl font-black text-indigo-500 italic tracking-tighter">{{currentQuestion + 1}} / {{quizQuestions.length}}</div>
                </div>
             </div>
@@ -66,16 +66,16 @@ import { ApiService } from '@core/services/api.service';
           </div>
 
           <div class="space-y-4">
-            <h1 class="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">Synthesis Complete</h1>
-            <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Validation score: <span class="text-indigo-500 font-black">{{score}}/{{quizQuestions.length}} ({{scorePercent}}%)</span></p>
+            <h1 class="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">Synthèse Terminée</h1>
+            <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Score de validation : <span class="text-indigo-500 font-black">{{score}}/{{quizQuestions.length}} ({{scorePercent}}%)</span></p>
           </div>
 
           <p class="text-lg font-medium text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed italic">
-            {{ score >= passingScore ? 'Exceptional alignment detected. Your operational data has been transmitted to the Human Capital department.' : 'Mission evaluation logged. Your skill matrix has been archived for future opportunities.' }}
+            {{ score >= passingScore ? 'Alignement exceptionnel détecté. Vos données opérationnelles ont été transmises au département des Ressources Humaines.' : 'Évaluation de mission enregistrée. Votre matrice de compétences a été archivée pour de futures opportunités.' }}
           </p>
 
           <button (click)="closeTest()" class="h-16 px-12 bg-slate-900 dark:bg-indigo-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl shadow-indigo-900/20 hover:scale-105 active:scale-95 transition-all">
-            RETURN TO COMMAND CENTER
+            RETOURNER AU TABLEAU DE BORD
           </button>
         </div>
       } @else {
@@ -89,7 +89,7 @@ import { ApiService } from '@core/services/api.service';
                  <i class="bi bi-person-bounding-box text-5xl text-white"></i>
                </div>
                <div class="text-center md:text-left space-y-2">
-                 <span class="text-[10px] font-black uppercase tracking-[6px] text-indigo-400 italic">Candidate Portal</span>
+                 <span class="text-[10px] font-black uppercase tracking-[6px] text-indigo-400 italic">Portail Candidat</span>
                  <h1 class="text-5xl font-black text-white tracking-tighter leading-none uppercase italic">{{userName}}</h1>
                  <p class="text-slate-400 font-bold text-sm tracking-widest uppercase">{{userEmail}}</p>
                </div>
@@ -97,7 +97,7 @@ import { ApiService } from '@core/services/api.service';
 
             <div class="flex gap-4">
                <div class="px-8 py-4 bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 text-center">
-                 <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Missions Engaged</div>
+                 <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Candidatures</div>
                  <div class="text-2xl font-black text-white italic tracking-tighter">{{myCandidatures.length}}</div>
                </div>
             </div>
@@ -106,18 +106,18 @@ import { ApiService } from '@core/services/api.service';
 
         <section class="space-y-8">
           <div class="flex items-center justify-between px-6">
-             <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase underline decoration-indigo-500 decoration-4">Mission Queue</h3>
-             <button routerLink="/applicant/offres" class="h-12 px-6 bg-slate-50 dark:bg-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all">New Deployment</button>
+             <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase underline decoration-indigo-500 decoration-4">File de Candidatures</h3>
+             <button routerLink="/applicant/offres" class="h-12 px-6 bg-slate-50 dark:bg-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all">Nouvelle Candidature</button>
           </div>
           
           @if (myCandidatures.length === 0) {
             <div class="bg-white dark:bg-slate-900 rounded-[50px] p-24 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-8">
                <i class="bi bi-rocket text-[80px] text-slate-200"></i>
                <div class="space-y-2">
-                 <p class="text-xl font-black uppercase tracking-widest text-slate-400 italic">No Active Deployments</p>
-                 <p class="text-sm font-bold text-slate-500">Initiate your career trajectory by exploring available missions.</p>
+                 <p class="text-xl font-black uppercase tracking-widest text-slate-400 italic">Aucune Candidature Active</p>
+                 <p class="text-sm font-bold text-slate-500">Initiez votre trajectoire de carrière en explorant les missions disponibles.</p>
                </div>
-               <button routerLink="/applicant/offres" class="h-16 px-12 bg-slate-900 dark:bg-indigo-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl">SCAN FOR OPPORTUNITIES</button>
+               <button routerLink="/applicant/offres" class="h-16 px-12 bg-slate-900 dark:bg-indigo-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl">RECHERCHER DES OFFRES</button>
             </div>
           } @else {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -146,10 +146,10 @@ import { ApiService } from '@core/services/api.service';
 
                     @if (cand.statut === 'Test_autorise' && cand.quiz) {
                       <div class="p-6 bg-indigo-600/5 rounded-3xl border border-indigo-500/20 space-y-4">
-                        <p class="text-[11px] font-bold text-indigo-600 italic leading-relaxed">Neural Assessment Required: Your candidacy has been green-lit for technical validation.</p>
+                        <p class="text-[11px] font-bold text-indigo-600 italic leading-relaxed">Évaluation technique requise : Votre candidature a été validée pour la validation technique.</p>
                         <button (click)="startTest(cand)" class="w-full h-14 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-3">
                           <i class="bi bi-play-circle-fill text-lg"></i>
-                          INITIATE VALIDATION
+                          LANCER LA VALIDATION
                         </button>
                       </div>
                     } @else if (cand.statut === 'Test_termine') {
@@ -158,8 +158,8 @@ import { ApiService } from '@core/services/api.service';
                           <i class="bi bi-clipboard2-check text-xl"></i>
                         </div>
                         <div>
-                          <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Assessment Finalized</p>
-                          <p class="text-sm font-black text-slate-900 dark:text-white italic">{{cand.quizScore}} / {{cand.quizTotal}} Yield</p>
+                          <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Évaluation Terminée</p>
+                          <p class="text-sm font-black text-slate-900 dark:text-white italic">{{cand.quizScore}} / {{cand.quizTotal}} Résultat</p>
                         </div>
                       </div>
                     }

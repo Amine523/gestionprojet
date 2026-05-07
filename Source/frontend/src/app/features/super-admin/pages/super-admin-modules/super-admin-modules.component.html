@@ -1,0 +1,146 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-badges">
+        <span class="badge badge-primary">Gestion Modules</span>
+      </div>
+      <h1 class="header-title">
+        Modules <span class="gradient-text">SaaS.</span>
+      </h1>
+      <p class="header-subtitle">
+        Activation et configuration des fonctionnalités par société.
+      </p>
+    </div>
+    <div class="header-actions">
+      <div class="stats-card">
+        <div class="stat-item">
+          <p class="stat-label">Sociétés</p>
+          <p class="stat-value text-primary">{{societes.length}}</p>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <p class="stat-label">Modules actifs</p>
+          <p class="stat-value text-primary">{{getTotalActive()}}</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  @if (loading) {
+  <div class="loading-overlay">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+    <span>Chargement des modules...</span>
+  </div>
+  }
+
+  <!-- Content -->
+  <!-- Tabs Navigation -->
+  <div class="tabs-container">
+    <button class="tab-btn" [class.active]="activeTab === 'catalog'" (click)="activeTab = 'catalog'">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Catalogue & Acteurs
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'societes'" (click)="activeTab = 'societes'">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0V7"/><path d="M9 7v1a3 3 0 0 0 6 0V7"/><path d="M15 7v1a3 3 0 0 0 6 0V7"/><path d="M19 21v-4a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v4"/><path d="M9 7h6"/>
+      </svg>
+      Activation par Société
+    </button>
+  </div>
+
+  <!-- Content Area -->
+  <div class="tab-content">
+    <!-- Tab 1: Catalogue System (Cards View) -->
+    @if (activeTab === 'catalog') {
+      <div class="modules-grid">
+        @for (module of availableModules; track module.id) {
+          <div class="module-card">
+            <div class="module-header">
+              <div class="module-icon">
+                <mat-icon>{{module.icon}}</mat-icon>
+              </div>
+              <span class="category-pill">{{module.category}}</span>
+            </div>
+            <div class="module-body">
+              <h4>{{module.nom}}</h4>
+              <p>{{module.description}}</p>
+            </div>
+            <div class="module-footer role-footer-meta">
+              <span class="footer-label">Acteurs autorisés :</span>
+              <div class="roles-matrix">
+                @for (roleId of getRolesForModule(module.id); track roleId) {
+                  <span class="role-chip" [style.background-color]="getRoleColor(roleId)" [matTooltip]="getRoleLabel(roleId)">
+                    {{roleId.substring(1)}}
+                  </span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Tab 2: Societe Activation -->
+    @if (activeTab === 'societes') {
+      <div class="modules-full-view">
+        @for (societe of societes; track societe.id) {
+          <div class="card societe-config-card">
+            <div class="card-header">
+              <div class="config-title">
+                <div class="config-avatar">{{ societe.nom.charAt(0) }}</div>
+                <div>
+                  <h3>{{ societe.nom }}</h3>
+                  <span class="config-subtitle">Configuration des modules • ID: {{ societe.id }}</span>
+                </div>
+              </div>
+              <button class="btn btn-primary" (click)="saveSocieteModules(societe)">
+                Enregistrer {{ societe.nom }}
+              </button>
+            </div>
+
+            <div class="modules-grid">
+              @for (module of availableModules; track module.id) {
+                <div class="module-card" [class.active]="isModuleActiveFor(societe.id, module.id)">
+                  <div class="module-header">
+                    <div class="module-icon">
+                      <mat-icon>{{module.icon}}</mat-icon>
+                    </div>
+                    <button class="toggle-btn" [class.active]="isModuleActiveFor(societe.id, module.id)" 
+                            (click)="toggleModuleFor(societe.id, module.id, !isModuleActiveFor(societe.id, module.id))">
+                      <span class="toggle-knob"></span>
+                    </button>
+                  </div>
+                  <div class="module-body">
+                    <h4>{{ module.nom }}</h4>
+                    <p>{{ module.description }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Info Card -->
+  <div class="card info-card">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="16" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+    <div class="info-content">
+      <h4>Modules disponibles</h4>
+      <p>Chaque module représente une fonctionnalité majeure de la plateforme. Les société peuvent activer/désactiver
+        les modules selon leurs besoins.</p>
+    </div>
+  </div>
+</div>

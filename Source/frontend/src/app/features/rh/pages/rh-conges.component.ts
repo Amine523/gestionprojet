@@ -1,14 +1,17 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
+import { ValidationErrorComponent } from '@shared/components';
 
 interface Conge {
   id: string;
   utilisateurId: string;
   utilisateurNom: string;
   typeNom: string;
+  typePointageId: string;
   dateDebut: string;
   dateFin: string;
   nombreJours: number;
@@ -19,7 +22,7 @@ interface Conge {
 @Component({
   selector: 'app-rh-conges',
   standalone: true,
-  imports: [CommonModule, MatSnackBarModule],
+  imports: [CommonModule, MatSnackBarModule, FormsModule, ReactiveFormsModule, ValidationErrorComponent],
   template: `
 
     <div class="dashboard-container">
@@ -104,7 +107,13 @@ interface Conge {
       <!-- Main Content -->
       <div class="card main-content">
         <div class="content-header">
-            <h3>Registre des Demandes</h3>
+            <div class="header-left" style="display: flex; align-items: center; gap: 20px;">
+              <h3>Registre des Demandes</h3>
+              <div class="filter-tabs" style="display: flex; gap: 10px;">
+                <button class="btn" [class.btn-primary]="activeTab() === 'pending'" [class.btn-secondary]="activeTab() !== 'pending'" (click)="activeTab.set('pending')">En attente</button>
+                <button class="btn" [class.btn-primary]="activeTab() === 'soldes'" [class.btn-secondary]="activeTab() !== 'soldes'" (click)="activeTab.set('soldes')">Crédits Congés</button>
+              </div>
+            </div>
             <div class="table-actions">
                <button class="btn-icon" title="Filtrer">
                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -124,18 +133,31 @@ interface Conge {
         <div class="table-container">
           <table class="data-table">
             <thead>
-              <tr>
-                <th>Réf.</th>
-                <th>Collaborateur</th>
-                <th>Type</th>
-                <th>Période</th>
-                <th>Motif</th>
-                <th>État</th>
-                <th>Décision</th>
-              </tr>
+              @if (activeTab() === 'pending') {
+                <tr>
+                  <th>Réf.</th>
+                  <th>Collaborateur</th>
+                  <th>Type</th>
+                  <th>Période</th>
+                  <th>Motif</th>
+                  <th>État</th>
+                  <th>Décision</th>
+                </tr>
+              } @else {
+                <tr>
+                  <th>Collaborateur</th>
+                  <th>Date d'embauche</th>
+                  <th>Congé Acquis</th>
+                  <th>Ajustement</th>
+                  <th>Consommé</th>
+                  <th>Solde Restant</th>
+                  <th>Actions</th>
+                </tr>
+              }
             </thead>
             <tbody>
-              @for (c of congesSignal(); track c.id) {
+              @if (activeTab() === 'pending') {
+                @for (c of paginatedConges(); track c.id) {
                 <tr>
                   <td class="ref-cell">#{{c.id.substring(0,6)}}</td>
                   <td>
@@ -190,9 +212,44 @@ interface Conge {
                     </div>
                   </td>
                 </tr>
+                }
+              } @else {
+                @for (s of paginatedSoldes(); track s.utilisateurId) {
+                  <tr>
+                    <td>
+                       <div class="emp-cell">
+                          <div class="user-avatar" [style.background]="'hsl('+((s.utilisateurNom?.length || 0) * 40)+', 60%, 55%)'">{{(s.utilisateurNom || '?').charAt(0)}}</div>
+                          <span class="emp-name">{{s.utilisateurNom}}</span>
+                       </div>
+                    </td>
+                    <td>{{s.dateEmbauche | date:'dd/MM/yyyy'}}</td>
+                    <td><span class="day-count">{{s.soldeAcquis}}j</span></td>
+                    <td><span class="day-count">{{s.soldeAjustement}}j</span></td>
+                    <td><span class="day-count">{{s.soldeUtilise}}j</span></td>
+                    <td>
+                      <span class="status-chip" [class.status-validée]="s.soldeRestant > 0" [class.status-refusée]="s.soldeRestant <= 0">
+                        {{s.soldeRestant}}j
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn-icon" (click)="openAjustement(s)" title="Ajuster">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 20h9"></path>
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>
+
+          <div class="pagination-footer">
+            <button class="btn-p" [disabled]="page() === 1" (click)="page.set(page() - 1)">&lt; Précédent</button>
+            <span class="page-info">Page {{page()}} sur {{totalPages()}}</span>
+            <button class="btn-p" [disabled]="page() === totalPages()" (click)="page.set(page() + 1)">Suivant &gt;</button>
+          </div>
 
           @if (congesSignal().length === 0) {
             <div class="empty-state">
@@ -208,6 +265,41 @@ interface Conge {
           }
         </div>
       </div>
+
+      <!-- Ajustement Modal -->
+      @if (ajustementModalOpen()) {
+        <div class="modal-overlay">
+          <div class="modal-container">
+            <div class="modal-header-form">
+              <h2>Ajuster le Solde Congé</h2>
+              <button class="btn-close" (click)="ajustementModalOpen.set(false)">✕</button>
+            </div>
+            <form [formGroup]="ajustementForm" (ngSubmit)="saveAjustement()" class="modal-body">
+              <div class="form-group">
+                <label>Employé</label>
+                <div class="readonly-field">{{selectedSolde()?.utilisateurNom}}</div>
+              </div>
+              
+              <div class="form-group">
+                <label>Date d'embauche</label>
+                <input type="date" formControlName="dateEmbauche" class="time-input" [max]="today">
+                <app-validation-error [control]="ajustementForm.get('dateEmbauche')"></app-validation-error>
+              </div>
+
+              <div class="form-group">
+                <label>Ajustement du solde (Jours)</label>
+                <input type="number" step="0.5" formControlName="soldeAjustement" class="time-input">
+                <app-validation-error [control]="ajustementForm.get('soldeAjustement')"></app-validation-error>
+              </div>
+
+              <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" (click)="ajustementModalOpen.set(false)">Annuler</button>
+                <button type="submit" class="btn btn-primary" [disabled]="ajustementForm.invalid">Enregistrer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -653,6 +745,33 @@ interface Conge {
       animation: blink 1.5s infinite;
     }
 
+     .pagination-footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .btn-p {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-p:hover:not(:disabled) { background: #f1f5f9; color: #1e293b; }
+    .btn-p:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .page-info { font-size: 13px; font-weight: 700; color: #1e293b; }
+
     @keyframes blink {
       0% { opacity: 1; }
       50% { opacity: 0.3; }
@@ -688,6 +807,20 @@ interface Conge {
       font-weight: var(--font-weight-bold);
       margin-bottom: var(--space-xs);
     }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s; }
+    .modal-container { background: white; border-radius: 24px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header-form { padding: 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
+    .modal-header-form h2 { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+    .btn-close { border: none; background: #f1f5f9; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .btn-close:hover { background: #e2e8f0; color: #1e293b; }
+    .modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
+    .readonly-field { padding: 12px; background: #f8fafc; border-radius: 12px; font-weight: 700; color: #1e293b; border: 1px solid #e2e8f0; }
+    .time-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; font-weight: 600; font-family: inherit; color: #1e293b; transition: border-color 0.2s; box-sizing: border-box; }
+    .time-input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1); }
 
     /* Dark mode */
     :host-context(.dark) .card {
@@ -752,31 +885,100 @@ interface Conge {
   `]
 })
 export class RhCongesComponent implements OnInit {
+  private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private api = inject(ApiService);
   private notificationService = inject(NotificationService);
   
+  ajustementForm!: FormGroup;
+  
   societeId: string = '';
   societeNom: string = '';
   currentUserId: string = '';
+  today: string = new Date().toISOString().split('T')[0];
   
   congesSignal = signal<Conge[]>([]);
   statsSignal = signal({ totalEmployes: 0, congesValidesCeMois: 0, demandesCongesEnAttente: 0 });
   employesMap: { [id: string]: string } = {};
 
+  activeTab = signal<'pending' | 'soldes'>('pending');
+  soldesSignal = signal<any[]>([]);
+  ajustementModalOpen = signal<boolean>(false);
+  selectedSolde = signal<any | null>(null);
+
   enAttenteCount = computed(() => this.congesSignal().filter(c => c.status === 'En attente').length);
+
+  // Pagination
+  page = signal(1);
+  pageSize = 6;
+
+  paginatedConges = computed(() => {
+    const data = this.congesSignal();
+    const start = (this.page() - 1) * this.pageSize;
+    return data.slice(start, start + this.pageSize);
+  });
+
+  paginatedSoldes = computed(() => {
+    const data = this.soldesSignal();
+    const start = (this.page() - 1) * this.pageSize;
+    return data.slice(start, start + this.pageSize);
+  });
+
+  totalPages = computed(() => {
+    const count = this.activeTab() === 'pending' ? this.congesSignal().length : this.soldesSignal().length;
+    return Math.ceil(count / this.pageSize) || 1;
+  });
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = this.api.getCurrentSocieteId();
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    this.currentUserId = user?.id || user?.Id || '';
     this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
-    this.currentUserId = user?.id || '';
+
+    this.initForm();
     this.loadData();
+  }
+
+  initForm() {
+    this.ajustementForm = this.fb.group({
+      dateEmbauche: ['', [Validators.required]],
+      soldeAjustement: [0, [Validators.required, Validators.min(-50), Validators.max(50)]]
+    });
   }
 
   loadData() {
     this.loadStats();
     this.loadConges();
+    
+    this.api.getAllSoldesConges(this.societeId).subscribe({
+      next: (soldes: any) => this.soldesSignal.set(soldes),
+      error: () => console.error("Could not load soldes conges")
+    });
+  }
+
+  openAjustement(solde: any) {
+    this.selectedSolde.set(solde);
+    this.ajustementForm.patchValue({ 
+      dateEmbauche: solde.dateEmbauche ? new Date(solde.dateEmbauche).toISOString().split('T')[0] : '',
+      soldeAjustement: solde.soldeAjustement || 0
+    });
+    this.ajustementModalOpen.set(true);
+  }
+
+  saveAjustement() {
+    const s = this.selectedSolde();
+    if (!s || this.ajustementForm.invalid) return;
+    
+    const formVal = this.ajustementForm.value;
+    this.api.ajusterConge(s.utilisateurId, formVal.dateEmbauche, formVal.soldeAjustement)
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Ajustement enregistré', 'OK', { duration: 3000 });
+          this.ajustementModalOpen.set(false);
+          this.loadData();
+        },
+        error: (err: any) => this.snackBar.open("Erreur lors de l'enregistrement: " + err.message, 'Fermer')
+      });
   }
 
   loadStats() {
@@ -790,7 +992,8 @@ export class RhCongesComponent implements OnInit {
       next: (employes) => {
         this.employesMap = {};
         employes.forEach((e: any) => {
-          this.employesMap[e.id || e.Id] = (e.prenom || e.Prenom || '') + ' ' + (e.nom || e.Nom || '');
+          // Backend stores full name in "nom" (prenom is always empty)
+          this.employesMap[e.id || e.Id] = (e.nom || e.Nom || '').trim() || (e.email || e.Email || '');
         });
 
         this.api.getDemandesEnAttenteReal(this.societeId).subscribe({
@@ -798,14 +1001,22 @@ export class RhCongesComponent implements OnInit {
             const list = data.map((d: any) => {
               const uId = d.utilisateurId || d.UtilisateurId;
               const uNom = d.utilisateurNom || d.UtilisateurNom || this.employesMap[uId] || 'Utilisateur ' + uId;
+              const dDebut = new Date(d.dateDebut || d.DateDebut);
+              const dFin = new Date(d.dateFin || d.DateFin);
+              let nj = 0;
+              if (!isNaN(dDebut.getTime()) && !isNaN(dFin.getTime())) {
+                const diffTime = Math.abs(dFin.getTime() - dDebut.getTime());
+                nj = d.jours || d.Jours || Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              }
               return {
                 id: d.id || d.Id,
                 utilisateurId: uId,
                 utilisateurNom: uNom,
                 typeNom: d.typeNom || d.TypeNom || 'Congé',
+                typePointageId: d.typePointageId || d.TypePointageId || '',
                 dateDebut: d.dateDebut || d.DateDebut,
                 dateFin: d.dateFin || d.DateFin,
-                nombreJours: d.jours || d.Jours || 0,
+                nombreJours: nj,
                 motif: d.motif || d.Motif || '',
                 status: this.formatStatus(d.status || d.Status || 'En attente')
               };

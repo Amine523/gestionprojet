@@ -1,0 +1,151 @@
+import { Injectable } from '@angular/core';
+import { ApiResource, OpenApiSpec } from '../model/api.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiService {
+  
+  getApiResources(): ApiResource[] {
+    return [
+      {
+        name: 'Authentication',
+        description: 'Opérations Firebase/JWT pour la connexion système.',
+        endpoints: [
+          {
+            method: 'POST',
+            path: '/api/auth/login',
+            summary: 'Authentifier un utilisateur et retourner le Bearer Token',
+            params: [],
+            body: '{\n  "email": "user@example.com",\n  "password": "Password123!"\n}',
+            responses: [
+              { status: '200', desc: 'Succès - Retourne l\'objet token.', model: '{\n  "token": "eyJhbG...",\n  "utilisateur": { "id": "1", "nom": "John Doe", "role": "dev" }\n}' },
+              { status: '401', desc: 'Non autorisé - Identifiants invalides.' }
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Utilisateurs',
+        description: 'Gestion des talents et employés.',
+        endpoints: [
+          {
+            method: 'GET',
+            path: '/api/utilisateurs',
+            summary: 'Récupère la liste de tous les utilisateurs de la société.',
+            params: [
+              { name: 'societeId', type: 'string', description: 'ID de la société parente (Optionnel, injecté via token).' }
+            ],
+            responses: [
+              {
+                status: '200', desc: 'Succès.', model: '[\n  {\n    "id": "123",\n    "nom": "Doe",\n    "prenom": "Jane",\n    "typeUtilisateurId": "developpeur"\n  }\n]' }
+            ]
+          },
+          {
+            method: 'POST',
+            path: '/api/utilisateurs',
+            summary: 'Créer un nouvel employé (RH / Admin).',
+            body: '{\n  "nom": "Nom",\n  "email": "email@test.com",\n  "typeUtilisateurId": "qa"\n}',
+            responses: [
+              { status: '201', desc: 'Création réussie.' }
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Projets & Tâches (Agile)',
+        description: 'Ressources de gestion des sprints et backlogs.',
+        endpoints: [
+          {
+            method: 'GET',
+            path: '/api/taches',
+            summary: 'Liste les tâches du développeur connecté.',
+            params: [],
+            responses: [
+              {
+                status: '200', desc: 'Succès.', model: '[\n  {\n    "id": 1,\n    "titre": "Fixer header",\n    "statut": "inprogress",\n    "priorite": "High"\n  }\n]' }
+            ]
+          },
+          {
+            method: 'PUT',
+            path: '/api/taches/{id}',
+            summary: 'Mettre à jour le statut KanBan d\'une tâche.',
+            params: [
+              { name: 'id', type: 'integer', description: 'Identifiant unique de la tâche.' }
+            ],
+            body: '{\n  "statut": "done",\n  "tempsTravaille": 4.5\n}',
+            responses: [
+              { status: '204', desc: 'Modification acceptée (No Content).' }
+            ]
+          }
+        ]
+      }
+    ];
+  }
+
+  generateOpenApiSpec(): OpenApiSpec {
+    const openApiSpec: OpenApiSpec = {
+      openapi: '3.0.0',
+      info: {
+        title: 'GestionProjet API',
+        version: '1.0.0',
+        description: 'API REST pour la gestion de projets'
+      },
+      paths: {},
+      components: {
+        schemas: {}
+      }
+    };
+
+    const apiResources = this.getApiResources();
+    
+    apiResources.forEach((resource: ApiResource) => {
+      resource.endpoints.forEach((endpoint: any) => {
+        const pathKey = endpoint.path;
+        const method = endpoint.method.toLowerCase();
+
+        if (!openApiSpec.paths[pathKey]) {
+          openApiSpec.paths[pathKey] = {};
+        }
+
+        openApiSpec.paths[pathKey][method] = {
+          summary: endpoint.summary,
+          parameters: endpoint.params?.map((param: any) => ({
+            name: param.name,
+            in: 'query',
+            schema: { type: param.type },
+            description: param.description,
+            required: true
+          })) || [],
+          requestBody: endpoint.body ? {
+            content: {
+              'application/json': {
+                schema: { type: 'object' }
+              }
+            }
+          } : undefined,
+          responses: endpoint.responses.reduce((acc: any, res: any) => {
+            acc[res.status] = {
+              description: res.desc
+            };
+            return acc;
+          }, {})
+        };
+      });
+    });
+
+    return openApiSpec;
+  }
+
+  downloadOpenApi(): void {
+    const openApiSpec = this.generateOpenApiSpec();
+    const dataStr = JSON.stringify(openApiSpec, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'openapi.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+}

@@ -18,24 +18,17 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // === CORS ===
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAllWithCredentials", policyBuilder =>
-                {
-                    policyBuilder.WithOrigins("http://localhost:4200", "http://127.0.0.1:4200", "http://127.0.0.1:55307", "http://localhost:55307")
-                                 .AllowAnyMethod()
-                                 .AllowAnyHeader()
-                                 .AllowCredentials();
-                });
-                options.AddPolicy("AllowAll", policyBuilder =>
-                {
-                    policyBuilder.SetIsOriginAllowed(origin => true)
-                                 .AllowAnyMethod()
-                                 .AllowAnyHeader()
-                                 .AllowCredentials();
-                });
-            });
+             // === CORS ===
+             builder.Services.AddCors(options =>
+             {
+                 options.AddPolicy("AllowAll", policyBuilder =>
+                 {
+                     policyBuilder.WithOrigins("http://localhost:4200")
+                                  .AllowAnyMethod()
+                                  .AllowAnyHeader()
+                                  .AllowCredentials();
+                 });
+             });
 
             // === Authentication (JWT) ===
             var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -71,6 +64,17 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi
                             context.NoResult();
                             return Task.CompletedTask;
                         }
+                        // Allow SignalR to send the token in the query string
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && 
+                            (path.StartsWithSegments("/hubs/notifications") || 
+                             path.StartsWithSegments("/hubs/chat") || 
+                             path.StartsWithSegments("/hubs/monitoring")))
+                        {
+                            context.Token = accessToken;
+                        }
+                        
                         return Task.CompletedTask;
                     },
                     OnChallenge = context =>
@@ -92,6 +96,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi
                 {
                     options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
                 });
+
+            // === Configuration pour les uploads de fichiers ===
+            builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 52428800; // 50 MB
+                options.ValueLengthLimit = 52428800;
+                options.MultipartHeadersLengthLimit = 52428800;
+            });
 
             // === SignalR ===
             builder.Services.AddSignalR();
@@ -313,13 +325,14 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi
 
             var app = builder.Build();
 
-            // === Pipeline HTTP ===
-            app.UseStaticFiles();
-            app.UseCors("AllowAll");
-            app.UseMiddleware<Gestprojet.Metier.ApiParamSociete.WebApi.Middleware.ExceptionMiddleware>();
-            app.UseAuthentication();
-            app.UseAuthorization();
-            app.MapControllers();
+             // === Pipeline HTTP ===
+             app.UseStaticFiles();
+             app.UseRouting();
+             app.UseCors("AllowAll");
+             app.UseMiddleware<Gestprojet.Metier.ApiParamSociete.WebApi.Middleware.ExceptionMiddleware>();
+             app.UseAuthentication();
+             app.UseAuthorization();
+             app.MapControllers();
             app.MapHub<NotificationHub>("/hubs/notifications");
             app.Run();
         }

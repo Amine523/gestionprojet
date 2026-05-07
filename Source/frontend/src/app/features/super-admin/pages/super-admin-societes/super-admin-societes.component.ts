@@ -5,12 +5,12 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
 import { ExportService } from '@core/services/export.service';
 import { SelectionModel } from '@angular/cdk/collections';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ToastService } from '@core/services/toast.service';
 
 @Component({
   selector: 'app-super-admin-societes',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   template: `
 
     <div class="dashboard-container">
@@ -1031,7 +1031,7 @@ export class SuperAdminSocietesComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private exportService = inject(ExportService);
-  private snackBar = inject(MatSnackBar);
+  private toastService = inject(ToastService);
 
   get activeCount() {
     return this.societesSignal().filter(s => s.actif).length;
@@ -1181,7 +1181,7 @@ export class SuperAdminSocietesComponent implements OnInit {
 
   saveSociete() {
     if (!this.formData.nom || this.formData.nom.trim().length < 2) {
-      this.snackBar.open("Le nom de la société doit contenir au moins 2 caractères", 'Fermer', { duration: 3000 });
+      this.toastService.warning("Le nom de la société doit contenir au moins 2 caractères");
       return;
     }
     
@@ -1191,7 +1191,7 @@ export class SuperAdminSocietesComponent implements OnInit {
           this.societesSignal.update(list => list.map(s => 
             (s.id === this.formData.id) ? { ...this.formData } : s
           ));
-          this.snackBar.open('Société mise à jour', 'Fermer', { duration: 3000 });
+          this.toastService.info('Société mise à jour avec succès');
           this.showDialog = false;
         }
       });
@@ -1201,7 +1201,7 @@ export class SuperAdminSocietesComponent implements OnInit {
       this.api.createSociete(this.formData).subscribe({
         next: () => {
           this.loadSocietes();
-          this.snackBar.open('Nouvelle société créée', 'Fermer', { duration: 3000 });
+          this.toastService.success('Nouvelle société créée avec succès');
           this.showDialog = false;
         }
       });
@@ -1213,6 +1213,7 @@ export class SuperAdminSocietesComponent implements OnInit {
     this.api.updateSociete(updated).subscribe({
       next: () => {
         this.societesSignal.update(list => list.map(s => s.id === societe.id ? updated : s));
+        this.toastService.info(updated.actif ? 'Société activée' : 'Société suspendue');
       }
     });
   }
@@ -1223,11 +1224,11 @@ export class SuperAdminSocietesComponent implements OnInit {
     if (confirm('Confirmer la suppression définitive de ' + societe.nom + ' ?')) {
       this.api.deleteSociete(id).subscribe({
         next: () => {
-          this.snackBar.open('Société supprimée', 'Fermer', { duration: 3000 });
+          this.toastService.error('Société supprimée avec succès');
           this.loadSocietes();
         },
         error: (err) => {
-          this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
+          this.toastService.error('Erreur lors de la suppression');
         }
       });
     }

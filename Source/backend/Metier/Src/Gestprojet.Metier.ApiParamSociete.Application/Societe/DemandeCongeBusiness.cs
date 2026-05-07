@@ -22,6 +22,11 @@ namespace Gestprojet.Metier.ApiParamSociete.Application.Societe
             if (string.IsNullOrEmpty(entity.Id))
             {
                 entity.Id = "CNG_" + System.Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+                // Calculate duration in days
+                if (entity.DateDebut.HasValue && entity.DateFin.HasValue)
+                {
+                    entity.Jours = (entity.DateFin.Value - entity.DateDebut.Value).Days;
+                }
                 success = await _repository.AjouterAsync(entity);
             }
             else

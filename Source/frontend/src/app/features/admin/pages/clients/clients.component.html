@@ -1,0 +1,188 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-badges">
+        <span class="badge badge-primary">Externes</span>
+      </div>
+      <h1 class="header-title">
+        Gestion <span class="gradient-text">Clients.</span>
+      </h1>
+      <p class="header-subtitle">
+        Gestion centralisée des comptes clients externes.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button (click)="openAddDialog()" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="8.5" cy="7" r="4"/>
+          <line x1="20" y1="8" x2="20" y2="14"/>
+          <line x1="17" y1="11" x2="23" y2="11"/>
+        </svg>
+        Nouveau Client
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-input">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="filterClients()" placeholder="Rechercher par nom ou email...">
+    </div>
+  </div>
+
+  <!-- Clients Table -->
+  <div class="card table-card animate-scale-in">
+    <div class="card-header">
+      <h3>Clients</h3>
+      <div class="stats-summary">
+        <span class="stat-item">
+          <span class="stat-value">{{stats().total}}</span>
+          <span class="stat-label">Total Clients</span>
+        </span>
+        <span class="stat-item">
+          <span class="stat-value">{{stats().actifs}}</span>
+          <span class="stat-label">Comptes Actifs</span>
+        </span>
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Nom Complet</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+            <th>Société associée</th>
+            <th>État</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of paginatedClients(); track c.id) {
+            <tr class="hover-row">
+              <td><span class="id-tag">{{c.id}}</span></td>
+              <td><span class="name">{{c.nom}} {{c.prenom}}</span></td>
+              <td>{{c.email}}</td>
+              <td>{{c.telephone || '--'}}</td>
+              <td>{{c.societeId}}</td>
+              <td>
+                <span [class]="'badge ' + (c.statut === 'actif' ? 'badge-success' : 'badge-danger')">
+                  {{c.statut === 'actif' ? 'Actif' : 'Inactif'}}
+                </span>
+              </td>
+              <td class="text-right">
+                <div class="action-row">
+                  <button (click)="openEditDialog(c)" class="btn-table-icon" title="Modifier">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button (click)="toggleStatut(c)" class="btn-table-icon" [title]="c.statut === 'actif' ? 'Désactiver' : 'Activer'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  </button>
+                  <button (click)="deleteClient(c)" class="btn-table-icon danger" title="Supprimer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="pagination-footer">
+        <div class="pagination-info">
+          Affichage de {{ Math.min((page() - 1) * pageSize() + 1, filteredClients().length) }} à {{ Math.min(page() * pageSize(), filteredClients().length) }} sur {{ filteredClients().length }} clients
+        </div>
+        <div class="pagination-actions">
+          <button class="btn-page" [disabled]="page() === 1" (click)="changePage(page() - 1)">Précédent</button>
+          <div class="page-numbers">
+            @for (p of totalPagesArray(); track $index) {
+              <button class="btn-number" [class.active]="$index + 1 === page()" (click)="changePage($index + 1)">{{$index + 1}}</button>
+            }
+          </div>
+          <button class="btn-page" [disabled]="page() === totalPages()" (click)="changePage(page() + 1)">Suivant</button>
+        </div>
+      </div>
+    }
+
+    @if (filteredClients().length === 0) {
+      <div class="empty-state">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+        </svg>
+        <p>Aucun client trouvé</p>
+      </div>
+    }
+  </div>
+
+  <!-- Modal Add/Edit -->
+  @if (showAddDialog() || showEditDialog()) {
+    <div class="modal-overlay" (click)="showAddDialog() ? closeAddDialog() : closeEditDialog()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{showAddDialog() ? 'Ajouter un Client' : 'Modifier le Client'}}</h2>
+          <button class="btn-icon" (click)="showAddDialog() ? closeAddDialog() : closeEditDialog()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <form [formGroup]="showAddDialog() ? clientForm : editForm" (ngSubmit)="onSubmit()">
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Nom *</label>
+              <input formControlName="nom" type="text" placeholder="Nom">
+            </div>
+            <div class="form-field">
+              <label>Prénom *</label>
+              <input formControlName="prenom" type="text" placeholder="Prénom">
+            </div>
+            <div class="form-field">
+              <label>Email *</label>
+              <input formControlName="email" type="email" placeholder="Email">
+            </div>
+            <div class="form-field">
+              <label>Téléphone</label>
+              <input formControlName="telephone" type="tel" placeholder="Téléphone">
+            </div>
+            <div class="form-field">
+              <label>Société associée *</label>
+              <select formControlName="societeId">
+                <option value="">Sélectionner une société</option>
+                @for (societe of societes$ | async; track societe.id) {
+                  <option [value]="societe.id">{{societe.nom}}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field full-width">
+              <label>Adresse</label>
+              <textarea formControlName="adresse" placeholder="Adresse complète"></textarea>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" (click)="showAddDialog() ? closeAddDialog() : closeEditDialog()" class="btn btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="(showAddDialog() ? clientForm : editForm).invalid" class="btn btn-primary">
+              {{showAddDialog() ? 'Ajouter' : 'Enregistrer'}}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

@@ -10,6 +10,7 @@ interface Conge {
   utilisateurId: string;
   utilisateurNom: string;
   typeNom: string;
+  typePointageId: string;
   dateDebut: string;
   dateFin: string;
   nombreJours: number;
@@ -22,6 +23,7 @@ interface Conge {
   standalone: true,
   imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
+
     <div class="dashboard-container">
       <!-- Header -->
       <header class="dashboard-header">
@@ -30,7 +32,7 @@ interface Conge {
             <span class="badge badge-primary">Administration</span>
           </div>
           <h1 class="header-title">
-            Contrôle des <span class="gradient-text">Congés.</span>
+            Centre de <span class="gradient-text">Validation.</span>
           </h1>
           <p class="header-subtitle">
             {{societeNom}} • Supervision globale des absences et validation des demandes collaborateurs.
@@ -41,7 +43,7 @@ interface Conge {
               @if (enAttenteCount() > 0) {
                 <span class="pulse-dot"></span>
               }
-              {{enAttenteCount()}} en attente
+              {{enAttenteCount()}} requêtes à traiter
            </div>
            <button class="btn btn-secondary" (click)="loadData()">
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -82,35 +84,45 @@ interface Conge {
           </div>
           <div class="stat-info">
              <div class="stat-value">{{statsSignal().congesValidesCeMois}}</div>
-             <div class="stat-label">Approuvés (Mois)</div>
+             <div class="stat-label">Approuvés ce mois</div>
           </div>
         </div>
-        <div class="card stat-card pulse-card" *ngIf="enAttenteCount() > 0">
-          <div class="stat-icon amber">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
+        @if (enAttenteCount() > 0) {
+          <div class="card stat-card pulse-card">
+            <div class="stat-icon amber">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+               <div class="stat-value">{{enAttenteCount()}}</div>
+               <div class="stat-label">En attente</div>
+            </div>
           </div>
-          <div class="stat-info">
-             <div class="stat-value">{{enAttenteCount()}}</div>
-             <div class="stat-label">À Valider</div>
-          </div>
-        </div>
+        }
       </div>
 
       <!-- Main Content -->
       <div class="card main-content">
         <div class="content-header">
             <div class="header-left">
-              <h3>Registre Central des Absences</h3>
+              <h3>Registre des Demandes</h3>
               <div class="filter-tabs">
-                <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="activeTab = 'all'">Tous</button>
-                <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="activeTab = 'pending'">
+                <button class="tab-btn" [class.active]="activeTab() === 'all'" (click)="activeTab.set('all')">Tous</button>
+                <button class="tab-btn" [class.active]="activeTab() === 'pending'" (click)="activeTab.set('pending')">
                   En attente
-                  <span class="count-badge" *ngIf="enAttenteCount() > 0">{{enAttenteCount()}}</span>
+                  @if (enAttenteCount() > 0) {
+                    <span class="count-badge">{{enAttenteCount()}}</span>
+                  }
                 </button>
-                <button class="tab-btn" [class.active]="activeTab === 'approved'" (click)="activeTab = 'approved'">Validés</button>
+                <button class="tab-btn" [class.active]="activeTab() === 'approved'" (click)="activeTab.set('approved')">Validés</button>
+                <button class="tab-btn" [class.active]="activeTab() === 'rejected'" (click)="activeTab.set('rejected')">Refusés</button>
+                @if (isRh) {
+                  <button class="tab-btn" [class.active]="activeTab() === 'soldes'" (click)="activeTab.set('soldes')">
+                    Crédits Congés
+                  </button>
+                }
               </div>
             </div>
             <div class="table-actions">
@@ -119,7 +131,7 @@ interface Conge {
                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                  </svg>
                </button>
-               <button class="btn-icon" title="Exporter Excel">
+               <button class="btn-icon" title="Exporter PDF">
                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                    <polyline points="7 10 12 15 17 10"/>
@@ -132,38 +144,49 @@ interface Conge {
         <div class="table-container">
           <table class="data-table">
             <thead>
-              <tr>
-                <th>Collaborateur</th>
-                <th>Type</th>
-                <th>Période</th>
-                <th>Motif</th>
-                <th>État</th>
-                <th>Décision</th>
-              </tr>
+              @if (activeTab() !== 'soldes') {
+                <tr>
+                  <th>Id</th>
+                  <th>UtilisateurId</th>
+                  <th>TypePointageId</th>
+                  <th>DateDebut</th>
+                  <th>DateFin</th>
+                  <th>Motif</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              } @else {
+                <tr>
+                  <th>UtilisateurId</th>
+                  <th>DateEmbauche</th>
+                  <th>SoldeAcquis</th>
+                  <th>SoldeAjustement</th>
+                  <th>SoldeUtilise</th>
+                  <th>SoldeRestant</th>
+                  <th>Actions</th>
+                </tr>
+              }
             </thead>
             <tbody>
-              @for (c of filteredConges(); track c.id) {
+              @if (activeTab() !== 'soldes') {
+                @for (c of paginatedConges(); track c.id) {
                 <tr>
+                  <td><small class="id-tag">{{c.id}}</small></td>
                   <td>
                      <div class="emp-cell">
-                        <div class="user-avatar" [style.background]="'hsl('+((c.utilisateurNom.length || 0) * 40)+', 60%, 55%)'">{{c.utilisateurNom.charAt(0)}}</div>
-                        <span class="emp-name">{{c.utilisateurNom}}</span>
+                        <div class="user-avatar" [style.background]="'hsl('+((c.utilisateurNom.length || 0) * 40)+', 60%, 55%)'">{{c.utilisateurNom.charAt(0) || '?'}}</div>
+                        <div>
+                           <p class="emp-name">{{c.utilisateurNom || c.utilisateurId}}</p>
+                           <small class="text-muted">{{c.utilisateurId}}</small>
+                        </div>
                      </div>
                   </td>
                   <td>
-                     <span class="type-pill" [class.type-maladie]="c.typeNom === 'Maladie'">{{c.typeNom}}</span>
+                     <span class="type-pill" [class.type-maladie]="c.typeNom === 'Maladie'">{{c.typeNom || c.typePointageId}}</span>
                   </td>
-                  <td class="date-range">
-                     <div class="date-display">
-                       <span>{{c.dateDebut | date:'dd MMM'}}</span>
-                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                         <polyline points="9 18 15 12 9 6"/>
-                       </svg>
-                       <span>{{c.dateFin | date:'dd MMM'}}</span>
-                     </div>
-                     <span class="day-count">{{c.nombreJours}}j</span>
-                  </td>
-                  <td class="motif-cell" [title]="c.motif">{{c.motif || 'Non spécifié'}}</td>
+                  <td>{{c.dateDebut | date:'dd/MM/yyyy'}}</td>
+                  <td>{{c.dateFin | date:'dd/MM/yyyy'}}</td>
+                  <td class="motif-cell" [title]="c.motif">{{c.motif || '...'}}</td>
                   <td>
                     <span class="status-chip" [class]="'status-'+(c.status ? c.status.toLowerCase().replace(' ', '-') : 'pending')">
                       <span class="dot"></span>
@@ -196,9 +219,47 @@ interface Conge {
                     </div>
                   </td>
                 </tr>
+                }
+              } @else {
+                @for (s of paginatedSoldes(); track s.utilisateurId) {
+                  <tr>
+                    <td>
+                       <div class="emp-cell">
+                          <div class="user-avatar" [style.background]="'hsl('+((s.utilisateurNom.length || 0) * 40)+', 60%, 55%)'">{{s.utilisateurNom.charAt(0) || '?'}}</div>
+                          <div>
+                             <p class="emp-name">{{s.utilisateurNom || s.utilisateurId}}</p>
+                             <small class="text-muted">{{s.utilisateurId}}</small>
+                          </div>
+                       </div>
+                    </td>
+                    <td>{{s.dateEmbauche | date:'dd/MM/yyyy'}}</td>
+                    <td><span class="day-count">{{s.soldeAcquis}}j</span></td>
+                    <td><span class="day-count">{{s.soldeAjustement}}j</span></td>
+                    <td><span class="day-count">{{s.soldeUtilise}}j</span></td>
+                    <td>
+                      <span class="status-chip" [class.status-validée]="s.soldeRestant > 0" [class.status-refusée]="s.soldeRestant <= 0">
+                        {{s.soldeRestant}}j
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn-icon" (click)="openAjustement(s)" title="Ajuster">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 20h9"></path>
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>
+
+          <div class="pagination-footer">
+            <button class="btn-p" [disabled]="page() === 1" (click)="page.set(page() - 1)">&lt; Précédent</button>
+            <span class="page-info">Page {{page()}} sur {{totalPages()}}</span>
+            <button class="btn-p" [disabled]="page() === totalPages()" (click)="page.set(page() + 1)">Suivant &gt;</button>
+          </div>
 
           @if (filteredConges().length === 0) {
             <div class="empty-state">
@@ -214,6 +275,36 @@ interface Conge {
           }
         </div>
       </div>
+
+      <!-- Ajustement Modal -->
+      @if (ajustementModalOpen()) {
+        <div class="modal-overlay">
+          <div class="modal-container">
+            <div class="modal-header">
+              <h2>Ajuster le Solde Congé</h2>
+              <button class="btn-close" (click)="ajustementModalOpen.set(false)">×</button>
+            </div>
+            <div class="modal-body">
+              <p>Employé : <strong>{{selectedSolde()?.utilisateurNom}}</strong></p>
+              
+              <div class="form-group">
+                <label class="form-label">Date d'embauche</label>
+                <input type="date" [(ngModel)]="ajustementData.dateEmbauche" class="form-input">
+              </div>
+
+              <div class="form-group" style="margin-top: 15px;">
+                <label class="form-label">Ajustement du solde (Jours supplémentaires ou pénalités)</label>
+                <input type="number" step="0.5" [(ngModel)]="ajustementData.soldeAjustement" class="form-input">
+              </div>
+
+              <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-secondary" (click)="ajustementModalOpen.set(false)">Annuler</button>
+                <button class="btn btn-primary" (click)="saveAjustement()">Enregistrer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -221,14 +312,13 @@ interface Conge {
       display: flex;
       flex-direction: column;
       gap: var(--space-xl);
-      padding: var(--space-lg);
       padding-bottom: var(--space-2xl);
     }
 
     .dashboard-header {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       border-radius: var(--radius-xl);
-      padding: var(--space-xl);
+      padding: var(--space-2xl);
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -245,7 +335,7 @@ interface Conge {
       right: -20%;
       width: 600px;
       height: 600px;
-      background: radial-gradient(circle, rgba(244, 63, 94, 0.1) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
       border-radius: 50%;
     }
 
@@ -273,9 +363,9 @@ interface Conge {
     }
 
     .badge-primary {
-      background: rgba(244, 63, 94, 0.1);
-      color: #f43f5e;
-      border: 1px solid rgba(244, 63, 94, 0.2);
+      background: rgba(99, 102, 241, 0.1);
+      color: #6366f1;
+      border: 1px solid rgba(99, 102, 241, 0.2);
     }
 
     .header-title {
@@ -287,7 +377,7 @@ interface Conge {
     }
 
     .gradient-text {
-      background: linear-gradient(135deg, #fb7185, #f43f5e, #e11d48);
+      background: linear-gradient(135deg, #818cf8, #6366f1, #4f46e5);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -383,15 +473,30 @@ interface Conge {
 
     .btn-icon:hover {
       background: var(--color-surface);
-      border-color: rgba(244, 63, 94, 0.3);
-      color: #f43f5e;
+      border-color: rgba(99, 102, 241, 0.3);
     }
 
-    .btn-check { color: #059669; background: #ecfdf5; }
-    .btn-check:hover { background: #059669; color: white; transform: scale(1.1); }
-    
-    .btn-cancel { color: #dc2626; background: #fef2f2; }
-    .btn-cancel:hover { background: #dc2626; color: white; transform: scale(1.1); }
+    .btn-check {
+      color: #059669;
+      background: #ecfdf5;
+    }
+
+    .btn-check:hover {
+      background: #059669;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .btn-cancel {
+      color: #dc2626;
+      background: #fef2f2;
+    }
+
+    .btn-cancel:hover {
+      background: #dc2626;
+      color: white;
+      transform: scale(1.1);
+    }
 
     .stats-grid {
       display: grid;
@@ -407,7 +512,9 @@ interface Conge {
       transition: transform var(--transition-base);
     }
 
-    .stat-card:hover { transform: translateY(-4px); }
+    .stat-card:hover {
+      transform: translateY(-4px);
+    }
 
     .stat-icon {
       width: 52px;
@@ -418,9 +525,20 @@ interface Conge {
       justify-content: center;
     }
 
-    .stat-icon.indigo { background: #eef2ff; color: #4f46e5; }
-    .stat-icon.emerald { background: #ecfdf5; color: #10b981; }
-    .stat-icon.amber { background: #fffbeb; color: #f59e0b; }
+    .stat-icon.indigo {
+      background: #eef2ff;
+      color: #4f46e5;
+    }
+
+    .stat-icon.emerald {
+      background: #ecfdf5;
+      color: #10b981;
+    }
+
+    .stat-icon.amber {
+      background: #fffbeb;
+      color: #f59e0b;
+    }
 
     .stat-value {
       font-size: 24px;
@@ -436,6 +554,15 @@ interface Conge {
       margin-top: var(--space-xs);
     }
 
+    .pulse-card {
+      animation: pulse-border 2s infinite;
+    }
+
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: var(--shadow-sm); }
+      50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2); }
+    }
+
     .card {
       background: white;
       border-radius: var(--radius-xl);
@@ -443,14 +570,10 @@ interface Conge {
       box-shadow: var(--shadow-sm);
     }
 
-    .pulse-card { animation: pulse-border 2s infinite; }
-
-    @keyframes pulse-border {
-      0%, 100% { box-shadow: var(--shadow-sm); }
-      50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2); }
+    .main-content {
+      padding: 0;
+      overflow: hidden;
     }
-
-    .main-content { padding: 0; overflow: hidden; }
 
     .content-header {
       padding: var(--space-lg);
@@ -460,10 +583,15 @@ interface Conge {
       border-bottom: 1px solid var(--color-border);
       background: white;
     }
-
+    
     .header-left { display: flex; align-items: center; gap: var(--space-xl); }
 
-    .content-header h3 { margin: 0; font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text); }
+    .content-header h3 {
+      margin: 0;
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+    }
 
     .filter-tabs {
       display: flex;
@@ -488,17 +616,28 @@ interface Conge {
       gap: 8px;
     }
 
-    .tab-btn.active { background: white; color: #f43f5e; box-shadow: var(--shadow-sm); }
+    .tab-btn.active { background: white; color: #6366f1; box-shadow: var(--shadow-sm); }
 
-    .count-badge { background: #f43f5e; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; }
+    .count-badge { background: #6366f1; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; }
 
-    .table-actions { display: flex; gap: var(--space-xs); }
+    .table-actions {
+      display: flex;
+      gap: var(--space-xs);
+    }
 
-    .table-container { background: white; overflow-x: auto; }
+    .table-container {
+      background: white;
+      overflow-x: auto;
+    }
 
-    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-    .data-table thead { background: var(--color-bg); }
+    .data-table thead {
+      background: var(--color-bg);
+    }
 
     .data-table th {
       padding: var(--space-md);
@@ -511,53 +650,300 @@ interface Conge {
       border-bottom: 1px solid var(--color-border);
     }
 
-    .data-table td { padding: var(--space-md); border-bottom: 1px solid var(--color-border); }
+    .data-table td {
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+    }
 
-    .emp-cell { display: flex; align-items: center; gap: var(--space-md); }
+    .ref-cell {
+      font-family: 'Courier New', monospace;
+      font-weight: var(--font-weight-bold);
+      color: #3b82f6;
+      font-size: var(--font-size-xs);
+    }
+
+    .emp-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
 
     .user-avatar {
-      width: 36px; height: 36px; border-radius: var(--radius-md); color: white;
-      display: flex; align-items: center; justify-content: center;
-      font-size: var(--font-size-sm); font-weight: var(--font-weight-bold);
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
       box-shadow: var(--shadow-sm);
     }
 
-    .emp-name { font-weight: var(--font-weight-semibold); color: var(--color-text); }
+    .emp-name {
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text);
+    }
 
-    .type-pill { background: var(--color-bg); padding: 4px 10px; border-radius: var(--radius-md); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--color-text); }
+    .type-pill {
+      background: var(--color-bg);
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text);
+    }
 
-    .type-maladie { background: #fef2f2; color: #ef4444; }
+    .type-maladie {
+      background: #fef2f2;
+      color: #ef4444;
+    }
 
-    .date-range { display: flex; flex-direction: column; gap: 4px; }
+    .date-range {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
 
-    .date-display { display: flex; align-items: center; gap: 8px; font-weight: var(--font-weight-semibold); color: var(--color-text); font-size: 13px; }
+    .date-display {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text);
+    }
 
-    .day-count { font-weight: var(--font-weight-bold); color: #f43f5e; font-size: var(--font-size-xs); background: #fff1f2; padding: 2px 8px; border-radius: var(--radius-sm); width: fit-content; }
+    .day-count {
+      font-weight: var(--font-weight-bold);
+      color: #3b82f6;
+      font-size: var(--font-size-xs);
+      background: #eff6ff;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--radius-sm);
+      width: fit-content;
+    }
 
-    .motif-cell { color: var(--color-text-muted); font-style: italic; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+    .motif-cell {
+      color: var(--color-text-muted);
+      font-style: italic;
+      max-width: 250px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
 
-    .status-chip { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: var(--radius-full); font-size: 11px; font-weight: var(--font-weight-semibold); text-transform: uppercase; }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+    }
 
-    .status-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-chip .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
 
-    .status-validée { background: #ecfdf5; color: #059669; }
-    .status-validée .dot { background: #059669; box-shadow: 0 0 8px #059669; }
+    .status-validée {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .status-validée .dot {
+      background: #059669;
+      box-shadow: 0 0 8px #059669;
+    }
+
+    .status-refusée {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .status-refusée .dot {
+      background: #dc2626;
+    }
+
+    .status-en-attente {
+      background: #fffbeb;
+      color: #d97706;
+    }
+
+    .status-en-attente .dot {
+      background: #d97706;
+      animation: blink 1.5s infinite;
+    }
+
+     .pagination-footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .btn-p {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-p:hover:not(:disabled) { background: #f1f5f9; color: #1e293b; }
+    .btn-p:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .page-info { font-size: 13px; font-weight: 700; color: #1e293b; }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .action-group {
+      display: flex;
+      gap: var(--space-xs);
+    }
+
+    .empty-state {
+      padding: var(--space-3xl);
+      text-align: center;
+      color: var(--color-text-muted);
+      background: white;
+    }
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--color-bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-lg);
+      color: var(--color-text-muted);
+    }
+
+    .empty-state h3 {
+      color: var(--color-text);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-xs);
+    }
+
+    /* Dark mode */
+    :host-context(.dark) .card {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .content-header,
+    :host-context(.dark) .table-container {
+      background: var(--color-surface);
+    }
+
+    :host-context(.dark) .data-table thead {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    :host-context(.dark) .header-badge {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .btn-secondary {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .stat-icon.indigo {
+      background: rgba(79, 70, 229, 0.1);
+    }
+
+    :host-context(.dark) .stat-icon.emerald {
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    :host-context(.dark) .stat-icon.amber {
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-container {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      width: 400px;
+      max-width: 90vw;
+      box-shadow: var(--shadow-xl);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: var(--space-sm);
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: var(--font-size-lg);
+    }
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--color-text-muted);
+    }
     
-    .status-refusée { background: #fef2f2; color: #dc2626; }
-    .status-refusée .dot { background: #dc2626; }
-    
-    .status-en-attente { background: #fffbeb; color: #d97706; }
-    .status-en-attente .dot { background: #d97706; animation: blink 1.5s infinite; }
+    :host-context(.dark) .modal-container {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+    }
 
-    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    @media (max-width: 768px) {
+      .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
 
-    .action-group { display: flex; gap: 8px; }
+      .header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+      }
 
-    .empty-state { padding: var(--space-3xl); text-align: center; color: var(--color-text-muted); }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
 
-    .empty-icon { width: 64px; height: 64px; background: var(--color-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg); }
-
-    @media (max-width: 768px) { .dashboard-header { flex-direction: column; } .header-left { flex-direction: column; align-items: flex-start; gap: var(--space-md); } }
+      .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-md);
+      }
+    }
   `]
 })
 export class AdminCongesComponent implements OnInit {
@@ -568,32 +954,95 @@ export class AdminCongesComponent implements OnInit {
   societeId = '';
   societeNom = '';
   currentUserId = '';
+  isRh = false;
   
   congesSignal = signal<Conge[]>([]);
   statsSignal = signal({ totalEmployes: 0, congesValidesCeMois: 0, demandesCongesEnAttente: 0 });
-  activeTab = 'pending';
+  activeTab = signal<'all' | 'pending' | 'approved' | 'rejected' | 'soldes'>('all');
   employesMap: { [id: string]: string } = {};
+
+  soldesSignal = signal<any[]>([]);
+  ajustementModalOpen = signal<boolean>(false);
+  selectedSolde = signal<any | null>(null);
+  ajustementData = { dateEmbauche: '', soldeAjustement: 0 };
 
   enAttenteCount = computed(() => this.congesSignal().filter(c => c.status === 'En attente').length);
 
+  // Pagination
+  page = signal(1);
+  pageSize = 6;
+
+  paginatedConges = computed(() => {
+    const data = this.filteredConges();
+    const start = (this.page() - 1) * this.pageSize;
+    return data.slice(start, start + this.pageSize);
+  });
+
+  paginatedSoldes = computed(() => {
+    const data = this.soldesSignal();
+    const start = (this.page() - 1) * this.pageSize;
+    return data.slice(start, start + this.pageSize);
+  });
+
+  totalPages = computed(() => {
+    const count = this.activeTab() === 'soldes' ? this.soldesSignal().length : this.filteredConges().length;
+    return Math.ceil(count / this.pageSize) || 1;
+  });
+
   filteredConges = computed(() => {
     const list = this.congesSignal();
-    if (this.activeTab === 'pending') return list.filter(c => c.status === 'En attente');
-    if (this.activeTab === 'approved') return list.filter(c => c.status === 'Validée');
+    const tab = this.activeTab();
+    if (tab === 'soldes') return [];
+    if (tab === 'pending') return list.filter(c => c.status === 'En attente');
+    if (tab === 'approved') return list.filter(c => c.status === 'Validée');
+    if (tab === 'rejected') return list.filter(c => c.status === 'Refusée');
     return list;
   });
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = this.api.getCurrentSocieteId();
+    this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.currentUserId = user?.id || '';
+    
+    const typeId = (user?.typeUtilisateurId || user?.TypeUtilisateurId || '').toLowerCase();
+    const roleId = (user?.roleId || user?.RoleId || '').toLowerCase();
+    this.isRh = typeId.includes('rh') || roleId.includes('rh');
+    
     this.loadData();
   }
 
   loadData() {
     this.loadStats();
     this.loadConges();
+    
+    this.api.getAllSoldesConges(this.societeId).subscribe({
+      next: (soldes: any) => this.soldesSignal.set(soldes),
+      error: () => console.error("Could not load soldes conges")
+    });
+  }
+
+  openAjustement(solde: any) {
+    this.selectedSolde.set(solde);
+    this.ajustementData = { 
+      dateEmbauche: solde.dateEmbauche ? new Date(solde.dateEmbauche).toISOString().split('T')[0] : '',
+      soldeAjustement: solde.soldeAjustement || 0
+    };
+    this.ajustementModalOpen.set(true);
+  }
+
+  saveAjustement() {
+    const s = this.selectedSolde();
+    if (!s) return;
+    this.api.ajusterConge(s.utilisateurId, this.ajustementData.dateEmbauche, this.ajustementData.soldeAjustement)
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Ajustement enregistré', 'OK', { duration: 3000 });
+          this.ajustementModalOpen.set(false);
+          this.loadData();
+        },
+        error: (err: any) => this.snackBar.open("Erreur lors de l'enregistrement: " + err.message, 'Fermer')
+      });
   }
 
   loadStats() {
@@ -607,21 +1056,22 @@ export class AdminCongesComponent implements OnInit {
       next: (employes) => {
         this.employesMap = {};
         employes.forEach((e: any) => {
-          this.employesMap[e.id || e.Id] = e.nom || e.Nom;
+          // Backend stores full name in "nom" (prenom is always empty)
+          this.employesMap[e.id || e.Id] = (e.nom || e.Nom || '').trim() || (e.email || e.Email || '');
         });
 
-        this.api.getDemandesCongeBySociete(this.societeId).subscribe({
+        this.api.getDemandesEnAttenteReal(this.societeId).subscribe({
           next: (data) => {
             const list = data.map((d: any) => {
               const uId = d.utilisateurId || d.UtilisateurId;
               const uNom = d.utilisateurNom || d.UtilisateurNom || this.employesMap[uId] || 'Utilisateur ' + uId;
               
-              let jours = d.jours || d.Jours || 0;
-              if (jours === 0 && d.dateDebut && d.dateFin) {
-                const start = new Date(d.dateDebut);
-                const end = new Date(d.dateFin);
-                const diffTime = Math.abs(end.getTime() - start.getTime());
-                jours = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+              const dDebut = new Date(d.dateDebut || d.DateDebut);
+              const dFin = new Date(d.dateFin || d.DateFin);
+              let nj = 0;
+              if (!isNaN(dDebut.getTime()) && !isNaN(dFin.getTime())) {
+                const diffTime = Math.abs(dFin.getTime() - dDebut.getTime());
+                nj = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
               }
 
               return {
@@ -629,9 +1079,10 @@ export class AdminCongesComponent implements OnInit {
                 utilisateurId: uId,
                 utilisateurNom: uNom,
                 typeNom: d.typeNom || d.TypeNom || 'Congé',
+                typePointageId: d.typePointageId || d.TypePointageId || '',
                 dateDebut: d.dateDebut || d.DateDebut,
                 dateFin: d.dateFin || d.DateFin,
-                nombreJours: jours,
+                nombreJours: nj,
                 motif: d.motif || d.Motif || '',
                 status: this.normalizeStatus(d.status || d.Status || 'En attente')
               };
@@ -649,9 +1100,9 @@ export class AdminCongesComponent implements OnInit {
   private normalizeStatus(status: string): string {
     if (!status) return 'En attente';
     const s = status.toLowerCase().replace('_', ' ');
-    if (s === 'en attente') return 'En attente';
-    if (s === 'validée' || s === 'valide' || s === 'approuvé' || s === 'validé') return 'Validée';
-    if (s === 'refusée' || s === 'refuse') return 'Refusée';
+    if (s === 'en attente' || s === 'pending') return 'En attente';
+    if (s === 'validée' || s === 'valide' || s === 'validee' || s === 'approuvé' || s === 'validé' || s === 'validated' || s === 'approved') return 'Validée';
+    if (s === 'refusée' || s === 'refuse' || s === 'refusee' || s === 'rejected') return 'Refusée';
     return status;
   }
 

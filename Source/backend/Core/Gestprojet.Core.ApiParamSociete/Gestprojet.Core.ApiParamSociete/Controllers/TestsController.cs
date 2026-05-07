@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Gestprojet.Core.ApiParamSociete.Application;
 using Gestprojet.Core.ApiParamSociete.Domain.Models;
+using Gestprojet.Core.ApiParamSociete.Domain.Interfaces.Business;
 
 namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers;
 
@@ -8,9 +9,9 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers;
 [Route("api/[controller]")]
 public class TestsController : ControllerBase
 {
-    private readonly TestCoreBusiness _business;
+    private readonly ITestCoreBusiness _business;
 
-    public TestsController(TestCoreBusiness business)
+    public TestsController(ITestCoreBusiness business)
     {
         _business = business;
     }

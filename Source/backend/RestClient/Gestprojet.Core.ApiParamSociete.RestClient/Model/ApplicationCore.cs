@@ -39,7 +39,7 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
         /// <param name="appelDate">appelDate.</param>
         /// <param name="statut">statut.</param>
         /// <param name="actif">actif.</param>
-        public ApplicationCore(string id = default(string), string utilisateurId = default(string), DateTime? appelDate = default(DateTime?), string statut = default(string), bool? actif = default(bool?), string type = default(string))
+        public ApplicationCore(string id = default(string), string utilisateurId = default(string), DateTime? appelDate = default(DateTime?), string statut = default(string), bool? actif = default(bool?), string type = default(string), string titre = default(string), string description = default(string))
         {
             this.Id = id;
             this.UtilisateurId = utilisateurId;
@@ -47,6 +47,8 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
             this.Statut = statut;
             this.Actif = actif;
             this.Type = type;
+            this.Titre = titre;
+            this.Description = description;
         }
 
         /// <summary>
@@ -54,6 +56,18 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
         /// </summary>
         [DataMember(Name = "type", EmitDefaultValue = true)]
         public string Type { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Titre
+        /// </summary>
+        [DataMember(Name = "titre", EmitDefaultValue = true)]
+        public string Titre { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Description
+        /// </summary>
+        [DataMember(Name = "description", EmitDefaultValue = true)]
+        public string Description { get; set; }
 
         /// <summary>
         /// Gets or Sets Id
@@ -98,6 +112,8 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
             sb.Append("  AppelDate: ").Append(AppelDate).Append("\n");
             sb.Append("  Statut: ").Append(Statut).Append("\n");
             sb.Append("  Actif: ").Append(Actif).Append("\n");
+            sb.Append("  Titre: ").Append(Titre).Append("\n");
+            sb.Append("  Description: ").Append(Description).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -156,6 +172,16 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
                     this.Actif == input.Actif ||
                     (this.Actif != null &&
                     this.Actif.Equals(input.Actif))
+                ) && 
+                (
+                    this.Titre == input.Titre ||
+                    (this.Titre != null &&
+                    this.Titre.Equals(input.Titre))
+                ) && 
+                (
+                    this.Description == input.Description ||
+                    (this.Description != null &&
+                    this.Description.Equals(input.Description))
                 );
         }
 
@@ -178,6 +204,10 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
                     hashCode = hashCode * 59 + this.Statut.GetHashCode();
                 if (this.Actif != null)
                     hashCode = hashCode * 59 + this.Actif.GetHashCode();
+                if (this.Titre != null)
+                    hashCode = hashCode * 59 + this.Titre.GetHashCode();
+                if (this.Description != null)
+                    hashCode = hashCode * 59 + this.Description.GetHashCode();
                 return hashCode;
             }
         }

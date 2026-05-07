@@ -13,7 +13,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
     [Route("api/pointages")]
     [Route("api/pointage")]
     [AllowAnonymous]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     public class PointageController : ControllerBase
     {
         private readonly IPointageBusiness _pointageBusiness;

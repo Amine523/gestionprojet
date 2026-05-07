@@ -10,7 +10,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
 {
     [ApiController]
     [Route("api/rh/enhanced")]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     public class EnhancedRHController : ControllerBase
     {
         private readonly RHCalculationService _rhCalculationService;
@@ -53,12 +53,13 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
         }
 
         [HttpGet("utilisateur/{utilisateurId}/heures-travaillees")]
-        public async Task<IActionResult> GetHeuresTravaillees(string utilisateurId, [FromQuery] DateTime? date)
+        public async Task<IActionResult> GetHeuresTravaillees(string utilisateurId, [FromQuery] DateTime? date, [FromQuery] DateTime? now)
         {
             try
             {
                 var targetDate = date ?? DateTime.Today;
-                var hours = await _rhCalculationService.CalculateWorkedHoursAsync(utilisateurId, targetDate);
+                var currentNow = now ?? DateTime.Now;
+                var hours = await _rhCalculationService.CalculateWorkedHoursAsync(utilisateurId, targetDate, currentNow);
                 return Ok(new { utilisateurId, date = targetDate, hours });
             }
             catch (Exception ex)
@@ -140,6 +141,20 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = "Erreur lors de la validation", message = ex.Message });
+            }
+        }
+
+        [HttpPost("utilisateur/{utilisateurId}/ajustement-conge")]
+        public IActionResult AjusterConge(string utilisateurId, [FromBody] AjustementCongeDTO request)
+        {
+            try
+            {
+                _rhCalculationService.UpdateCongeInfo(utilisateurId, request.DateEmbauche, request.SoldeAjustement);
+                return Ok(new { success = true, message = "Ajustement enregistré avec succès." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Erreur lors de l'ajustement du solde", message = ex.Message });
             }
         }
 

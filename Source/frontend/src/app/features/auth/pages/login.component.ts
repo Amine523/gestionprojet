@@ -8,132 +8,72 @@ import { ApiService } from '@core/services/api.service';
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, RouterModule, ReactiveFormsModule],
-  template: `
-    <div class="login-container">
-      <div class="login-card">
-        <div class="login-header">
-          <div class="logo-section">
-            <svg class="logo-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-              <polyline points="10 17 15 12 10 7"/>
-              <line x1="15" y1="12" x2="3" y2="12"/>
-            </svg>
-            <span class="logo-text">GestProjet</span>
-          </div>
-          <h1 class="login-title">Bienvenue</h1>
-          <p class="login-subtitle">Connectez-vous à votre espace de travail</p>
-        </div>
-        
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-          <div class="form-group">
-            <label for="email" class="form-label">Adresse email</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
-              </svg>
-              <input 
-                id="email"
-                type="email" 
-                formControlName="email" 
-                class="form-input" 
-                placeholder="nom@entreprise.com"
-                autocomplete="email"
-              >
-            </div>
-            @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
-              <span class="error-message">Veuillez entrer une adresse email valide</span>
-            }
-          </div>
-          
-          <div class="form-group">
-            <label for="password" class="form-label">Mot de passe</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              <input 
-                id="password"
-                type="password" 
-                formControlName="password" 
-                class="form-input" 
-                placeholder="••••••••"
-                autocomplete="current-password"
-              >
-            </div>
-            @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
-              <span class="error-message">Veuillez entrer votre mot de passe</span>
-            }
-          </div>
-          
-          <div class="form-options">
-            <label class="checkbox-label">
-              <input type="checkbox" formControlName="remember">
-              <span>Se souvenir de moi</span>
-            </label>
-            <a routerLink="/auth/forgot-password" class="forgot-link">Mot de passe oublié ?</a>
-          </div>
-          
-          <button type="submit" class="btn btn-primary btn-block" [disabled]="loginForm.invalid || isLoading">
-            @if (isLoading) {
-              <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-              </svg>
-              Connexion en cours...
-            } @else {
-              Se connecter
-            }
-          </button>
-          
-          @if (errorMessage) {
-            <div class="error-alert">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              <span>{{ errorMessage }}</span>
-            </div>
-          }
-        </form>
-        
-        <div class="login-footer">
-          <p class="footer-text">Vous êtes candidat ? <a routerLink="/applicant" class="footer-link">Postulez ici</a></p>
-          <p class="footer-text" style="margin-top: 8px;">Vous voulez utiliser GestProjet ? <a routerLink="/register-company" class="footer-link">Enregistrez votre société</a></p>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './login.component.html',
   styles: [`
-    .login-container {
+    .login-container.premium-gradient-dark {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3d7ab5 100%);
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       padding: 20px;
       position: relative;
+      perspective: 1000px;
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 10%;
+      left: 10%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .login-container::after {
+      content: '';
+      position: absolute;
+      bottom: 10%;
+      right: 10%;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 10s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-20px) scale(1.05); }
     }
 
     .login-card {
       background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+      box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.05),
+        0 10px 20px rgba(0, 0, 0, 0.1),
+        0 30px 60px rgba(0, 0, 0, 0.15);
       padding: 48px 40px;
       width: 100%;
       max-width: 440px;
-      animation: fadeIn 0.5s ease-out;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-style: preserve-3d;
+      position: relative;
+      z-index: 1;
     }
 
-    @keyframes fadeIn {
+    @keyframes slideUp {
       from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(40px) rotateX(10deg);
       }
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) rotateX(0deg);
       }
     }
 
@@ -151,14 +91,19 @@ import { ApiService } from '@core/services/api.service';
     }
 
     .logo-icon {
-      color: #2d5a87;
+      color: #6366f1;
+      filter: drop-shadow(0 4px 8px rgba(99, 102, 241, 0.3));
     }
 
     .logo-text {
-      font-size: 28px;
-      font-weight: 700;
-      color: #1e3a5f;
-      letter-spacing: -0.5px;
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+      text-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
     }
 
     .login-title {
@@ -166,7 +111,7 @@ import { ApiService } from '@core/services/api.service';
       font-weight: 700;
       color: #1e293b;
       margin: 0 0 8px;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.5px;
     }
 
     .login-subtitle {
@@ -179,21 +124,22 @@ import { ApiService } from '@core/services/api.service';
     .login-form {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 24px;
       margin-bottom: 32px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .form-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #334155;
-      letter-spacing: 0.2px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #374151;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     .input-wrapper {
@@ -204,74 +150,84 @@ import { ApiService } from '@core/services/api.service';
 
     .input-icon {
       position: absolute;
-      left: 14px;
+      left: 16px;
       color: #94a3b8;
       pointer-events: none;
-      transition: color 0.2s ease;
+      transition: all 0.3s ease;
+      z-index: 1;
     }
 
     .form-input {
       width: 100%;
-      padding: 14px 14px 14px 44px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      padding: 16px 16px 16px 48px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
       font-size: 15px;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
       background: #f8fafc;
       color: #1e293b;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
     .form-input:focus {
       outline: none;
-      border-color: #2d5a87;
+      border-color: #6366f1;
       background: white;
-      box-shadow: 0 0 0 3px rgba(45, 90, 135, 0.1);
+      box-shadow: 
+        0 0 0 4px rgba(99, 102, 241, 0.1),
+        0 4px 12px rgba(99, 102, 241, 0.2);
+      transform: translateY(-2px);
     }
 
     .form-input:focus ~ .input-icon {
-      color: #2d5a87;
+      color: #6366f1;
+      transform: scale(1.1);
     }
 
     .error-message {
       font-size: 13px;
-      color: #dc2626;
+      color: #ef4444;
       margin-top: 4px;
+      font-weight: 600;
     }
 
     .form-options {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: -4px;
+      margin-top: -8px;
     }
 
     .checkbox-label {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       font-size: 14px;
       color: #475569;
       cursor: pointer;
       user-select: none;
+      font-weight: 500;
     }
 
     .checkbox-label input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: #2d5a87;
+      width: 18px;
+      height: 18px;
+      accent-color: #6366f1;
       cursor: pointer;
+      border-radius: 4px;
     }
 
     .forgot-link {
       font-size: 14px;
-      color: #2d5a87;
+      color: #6366f1;
       text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s ease;
+      font-weight: 600;
+      transition: all 0.3s ease;
     }
 
     .forgot-link:hover {
-      color: #1e3a5f;
+      color: #4f46e5;
       text-decoration: underline;
     }
 
@@ -279,35 +235,107 @@ import { ApiService } from '@core/services/api.service';
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 14px 24px;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 15px;
+      gap: 10px;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
       border: none;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      text-decoration: none;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover::before {
+      left: 100%;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #2d5a87 0%, #3d7ab5 100%);
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
       color: white;
-      box-shadow: 0 4px 12px rgba(45, 90, 135, 0.3);
+      box-shadow: 
+        0 4px 12px rgba(99, 102, 241, 0.3),
+        0 0 0 0 rgba(99, 102, 241, 0);
+      border: 1px solid rgba(99, 102, 241, 0.2);
     }
 
     .btn-primary:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(45, 90, 135, 0.4);
+      transform: translateY(-3px) rotateX(5deg);
+      box-shadow: 
+        0 8px 24px rgba(99, 102, 241, 0.4),
+        0 0 0 4px rgba(99, 102, 241, 0.1);
     }
 
     .btn-primary:active:not(:disabled) {
-      transform: translateY(0);
+      transform: translateY(-1px) rotateX(2deg);
+      box-shadow: 
+        0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
     .btn-primary:disabled {
-      opacity: 0.7;
+      opacity: 0.6;
       cursor: not-allowed;
       transform: none;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 
+        0 4px 12px rgba(16, 185, 129, 0.3),
+        0 0 0 0 rgba(16, 185, 129, 0);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      transform: translateY(-3px) rotateX(5deg);
+      box-shadow: 
+        0 8px 24px rgba(16, 185, 129, 0.4),
+        0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+
+    .btn-secondary:active:not(:disabled) {
+      transform: translateY(-1px) rotateX(2deg);
+      box-shadow: 
+        0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-outline {
+      background: white;
+      color: #6366f1;
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.05),
+        0 0 0 0 rgba(99, 102, 241, 0);
+      border: 2px solid #6366f1;
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      transform: translateY(-3px) rotateX(5deg);
+      box-shadow: 
+        0 8px 24px rgba(99, 102, 241, 0.2),
+        0 0 0 4px rgba(99, 102, 241, 0.1);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .btn-outline:active:not(:disabled) {
+      transform: translateY(-1px) rotateX(2deg);
+      box-shadow: 
+        0 4px 12px rgba(99, 102, 241, 0.15);
     }
 
     .btn-block {
@@ -324,41 +352,50 @@ import { ApiService } from '@core/services/api.service';
     }
 
     .login-footer {
-      text-align: center;
-      padding-top: 24px;
+      padding-top: 32px;
       border-top: 1px solid #e2e8f0;
     }
 
-    .footer-text {
-      color: #64748b;
-      font-size: 14px;
-      margin: 0;
-    }
-
-    .footer-link {
-      color: #2d5a87;
-      text-decoration: none;
-      font-weight: 600;
-      transition: color 0.2s ease;
-    }
-
-    .footer-link:hover {
-      color: #1e3a5f;
-      text-decoration: underline;
+    .footer-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     .error-alert {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      background: #fef2f2;
+      gap: 12px;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
       border: 1px solid #fecaca;
-      border-radius: 10px;
+      border-radius: 12px;
       color: #dc2626;
       font-size: 14px;
-      font-weight: 500;
-      animation: fadeIn 0.3s ease-out;
+      font-weight: 600;
+      animation: shake 0.5s ease-out;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 32px 24px;
+        border-radius: 16px;
+      }
+      
+      .logo-text {
+        font-size: 28px;
+      }
+      
+      .login-title {
+        font-size: 24px;
+      }
     }
   `]
 })
@@ -417,38 +454,30 @@ export class LoginComponent {
   }
 
   private redirectBasedOnRole(role: string) {
+    const R = ApiService.ROLES;
     const routes: Record<string, string> = {
-      'T001': '/superadmin',
-      'T002': '/admin',
-      'T003': '/rh',
-      'T004': '/chef',
-      'T005': '/dev',
-      'T006': '/qa',
-      'T007': '/applicant',
-      'T008': '/client',
+      [R.SUPER_ADMIN]: '/superadmin',
+      [R.ADMIN_SOCIETE]: '/admin',
+      [R.RH]: '/rh',
+      [R.CHEF_PROJET]: '/chef',
+      [R.DEVELOPPEUR]: '/dev',
+      [R.TESTEUR]: '/qa',
+      [R.CANDIDAT]: '/applicant',
+      [R.CLIENT]: '/client',
+      // Legacy strings support
       'SUPER_ADMIN': '/superadmin',
       'ADMIN': '/admin',
       'ADMIN_SOCIETE': '/admin',
-      'ADMIN SOCIETE': '/admin',
-      'ADMIN SOCIÉTÉ': '/admin',
-      'ADMINSOCIETE': '/admin',
       'RH': '/rh',
       'DEVELOPPEUR': '/dev',
       'QA': '/qa',
       'CHEF_PROJET': '/chef',
-      'CHEF PROJET': '/chef',
       'CANDIDAT': '/applicant',
-      'CLIENT_PROJET': '/client',
       'CLIENT': '/client'
     };
 
-    let route = routes[role] || '/admin';
+    let route = routes[role] || routes[role.toUpperCase()] || '/admin';
     
-    // Fallback pour les admins qui auraient été assignés au rôle chef_projet par erreur
-    if (role === 'CHEF_PROJET' && this.loginForm.value.email.toLowerCase().includes('admin')) {
-      route = '/admin';
-    }
-
     console.log('Login - Route choisie:', route, 'pour le rôle:', role);
     this.router.navigate([route]);
   }

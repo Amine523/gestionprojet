@@ -15,11 +15,7 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
                 tacheCore.Statut,
                 tacheCore.Priorite,
                 tacheCore.DateLimite,
-                tacheCore.TempsEstime,
-                tacheCore.TempsReel,
-                tacheCore.DevComment,
-                tacheCore.TestComment,
-                tacheCore.Actif
+                tacheCore.UtilisateurId
             };
         }
     }

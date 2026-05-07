@@ -9,226 +9,305 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   selector: 'app-register-company',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule, MatSnackBarModule],
-  template: `
-    <div class="register-container">
-      <div class="register-card">
-        <div class="register-header">
-          <div class="logo-section">
-            <svg class="logo-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <line x1="3" y1="9" x2="21" y2="9"/>
-              <line x1="9" y1="21" x2="9" y2="9"/>
-            </svg>
-            <span class="logo-text">GestProjet</span>
-          </div>
-          <h1 class="register-title">Enregistrer votre société</h1>
-          <p class="register-subtitle">Remplissez le formulaire pour demander l'accès à la plateforme</p>
-        </div>
-
-        @if (isSubmitted) {
-          <div class="success-message">
-            <div class="success-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
-            </div>
-            <h2>Demande envoyée !</h2>
-            <p>Votre demande de création de société a été transmise à notre équipe administrative. Vous recevrez un email dès qu'elle sera approuvée.</p>
-            <button class="btn btn-primary" routerLink="/">Retour à la connexion</button>
-          </div>
-        } @else {
-          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
-            <div class="form-section">
-              <h3>Informations Société</h3>
-              <div class="form-group">
-                <label class="form-label">Nom de la société</label>
-                <input type="text" formControlName="societeNom" class="form-input" placeholder="Ex: Tech Solutions">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Adresse</label>
-                <input type="text" formControlName="societeAdresse" class="form-input" placeholder="Ex: Tunis, Tunisie">
-              </div>
-            </div>
-
-            <div class="form-section">
-              <h3>Informations Administrateur</h3>
-              <div class="form-group">
-                <label class="form-label">Nom complet</label>
-                <input type="text" formControlName="adminNom" class="form-input" placeholder="Ex: Amine Ben Ali">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Email professionnel</label>
-                <input type="email" formControlName="adminEmail" class="form-input" placeholder="amine@tech.com">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Mot de passe souhaité</label>
-                <input type="password" formControlName="adminPassword" class="form-input" placeholder="••••••••">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Téléphone</label>
-                <input type="text" formControlName="telephone" class="form-input" placeholder="+216 12 345 678">
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-block" [disabled]="registerForm.invalid || isLoading">
-              @if (isLoading) {
-                <span>Traitement en cours...</span>
-              } @else {
-                Soumettre la demande
-              }
-            </button>
-            
-            <a routerLink="/" class="back-link">Annuler et retourner au login</a>
-          </form>
-        }
-      </div>
-    </div>
-  `,
+  templateUrl: './register-company.component.html',
   styles: [`
     .register-container {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-      padding: 40px 20px;
+      background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #cbd5e1 100%);
+      padding: 20px;
+      position: relative;
+      perspective: 1000px;
+    }
+
+    .register-container::before {
+      content: '';
+      position: absolute;
+      top: 10%;
+      left: 10%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .register-container::after {
+      content: '';
+      position: absolute;
+      bottom: 10%;
+      right: 10%;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 10s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-20px) scale(1.05); }
     }
 
     .register-card {
       background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.05),
+        0 10px 20px rgba(0, 0, 0, 0.1),
+        0 30px 60px rgba(0, 0, 0, 0.15);
+      padding: 48px 40px;
       width: 100%;
       max-width: 500px;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-style: preserve-3d;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px) rotateX(10deg);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) rotateX(0deg);
+      }
     }
 
     .register-header {
       text-align: center;
-      margin-bottom: 32px;
+      margin-bottom: 40px;
     }
 
     .logo-section {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      margin-bottom: 16px;
-      color: #2d5a87;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .logo-icon {
+      color: #6366f1;
+      filter: drop-shadow(0 4px 8px rgba(99, 102, 241, 0.3));
     }
 
     .logo-text {
-      font-size: 24px;
-      font-weight: 700;
-      color: #1e3a5f;
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+      text-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
     }
 
     .register-title {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 700;
       color: #1e293b;
       margin: 0 0 8px;
+      letter-spacing: -0.5px;
     }
 
     .register-subtitle {
       color: #64748b;
-      font-size: 14px;
       margin: 0;
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .register-form {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
     }
 
     .form-section {
-      margin-bottom: 24px;
+      margin-bottom: 0;
     }
 
     .form-section h3 {
       font-size: 16px;
-      color: #1e3a5f;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 8px;
-      margin-bottom: 16px;
+      font-weight: 700;
+      color: #374151;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       margin-bottom: 16px;
     }
 
     .form-label {
-      display: block;
       font-size: 13px;
-      font-weight: 600;
-      color: #475569;
-      margin-bottom: 4px;
+      font-weight: 700;
+      color: #374151;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     .form-input {
       width: 100%;
-      padding: 10px 12px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: border-color 0.2s;
+      padding: 14px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+      color: #1e293b;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
     .form-input:focus {
       outline: none;
-      border-color: #2d5a87;
+      border-color: #6366f1;
+      background: white;
+      box-shadow: 
+        0 0 0 4px rgba(99, 102, 241, 0.1),
+        0 4px 12px rgba(99, 102, 241, 0.2);
+      transform: translateY(-2px);
     }
 
     .btn {
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
       border: none;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      text-decoration: none;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover::before {
+      left: 100%;
     }
 
     .btn-primary {
-      background: #2d5a87;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
       color: white;
+      box-shadow: 
+        0 4px 12px rgba(99, 102, 241, 0.3),
+        0 0 0 0 rgba(99, 102, 241, 0);
+      border: 1px solid rgba(99, 102, 241, 0.2);
     }
 
-    .btn-primary:hover {
-      background: #1e3a5f;
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-3px) rotateX(5deg);
+      box-shadow: 
+        0 8px 24px rgba(99, 102, 241, 0.4),
+        0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(-1px) rotateX(2deg);
+      box-shadow: 
+        0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-outline {
+      background: white;
+      color: #6366f1;
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.05),
+        0 0 0 0 rgba(99, 102, 241, 0);
+      border: 2px solid #6366f1;
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      transform: translateY(-3px) rotateX(5deg);
+      box-shadow: 
+        0 8px 24px rgba(99, 102, 241, 0.2),
+        0 0 0 4px rgba(99, 102, 241, 0.1);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .btn-outline:active:not(:disabled) {
+      transform: translateY(-1px) rotateX(2deg);
+      box-shadow: 
+        0 4px 12px rgba(99, 102, 241, 0.15);
     }
 
     .btn-block {
       width: 100%;
     }
 
-    .back-link {
-      display: block;
-      text-align: center;
-      margin-top: 16px;
-      color: #64748b;
-      font-size: 13px;
-      text-decoration: none;
-    }
-
-    .back-link:hover {
-      text-decoration: underline;
-    }
-
     .success-message {
       text-align: center;
-      padding: 24px 0;
+      padding: 32px 0;
     }
 
     .success-icon {
       color: #10b981;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.3));
     }
 
     .success-message h2 {
       color: #1e293b;
       margin-bottom: 12px;
+      font-size: 24px;
+      font-weight: 700;
     }
 
     .success-message p {
       color: #64748b;
-      margin-bottom: 24px;
-      line-height: 1.5;
+      margin-bottom: 32px;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    @media (max-width: 480px) {
+      .register-card {
+        padding: 32px 24px;
+        border-radius: 16px;
+      }
+      
+      .logo-text {
+        font-size: 28px;
+      }
+      
+      .register-title {
+        font-size: 24px;
+      }
     }
   `]
 })

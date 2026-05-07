@@ -11,6 +11,7 @@ interface Message {
   from: string;
   fromName: string;
   time: string;
+  timestamp?: string;
   attachments?: { name: string; type: string; url: string }[];
 }
 
@@ -22,6 +23,7 @@ interface Contact {
   typeUtilisateurId: string;
   dernierMessage: string;
   time: string;
+  timestamp: string;
   unread: number;
   isGroup?: boolean;
 }
@@ -40,14 +42,16 @@ interface Contact {
             <h2>Messages</h2>
             <span>{{contacts.length}} contact(s)</span>
           </div>
-          <button class="btn-icon" (click)="openNewGroupDialog()" title="Nouveau groupe">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <line x1="19" y1="8" x2="19" y2="14"/>
-              <line x1="22" y1="11" x2="16" y2="11"/>
-            </svg>
-          </button>
+          @if (canCreateGroup) {
+            <button class="btn-icon" (click)="openNewGroupDialog()" title="Nouveau groupe">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <line x1="19" y1="8" x2="19" y2="14"/>
+                <line x1="22" y1="11" x2="16" y2="11"/>
+              </svg>
+            </button>
+          }
         </div>
 
         <div class="search-wrapper">
@@ -104,15 +108,11 @@ interface Contact {
               </div>
             </div>
             <div class="header-actions">
-              <button class="btn-icon" title="Appeler">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-              </button>
-              <button class="btn-icon" title="Vidéo">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m23 7-7 5 7 5V7Z"/>
-                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              <button class="btn-icon" (click)="showInfo()" title="Infos">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="16" x2="12" y2="12"/>
+                  <line x1="12" y1="8" x2="12.01" y2="8"/>
                 </svg>
               </button>
             </div>
@@ -121,15 +121,35 @@ interface Contact {
           <!-- Messages Area -->
           <div class="messages-area" #scrollContainer>
             @for (msg of messages; track msg.id) {
-              <div class="message-wrapper" [class.from-me]="msg.from === currentUserId" [class.from-them]="msg.from !== currentUserId">
-                @if (msg.from !== currentUserId) {
+              <div class="message-wrapper" [class.from-me]="msg.from == currentUserId" [class.from-them]="msg.from != currentUserId">
+                @if (msg.from != currentUserId) {
                   <div class="message-avatar">{{(msg.fromName || '').charAt(0) || 'A'}}</div>
                 }
-                <div class="message-bubble" [class.from-me]="msg.from === currentUserId" [class.from-them]="msg.from !== currentUserId">
+                <div class="message-bubble" [class.from-me]="msg.from == currentUserId" [class.from-them]="msg.from != currentUserId">
                   @if (selectedContact.isGroup && msg.from !== currentUserId) {
                     <span class="message-sender">{{msg.fromName}}</span>
                   }
                   <p class="message-text">{{msg.text}}</p>
+                  
+                  @if (msg.attachments && msg.attachments.length > 0) {
+                    <div class="message-attachments">
+                      @for (att of msg.attachments; track att.name) {
+                        <div class="attachment-item" (click)="downloadAttachment(att)">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                            <polyline points="13 2 13 9 20 9"/>
+                          </svg>
+                          <span class="attachment-name">{{att.name}}</span>
+                          <svg class="download-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                          </svg>
+                        </div>
+                      }
+                    </div>
+                  }
+
                   <span class="message-time">{{msg.time}}</span>
                 </div>
               </div>
@@ -174,6 +194,44 @@ interface Contact {
         }
       </main>
     </div>
+
+    @if (showNewGroupDialog) {
+      <div class="dialog-overlay" (click)="showNewGroupDialog = false">
+        <div class="dialog-content" (click)="$event.stopPropagation()">
+          <div class="dialog-header">
+            <h3>Nouveau groupe</h3>
+            <button class="btn-icon" (click)="showNewGroupDialog = false">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <div class="dialog-body">
+            <div class="form-group">
+              <label>Nom du groupe</label>
+              <input [(ngModel)]="newGroupName" class="message-input" placeholder="Nom du groupe...">
+            </div>
+            <p class="members-label">Sélectionnez les membres :</p>
+            <div class="members-list">
+              @for (c of groupContacts; track c.id) {
+                <div class="member-item" [class.selected]="c.selected" (click)="c.selected = !c.selected">
+                   <div class="checkbox" [class.checked]="c.selected">
+                     @if (c.selected) {
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                     }
+                   </div>
+                   <span>{{c.nom}}</span>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button class="btn" (click)="showNewGroupDialog = false">Annuler</button>
+            <button class="btn btn-primary" [disabled]="!newGroupName || selectedMembersCount === 0" (click)="createGroup()">Créer le groupe</button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .chat-container {
@@ -662,6 +720,172 @@ interface Contact {
     :host-context(.dark) .btn-icon:hover {
       background: rgba(255, 255, 255, 0.1);
     }
+
+    /* Dialog Styles */
+    .dialog-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: var(--space-xl);
+    }
+
+    .dialog-content {
+      background: white;
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 450px;
+      box-shadow: var(--shadow-2xl);
+      overflow: hidden;
+    }
+
+    .dialog-header {
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--color-bg);
+    }
+
+    .dialog-body {
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .members-label {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0;
+    }
+
+    .members-list {
+      max-height: 300px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      padding: var(--space-xs);
+      background: var(--color-bg);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+    }
+
+    .member-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+
+    .member-item:hover {
+      background: white;
+    }
+
+    .member-item.selected {
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--color-border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-base);
+      flex-shrink: 0;
+    }
+
+    .checkbox.checked {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: white;
+    }
+
+    .dialog-footer {
+      padding: var(--space-lg);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-md);
+      background: var(--color-bg);
+    }
+
+    /* Dark mode for Dialog */
+    :host-context(.dark) .dialog-content {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+    }
+    :host-context(.dark) .dialog-header,
+    :host-context(.dark) .dialog-footer,
+    :host-context(.dark) .members-list {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: var(--color-border);
+    }
+    :host-context(.dark) .member-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    :host-context(.dark) .checkbox {
+      border-color: var(--color-border);
+    }
+
+    .message-attachments {
+      margin-top: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .attachment-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm);
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .message-bubble.from-them .attachment-item {
+      background: var(--color-bg);
+      border-color: var(--color-border);
+    }
+
+    .attachment-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .message-bubble.from-them .attachment-item:hover {
+      background: var(--color-surface);
+    }
+
+    .attachment-name {
+      font-size: var(--font-size-xs);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .download-icon {
+      opacity: 0.7;
+    }
   `]
 })
 export class AdminChatComponent implements OnInit, AfterViewChecked {
@@ -670,6 +894,7 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
   private snackBar = inject(MatSnackBar);
   
   currentUserId: string = '';
+  currentUserRole: string = '';
   societeId: string = '';
   contacts: Contact[] = [];
   filteredContacts: Contact[] = [];
@@ -681,9 +906,21 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
   newGroupName = '';
   groupContacts: any[] = [];
 
+  isMemberSelected = (c: any) => c.selected;
+
+  get selectedMembersCount(): number {
+    return this.groupContacts.filter(c => c.selected).length;
+  }
+
+  get canCreateGroup(): boolean {
+    const allowed = ['T001', 'T002', 'T003', 'T004', 'T005', 'T006'];
+    return allowed.includes(this.currentUserRole);
+  }
+
   ngOnInit() {
     const u = this.api.getCurrentUser();
     this.currentUserId = u?.id || '';
+    this.currentUserRole = u?.typeUtilisateurId || '';
     this.societeId = u?.societeId || '';
     this.loadContacts();
   }
@@ -703,10 +940,58 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
         email: u.email,
         typeUtilisateurId: u.typeUtilisateurId,
         dernierMessage: '',
-        time: '12:00',
+        time: '',
+        timestamp: '',
         unread: 0
       }));
-      this.filteredContacts = [...this.contacts];
+
+      // Charger le dernier message de chaque contact pour affichage et tri
+      let pending = this.contacts.length;
+      if (pending === 0) {
+        this.filteredContacts = [];
+        return;
+      }
+      this.contacts.forEach(contact => {
+        const roomId = this.getRoomId(this.currentUserId, contact.id);
+        this.api.getChatMessages(roomId).subscribe({
+          next: (data) => {
+            if (data && data.length > 0) {
+              const last = data[data.length - 1];
+              contact.dernierMessage = last.text || '';
+              contact.time = last.time || '';
+              contact.timestamp = last.timestamp || last.createdAt || last.date || '';
+            }
+            pending--;
+            if (pending === 0) {
+              this.sortContacts();
+              this.filterContacts();
+            }
+          },
+          error: () => {
+            pending--;
+            if (pending === 0) {
+              this.sortContacts();
+              this.filterContacts();
+            }
+          }
+        });
+      });
+    });
+  }
+
+  private sortContacts() {
+    this.contacts.sort((a, b) => {
+      // Priorité au timestamp ISO complet (multi-jours)
+      const tsA = a.timestamp || '';
+      const tsB = b.timestamp || '';
+      if (tsA && tsB) return tsB.localeCompare(tsA);
+      if (tsA && !tsB) return -1;
+      if (!tsA && tsB) return 1;
+      // Fallback : comparer par heure HH:MM
+      if (!a.time && !b.time) return 0;
+      if (!a.time) return 1;
+      if (!b.time) return -1;
+      return b.time.localeCompare(a.time);
     });
   }
 
@@ -720,31 +1005,63 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
   }
 
   loadMessages(c: Contact) {
-    const allMessages = JSON.parse(localStorage.getItem('admin_chat_messages') || '{}');
-    const key = `conv_${c.id}_${this.societeId}`;
-    const saved = allMessages[key];
-    if (saved && saved.length > 0) {
-      this.messages = saved;
-    } else {
-      this.messages = [];
-    }
+    const roomId = this.getRoomId(this.currentUserId, c.id);
+    this.api.getChatMessages(roomId).subscribe({
+      next: (data) => {
+        this.messages = (data || []).map((m: any) => ({
+          id: m.id,
+          text: m.text,
+          from: m.from,
+          fromName: m.fromName,
+          time: m.time,
+          attachments: m.attachments
+        }));
+      },
+      error: () => {
+        this.messages = [];
+      }
+    });
+  }
+
+  private getRoomId(id1: string, id2: string): string {
+    const ids = [id1, id2].sort();
+    return `room_${ids[0]}_${ids[1]}`;
   }
 
   sendMessage() {
     if (!this.newMessage.trim() || !this.selectedContact) return;
-    this.messages.push({
+    
+    const roomId = this.getRoomId(this.currentUserId, this.selectedContact.id);
+    const now = new Date();
+    const isoTimestamp = now.toISOString();
+    const msg: Message = {
       id: Date.now().toString(),
       text: this.newMessage,
       from: this.currentUserId,
       fromName: 'Me',
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: isoTimestamp
+    };
+
+    const payload = { ...msg, chatRoomId: roomId, timestamp: isoTimestamp };
+
+    this.api.sendChatMessage(payload).subscribe({
+      next: () => {
+        this.messages.push(msg);
+        if (this.selectedContact) {
+          this.selectedContact.dernierMessage = this.newMessage;
+          this.selectedContact.time = msg.time;
+          this.selectedContact.timestamp = isoTimestamp;
+        }
+        this.newMessage = '';
+        // Re-trier les contacts après envoi
+        this.sortContacts();
+        this.filterContacts();
+      },
+      error: () => {
+        this.snackBar.open('Erreur lors de l\'envoi du message', 'Fermer', { duration: 3000 });
+      }
     });
-    
-    this.saveMessages();
-    
-    this.selectedContact.dernierMessage = this.newMessage;
-    this.selectedContact.time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    this.newMessage = '';
   }
 
   saveMessages() {
@@ -755,7 +1072,69 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
     localStorage.setItem('admin_chat_messages', JSON.stringify(allMessages));
   }
 
-  onFileSelected(e: any) { this.snackBar.open('Uploading transmission packets...', 'Fermer', { duration: 3000 }); }
+  showInfo() {
+    this.snackBar.open('Détails du contact : ' + this.selectedContact?.nom, 'Fermer', { duration: 3000 });
+  }
+
+  onFileSelected(e: any) {
+    const files: FileList = e.target.files;
+    if (!files || files.length === 0 || !this.selectedContact) return;
+
+    this.snackBar.open('Téléchargement en cours...', 'Fermer', { duration: 2000 });
+    const roomId = this.getRoomId(this.currentUserId, this.selectedContact.id);
+
+    Array.from(files).forEach(file => {
+      this.api.uploadFile(file, roomId, 'ChatAttachment').subscribe({
+        next: (res: any) => {
+          const now = new Date();
+          const isoTimestamp = now.toISOString();
+          const msg: Message = {
+            id: Date.now().toString(),
+            text: `Document envoyé : ${file.name}`,
+            from: this.currentUserId,
+            fromName: 'Me',
+            time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+            timestamp: isoTimestamp,
+            attachments: [{ name: file.name, type: file.type, url: res.url }]
+          };
+
+          const payload = { ...msg, chatRoomId: roomId, timestamp: isoTimestamp };
+
+          this.api.sendChatMessage(payload).subscribe({
+            next: () => {
+              this.messages.push(msg);
+              this.messages = [...this.messages];
+              if (this.selectedContact) {
+                this.selectedContact.dernierMessage = msg.text;
+                this.selectedContact.time = msg.time;
+                this.selectedContact.timestamp = isoTimestamp;
+              }
+              this.sortContacts();
+              this.filterContacts();
+              this.scrollToBottom();
+              this.snackBar.open('Document envoyé avec succès', 'Fermer', { duration: 2000 });
+            },
+            error: () => {
+              this.snackBar.open('Erreur lors de l\'enregistrement du message', 'Fermer', { duration: 3000 });
+            }
+          });
+        },
+        error: () => {
+          this.snackBar.open('Erreur lors du téléchargement de ' + file.name, 'Fermer', { duration: 3000 });
+        }
+      });
+    });
+    // Reset file input
+    e.target.value = '';
+  }
+
+  downloadAttachment(att: { name: string; url: string }) {
+    const link = document.createElement('a');
+    link.href = att.url;
+    link.download = att.name;
+    link.target = '_blank';
+    link.click();
+  }
 
   openNewGroupDialog() {
     this.newGroupName = '';
@@ -771,6 +1150,7 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
       return;
     }
     
+    const now = new Date();
     const newGroup: Contact = {
       id: 'group_' + Date.now(),
       nom: this.newGroupName,
@@ -778,7 +1158,8 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
       email: '',
       typeUtilisateurId: 'GROUP',
       dernierMessage: 'Groupe créé',
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: now.toISOString(),
       unread: 0,
       isGroup: true
     };

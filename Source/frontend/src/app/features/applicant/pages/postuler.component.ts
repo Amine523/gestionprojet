@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { FormStateService } from '@core/services/form-state.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-applicant-postuler',
@@ -122,141 +125,162 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: var(--space-xl);
+      background: var(--color-bg);
     }
 
     .postuler-container {
       width: 100%;
-      max-width: 480px;
+      max-width: 500px;
     }
 
     .postuler-card {
       background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--color-border);
       overflow: hidden;
     }
 
     .card-header {
-      padding: 32px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: var(--space-2xl);
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: white;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
     }
 
     .header-logo {
       width: 64px;
       height: 64px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.2);
+      border-radius: var(--radius-lg);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 16px;
+      margin: 0 auto var(--space-lg);
       backdrop-filter: blur(10px);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      position: relative;
+      z-index: 1;
     }
 
     .header-logo svg {
-      color: white;
+      color: #60a5fa;
     }
 
     .header-text h1 {
-      font-size: 24px;
-      font-weight: 700;
-      margin: 0 0 8px;
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      margin: 0 0 var(--space-sm);
       color: white;
+      position: relative;
+      z-index: 1;
     }
 
     .header-text p {
-      font-size: 14px;
+      font-size: var(--font-size-sm);
       margin: 0;
-      opacity: 0.9;
-      color: white;
+      color: #94a3b8;
+      position: relative;
+      z-index: 1;
     }
 
     .mode-switch {
       display: flex;
-      background: #f3f4f6;
-      padding: 4px;
-      margin: 24px 32px 0;
-      border-radius: 12px;
+      background: var(--color-bg);
+      padding: var(--space-xs);
+      margin: var(--space-lg) var(--space-2xl) 0;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
     }
 
     .mode-switch button {
       flex: 1;
-      padding: 12px;
+      padding: var(--space-sm);
       border: none;
       background: transparent;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #6b7280;
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-muted);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all var(--transition-base);
     }
 
     .mode-switch button.active {
       background: white;
-      color: #667eea;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      color: #3b82f6;
+      box-shadow: var(--shadow-sm);
     }
 
     .postuler-form {
-      padding: 32px;
+      padding: var(--space-2xl);
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: var(--space-lg);
     }
 
     .form-field {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: var(--space-xs);
     }
 
     .form-field label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #374151;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
     }
 
     .form-control {
-      padding: 12px 16px;
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: all 0.2s;
-      background: white;
+      padding: var(--space-sm) var(--space-md);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      transition: all var(--transition-base);
+      background: var(--color-bg);
+      color: var(--color-text);
     }
 
     .form-control:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: #3b82f6;
     }
 
     .form-control::placeholder {
-      color: #9ca3af;
+      color: var(--color-text-muted);
     }
 
     .selected-offre {
-      padding: 16px;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-      border: 2px solid rgba(102, 126, 234, 0.2);
-      border-radius: 12px;
+      padding: var(--space-lg);
+      background: rgba(59, 130, 246, 0.05);
+      border: 2px solid rgba(59, 130, 246, 0.2);
+      border-radius: var(--radius-lg);
     }
 
     .offre-badge {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #667eea;
+      gap: var(--space-sm);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: #3b82f6;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-sm);
     }
 
     .offre-badge svg {
@@ -265,25 +289,25 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     }
 
     .offre-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #1f2937;
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
       margin: 0;
     }
 
     .file-upload-zone {
-      padding: 32px;
-      border: 2px dashed #d1d5db;
-      border-radius: 12px;
+      padding: var(--space-2xl);
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius-lg);
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s;
-      background: #f9fafb;
+      transition: all var(--transition-base);
+      background: var(--color-bg);
     }
 
     .file-upload-zone:hover {
-      border-color: #667eea;
-      background: rgba(102, 126, 234, 0.05);
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.05);
     }
 
     .file-upload-zone.has-file {
@@ -292,8 +316,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     }
 
     .upload-icon {
-      margin-bottom: 12px;
-      color: #9ca3af;
+      margin-bottom: var(--space-md);
+      color: var(--color-text-muted);
     }
 
     .file-upload-zone.has-file .upload-icon {
@@ -301,37 +325,37 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     }
 
     .upload-text {
-      font-size: 14px;
-      font-weight: 600;
-      color: #374151;
-      margin: 0 0 4px;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text);
+      margin: 0 0 var(--space-xs);
     }
 
     .upload-hint {
-      font-size: 12px;
-      color: #6b7280;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
       margin: 0;
     }
 
     .btn-submit {
-      padding: 14px 24px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: var(--space-lg) var(--space-2xl);
+      background: #0f172a;
       color: white;
       border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
+      border-radius: var(--radius-lg);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-bold);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all var(--transition-base);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: var(--space-sm);
     }
 
     .btn-submit:hover:not(:disabled) {
+      background: #3b82f6;
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
     }
 
     .btn-submit:active:not(:disabled) {
@@ -357,50 +381,80 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     }
 
     .card-footer {
-      padding: 24px 32px;
-      background: #f9fafb;
+      padding: var(--space-xl) var(--space-2xl);
+      background: var(--color-bg);
       text-align: center;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid var(--color-border);
     }
 
     .card-footer p {
-      font-size: 14px;
-      color: #6b7280;
-      margin: 0 0 8px;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin: 0 0 var(--space-sm);
     }
 
     .link-btn {
       background: none;
       border: none;
-      color: #667eea;
-      font-size: 14px;
-      font-weight: 600;
+      color: #3b82f6;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
       cursor: pointer;
       padding: 0;
       text-decoration: underline;
     }
 
     .link-btn:hover {
-      color: #764ba2;
+      color: #2563eb;
     }
 
     .hidden {
       display: none;
     }
 
+    /* Dark mode */
+    :host-context(.dark) .postuler-page {
+      background: var(--color-surface);
+    }
+
+    :host-context(.dark) .postuler-card {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .form-control {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .mode-switch {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .mode-switch button.active {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    :host-context(.dark) .card-footer {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-border);
+    }
+
     @media (max-width: 640px) {
       .postuler-page {
-        padding: 16px;
+        padding: var(--space-lg);
       }
 
       .card-header,
       .postuler-form,
       .card-footer {
-        padding: 24px;
+        padding: var(--space-xl);
       }
 
       .header-text h1 {
-        font-size: 20px;
+        font-size: var(--font-size-xl);
       }
     }
   `]
@@ -409,6 +463,10 @@ export class ApplicantPostulerComponent {
   private api = inject(ApiService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private formState = inject(FormStateService);
+  
+  private subs: Subscription[] = [];
+  private readonly DRAFT_KEY = 'applicant_postuler_draft';
   
   selectedOffre: any = null;
   cvFile: File | null = null;
@@ -424,6 +482,26 @@ export class ApplicantPostulerComponent {
   
   constructor() { 
     this.selectedOffre = this.api.getOffreEmploiTemp(); 
+  }
+  
+  ngOnInit() {
+    this.restoreDraft();
+    this.subs.push(
+      this.applyForm.valueChanges.pipe(debounceTime(500)).subscribe(v => {
+        this.formState.saveDraft(this.DRAFT_KEY, v);
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subs.forEach(s => s.unsubscribe());
+  }
+
+  private restoreDraft() {
+    const draft = this.formState.getDraft(this.DRAFT_KEY);
+    if (draft) {
+      this.applyForm.patchValue(draft, { emitEvent: false });
+    }
   }
   
   onFileSelected(event: any) { 
@@ -462,6 +540,7 @@ export class ApplicantPostulerComponent {
         this.api.postulerForm(formData).subscribe({
           next: () => {
             this.snackBar.open('Candidature soumise avec succès !', 'Fermer', { duration: 3000 });
+            this.formState.clearDraft(this.DRAFT_KEY);
             this.isSubmitting = false;
             this.router.navigate(['/applicant/profil']);
           },

@@ -3,43 +3,49 @@ using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Commun;
 using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Business;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
 {
     /// <summary>
     /// Endpoints dédiés à l'acteur Client Projet (TypeUtilisateurId = "T008").
-    /// Toutes les données sont filtrées pour n'exposer que les projets
-    /// auxquels le client est explicitement affecté via ProjetUtilisateur.
-    /// Aucune nouvelle table n'est utilisée.
-    /// ProjetCore : Id, Nom, Description, StartDate, EndDate, Status, Priorite, UtilisateurId, Actif
-    /// TacheCore  : Id, ProjetId, Titre, Description, Statut, Priorite, DateLimite, Actif
-    /// ProjetUtilisateurCore : Id, ProjetId, UtilisateurId, Actif
     /// </summary>
     [ApiController]
     [Route("api/client-projet")]
     [AllowAnonymous]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     public class ClientProjetController : ControllerBase
     {
         private readonly IProjetBusiness _projetBusiness;
         private readonly IProjetUtilisateurBusiness _projetUtilisateurBusiness;
         private readonly ITacheBusiness _tacheBusiness;
         private readonly IUtilisateurBusiness _utilisateurBusiness;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string _coreApiUrl;
 
         public ClientProjetController(
             IProjetBusiness projetBusiness,
             IProjetUtilisateurBusiness projetUtilisateurBusiness,
             ITacheBusiness tacheBusiness,
-            IUtilisateurBusiness utilisateurBusiness)
+            IUtilisateurBusiness utilisateurBusiness,
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration)
         {
             _projetBusiness = projetBusiness;
             _projetUtilisateurBusiness = projetUtilisateurBusiness;
             _tacheBusiness = tacheBusiness;
             _utilisateurBusiness = utilisateurBusiness;
+            _httpClientFactory = httpClientFactory;
+            _coreApiUrl = configuration.GetSection("URL").GetValue<string>("ApiParamSociete") ?? "http://localhost:5050";
         }
+
+        private HttpClient GetClient() => _httpClientFactory.CreateClient("ApiParamSociete");
 
         // ─────────────────────────────────────────────
         // DASHBOARD
@@ -117,7 +123,8 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                 return BadRequest("UtilisateurId requis");
 
             var projets = await GetProjetsParClient(utilisateurId);
-            return Ok(projets.Select(p => new {
+            return Ok(projets.Select(p => new
+            {
                 id = p.Id,
                 nom = p.Nom,
                 description = p.Description,
@@ -146,7 +153,8 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             var projet = await _projetBusiness.ObtenirAsync(projetId);
             if (projet == null) return NotFound("Projet introuvable");
 
-            return Ok(new {
+            return Ok(new
+            {
                 id = projet.Id,
                 nom = projet.Nom,
                 description = projet.Description,
@@ -180,7 +188,8 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                 Criteres = new Dictionary<string, string> { { "ProjetId", projetId } }
             };
             var taches = await _tacheBusiness.ListeParCritereAsync(critere);
-            return Ok(taches?.Select(t => new {
+            return Ok(taches?.Select(t => new
+            {
                 id = t.Id,
                 titre = t.Titre,
                 description = t.Description,
@@ -318,8 +327,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
 
         /// <summary>
         /// Le client soumet un feedback sur un livrable ou un projet.
-        /// Aucune nouvelle table n'est créée : le feedback est loggé côté serveur
-        /// et peut déclencher une notification future.
+        /// Persisté dans la table Activite.
         /// </summary>
         [HttpPost("feedback")]
         public async Task<IActionResult> SoumettreFeedback([FromBody] FeedbackClientRequest request)
@@ -336,9 +344,26 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
             var projet = await _projetBusiness.ObtenirAsync(request.ProjetId);
             if (projet == null) return NotFound("Projet introuvable");
 
-            System.Console.WriteLine($"[CLIENT FEEDBACK] ProjetId={request.ProjetId}, " +
-                $"ClientId={request.UtilisateurId}, Type={request.Type}, " +
-                $"Msg={request.Message}");
+            // Persistance dans la table Activite
+            var activite = new
+            {
+                Id = Guid.NewGuid().ToString(),
+                Action = "FEEDBACK_CLIENT",
+                Description = $"Feedback ({request.Type}) sur le projet {projet.Nom} : {request.Message}",
+                Type = "Feedback",
+                SocieteId = projet.SocieteId,
+                UtilisateurId = request.UtilisateurId,
+                Date = DateTime.Now
+            };
+
+            try
+            {
+                await GetClient().PostAsJsonAsync($"{_coreApiUrl}/api/Activite", activite);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[CLIENT FEEDBACK] Erreur lors de la persistance Activite: {ex.Message}");
+            }
 
             return Ok(new
             {
@@ -348,6 +373,69 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                 Type = request.Type,
                 Statut = "Reçu"
             });
+        }
+
+        /// <summary>
+        /// Récupère les feedbacks précédents du client.
+        /// </summary>
+        [HttpGet("feedback/{utilisateurId}")]
+        public async Task<IActionResult> GetFeedbacks(string utilisateurId)
+        {
+            if (string.IsNullOrWhiteSpace(utilisateurId)) return BadRequest("UtilisateurId requis");
+
+            try
+            {
+                var response = await GetClient().GetAsync($"{_coreApiUrl}/api/Activite");
+                if (!response.IsSuccessStatusCode) return Ok(new List<object>());
+
+                var allActivities = await response.Content.ReadFromJsonAsync<List<dynamic>>();
+                var feedbacks = allActivities?
+                    .Where(a => a.utilisateurId == utilisateurId && a.type == "Feedback")
+                    .OrderByDescending(a => a.date)
+                    .Select(a => new
+                    {
+                        projetNom = ExtractProjetNom(a.description?.ToString()),
+                        type = ExtractType(a.description?.ToString()),
+                        message = ExtractMessage(a.description?.ToString()),
+                        statut = "Reçu",
+                        date = a.date
+                    })
+                    .ToList();
+
+                if (feedbacks == null) return Ok(new List<object>());
+                return Ok(feedbacks);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[CLIENT FEEDBACK] Erreur lors de la récupération des feedbacks: {ex.Message}");
+                return Ok(new List<object>());
+            }
+        }
+
+        private string ExtractProjetNom(string description)
+        {
+            if (string.IsNullOrEmpty(description)) return "Projet";
+            // Format: "Feedback (Type) sur le projet NOM : MESSAGE"
+            var parts = description.Split("sur le projet ");
+            if (parts.Length < 2) return "Projet";
+            var nomPart = parts[1].Split(" : ");
+            return nomPart[0];
+        }
+
+        private string ExtractType(string description)
+        {
+            if (string.IsNullOrEmpty(description)) return "Commentaire";
+            var start = description.IndexOf("(");
+            var end = description.IndexOf(")");
+            if (start != -1 && end != -1) return description.Substring(start + 1, end - start - 1);
+            return "Commentaire";
+        }
+
+        private string ExtractMessage(string description)
+        {
+            if (string.IsNullOrEmpty(description)) return "";
+            var parts = description.Split(" : ");
+            return parts.Length > 1 ? parts[1] : description;
         }
 
         // ─────────────────────────────────────────────

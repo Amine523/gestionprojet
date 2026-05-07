@@ -1,0 +1,236 @@
+<div class="conges-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+      </svg>
+    </div>
+    <div class="header-info">
+      <h1 class="header-title">Espace Absences</h1>
+      <p class="header-subtitle">Gérez vos demandes de congés en toute simplicité</p>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="balance-card">
+      <div class="balance-header">
+        <div class="balance-info">
+          <span class="balance-label">Solde Restant</span>
+          <h2 class="balance-value">{{solde.soldeRestant}} <span>jours</span></h2>
+        </div>
+        <div class="balance-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 18a5 5 0 0 0-10 0"></path>
+            <line x1="12" y1="2" x2="12" y2="9"></line>
+            <line x1="4.22" y1="10.22" x2="5.64" y2="11.64"></line>
+            <line x1="1" y1="18" x2="3" y2="18"></line>
+            <line x1="21" y1="18" x2="23" y2="18"></line>
+            <line x1="18.36" y1="11.64" x2="19.78" y2="10.22"></line>
+            <line x1="23" y1="22" x2="1" y2="22"></line>
+            <polyline points="16 5 12 9 8 5"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="balance-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="(solde.soldeRestant / solde.soldeTotal) * 100"></div>
+        </div>
+        <div class="progress-labels">
+          <span>Consommé: {{solde.soldeUtilise}}j</span>
+          <span>Total: {{solde.soldeTotal}}j</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-stats">
+      <div class="mini-tile">
+        <svg class="icon-amber" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <div class="mini-info">
+          <span class="mini-value">{{solde.congesEnAttente}}</span>
+          <span class="mini-label">En attente</span>
+        </div>
+      </div>
+      <div class="mini-tile">
+        <svg class="icon-emerald" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <div class="mini-info">
+          <span class="mini-value">{{solde.congesValides}}</span>
+          <span class="mini-label">Approuvés</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="content-grid">
+    <div class="form-widget">
+      <div class="widget-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+          Nouvelle Demande
+        </h3>
+      </div>
+      <form (ngSubmit)="soumettreDemande()">
+        <div class="form-group">
+          <label class="form-label">Type de congé</label>
+          <select [(ngModel)]="nouvelleDemande.typePointageId" name="type" class="form-select" required>
+            <option value="NORMAL">Congé Annuel</option>
+            <option value="MALADIE">Maladie</option>
+            <option value="EXCEP">Exceptionnel</option>
+            <option value="HALFDAY">Demi-journée</option>
+            <option value="AUTORISATION">Autorisation (Heures)</option>
+            <option value="VACATION">Vacances / Vacation</option>
+          </select>
+        </div>
+
+        @if (nouvelleDemande.typePointageId === 'HALFDAY' || nouvelleDemande.typePointageId === 'AUTORISATION') {
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" [(ngModel)]="nouvelleDemande.dateDebut" name="start" class="form-input" required>
+          </div>
+
+          @if (nouvelleDemande.typePointageId === 'HALFDAY') {
+          <div class="form-group">
+            <label class="form-label">Période</label>
+            <select [(ngModel)]="nouvelleDemande.periode" name="periode" class="form-select" required>
+              <option value="Matin">Matin</option>
+              <option value="Après-midi">Après-midi</option>
+            </select>
+          </div>
+          }
+          @if (nouvelleDemande.typePointageId === 'AUTORISATION') {
+          <div class="form-group">
+            <label class="form-label">Nombre d'heures</label>
+            <input type="number" [(ngModel)]="nouvelleDemande.heures" name="heures" class="form-input" required min="1"
+              max="8">
+          </div>
+          }
+        </div>
+        } @else {
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date de début</label>
+            <input type="date" [(ngModel)]="nouvelleDemande.dateDebut" name="start" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date de fin</label>
+            <input type="date" [(ngModel)]="nouvelleDemande.dateFin" name="end" class="form-input" required>
+          </div>
+        </div>
+        }
+
+        <div class="form-group">
+          <label class="form-label">Motif / Justification</label>
+          <textarea [(ngModel)]="nouvelleDemande.motif" name="motif" class="form-textarea" rows="3"
+            placeholder="Ex: Vacances d'été, Rendez-vous médical..."></textarea>
+        </div>
+
+        @if (nouvelleDemande.typePointageId === 'MALADIE') {
+        <div class="upload-zone" (click)="fileInput.click()" (dragover)="$event.preventDefault()"
+          (drop)="onFileDrop($event)" [class.has-file]="justificatifFile">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          @if (!justificatifFile) {
+          <span class="upload-text">Joindre un justificatif médical<br><small>PDF, JPG, PNG · max 5MB</small></span>
+          }
+          @if (justificatifFile) {
+          <span class="upload-text">{{justificatifFile.name}}<br><small>{{(justificatifFile.size / 1024 /
+              1024).toFixed(2)}} MB · Cliquer pour changer</small></span>
+          }
+          <input #fileInput type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelect($event)"
+            style="display:none">
+        </div>
+        }
+
+        <button class="btn btn-primary btn-full" type="submit" [disabled]="loading">
+          @if (!loading) {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13"></polygon>
+          </svg>
+          }
+          {{loading ? 'Traitement...' : 'Envoyer la demande'}}
+        </button>
+      </form>
+    </div>
+
+    <div class="history-widget">
+      <div class="widget-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Mes Demandes Récentes
+        </h3>
+      </div>
+      <div class="history-list">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Période</th>
+                <th>Jours</th>
+                <th>État</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of paginatedConges; track c.id) {
+              <tr>
+                <td><strong>{{c.typeNom}}</strong></td>
+                <td>
+                  <small>{{c.dateDebut | date:'dd/MM'}} - {{c.dateFin | date:'dd/MM/yyyy'}}</small>
+                </td>
+                <td><span class="badge badge-info">{{c.nombreJours}}j</span></td>
+                <td>
+                  <span class="status-chip"
+                    [class]="'status-'+(c.status ? c.status.toLowerCase().replace(' ', '-') : 'pending')">
+                    <span class="dot"></span>
+                    {{c.status}}
+                  </span>
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="4" class="empty-state">Aucune demande.</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (conges.length > pageSize) {
+        <div class="pagination-mini">
+          <button class="btn-p" [disabled]="page === 1" (click)="page = page - 1">&lt;</button>
+          <span>Page {{page}} / {{totalPages}}</span>
+          <button class="btn-p" [disabled]="page === totalPages" (click)="page = page + 1">&gt;</button>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -11,7 +11,7 @@ import { RhRapportsComponent } from './pages/rh-rapports/rh-rapports.component';
 import { AdminChatComponent } from '../admin/pages/admin-chat/admin-chat.component';
 import { NotificationsComponent } from '@shared/components/notifications/notifications.component';
 import { ProfileComponent } from '@shared/components/profile/profile.component';
-import { DevParametresComponent } from '../dev/pages/dev-parametres/dev-parametres.component';
+import { ParametresComponent } from '../dev/pages/parametres/components/parametres.component';
 
 export const RH_ROUTES: Routes = [
   { path: 'dashboard', component: RhDashboardComponent },
@@ -25,6 +25,6 @@ export const RH_ROUTES: Routes = [
   { path: 'chat', component: AdminChatComponent },
   { path: 'notifications', component: NotificationsComponent },
   { path: 'profil', component: ProfileComponent },
-  { path: 'parametres', component: DevParametresComponent },
+  { path: 'parametres', component: ParametresComponent },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];

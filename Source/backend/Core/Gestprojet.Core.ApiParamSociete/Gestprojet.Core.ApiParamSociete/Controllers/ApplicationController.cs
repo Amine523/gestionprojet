@@ -61,6 +61,7 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         /// </summary>
         /// <param name="critereRecherche"></param>
         /// <returns></returns>
+        [HttpPost("SupprimerParCondition")]
         [HttpPost("supprimer-par-condition")]
         public async Task<ActionResult<bool>> SupprimerApplicationParCondition([FromBody] CritereRecherche critereRecherche)
         {
@@ -84,6 +85,7 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         /// Liste Application.
         /// </summary>
         /// <returns></returns>
+        [HttpGet("liste")]
         [HttpGet("liste-legacy-1")]
         public async Task<ActionResult<List<ApplicationCore>>> ListeApplication()
         {
@@ -177,21 +179,10 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         }
 
         [HttpPost("ListeParCondition")]
+        [HttpPost("liste-par-condition")]
         public async Task<ActionResult<List<ApplicationCore>>> ListeParCondition([FromBody] CritereRecherche critereRecherche)
         {
             var resultat = await _applicationCoreBusiness.ListeApplicationParConditionAsync(critereRecherche);
-            return Ok(resultat);
-        }
-
-        /// <summary>
-        /// Liste Application par condition.
-        /// </summary>
-        /// <param name="critereRecherche"></param>
-        /// <returns></returns>
-        [HttpPost("liste-par-condition")]
-        public async Task<ActionResult<List<ApplicationCore>>> ListeApplicationParCondition([FromBody] CritereRecherche critereRecherche)
-        {
-            List<ApplicationCore> resultat = await _applicationCoreBusiness.ListeApplicationParConditionAsync(critereRecherche);
             return Ok(resultat);
         }
 

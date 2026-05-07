@@ -83,6 +83,50 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+        [HttpPost("generate")]
+        public async Task<IActionResult> Generate([FromBody] dynamic request)
+        {
+            try
+            {
+                string prompt = request?.prompt?.ToString() ?? "";
+                string model = request?.model?.ToString() ?? "llama3.2";
+                var response = await _ollamaService.GenerateTextAsync(prompt, model);
+                return Ok(new { response });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("generate-tests")]
+        public async Task<IActionResult> GenerateTests([FromBody] GenerateTestRequest? request)
+        {
+            try
+            {
+                if (request is null)
+                    return BadRequest(new { error = "Corps de requête JSON invalide ou manquant." });
+
+                var questions = await _ollamaService.GenerateTestQuestionsAsync(
+                    request.Topic ?? "",
+                    request.QuestionCount,
+                    request.QuestionType ?? "QCM"
+                );
+
+                return Ok(new TestGenerationResponse
+                {
+                    Topic = request.Topic,
+                    GeneratedQuestions = questions,
+                    GeneratedAt = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur pendant la génération IA des tests");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 
     public class ProjectRiskRequest { public string ProjectId { get; set; } = ""; }

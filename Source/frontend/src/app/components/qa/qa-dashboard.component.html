@@ -1,0 +1,345 @@
+<div class="qa-dashboard-container">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1>Tableau de Bord <span class="gradient-text">QA.</span></h1>
+      <p class="header-subtitle">Gérez les tests et assurez la qualité des livrables.</p>
+    </div>
+    <div class="header-actions">
+      <div class="search-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher...">
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats Overview -->
+  <div class="stats-overview">
+    <div class="stat-card danger">
+      <div class="stat-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().bugsCritiques}}</h3>
+        <p>Bugs Critiques</p>
+      </div>
+    </div>
+    
+    <div class="stat-card warning">
+      <div class="stat-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().bugsOuverts}}</h3>
+        <p>Bugs Ouverts</p>
+      </div>
+    </div>
+    
+    <div class="stat-card info">
+      <div class="stat-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().testsEnCours}}</h3>
+        <p>Tests en Cours</p>
+      </div>
+    </div>
+    
+    <div class="stat-card success">
+      <div class="stat-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().couvertureTests}}%</h3>
+        <p>Couverture Tests</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h2>Actions Rapides</h2>
+    <div class="actions-grid">
+      <button (click)="openBugModal()" class="action-card">
+        <div class="action-icon">🐛</div>
+        <div class="action-content">
+          <h3>Nouveau Bug</h3>
+          <p>Signaler un problème</p>
+        </div>
+      </button>
+      
+      <button (click)="openTestModal()" class="action-card">
+        <div class="action-icon">🧪</div>
+        <div class="action-content">
+          <h3>Nouveau Test</h3>
+          <p>Créer un test case</p>
+        </div>
+      </button>
+      
+      <button (click)="navigateToBugs()" class="action-card">
+        <div class="action-icon">📋</div>
+        <div class="action-content">
+          <h3>Tous les Bugs</h3>
+          <p>Voir la liste complète</p>
+        </div>
+      </button>
+      
+      <button (click)="navigateToTests()" class="action-card">
+        <div class="action-icon">✅</div>
+        <div class="action-content">
+          <h3>Tous les Tests</h3>
+          <p>Accéder aux test cases</p>
+        </div>
+      </button>
+      
+      <button (click)="navigateToReports()" class="action-card">
+        <div class="action-icon">📊</div>
+        <div class="action-content">
+          <h3>Rapports</h3>
+          <p>Analyser les résultats</p>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="content-grid">
+    <!-- Recent Bugs -->
+    <section class="bugs-section">
+      <div class="section-header">
+        <h2>Bugs Récents</h2>
+        <button (click)="navigateToBugs()" class="btn-link">Voir tout</button>
+      </div>
+      
+      <div class="bugs-list">
+        @for (bug of filteredBugs().slice(0, 4); track bug.id) {
+          <div class="bug-item">
+            <div class="bug-header">
+              <h3>{{bug.titre}}</h3>
+              <div class="bug-badges">
+                <span [class]="'severity-badge ' + getSeveriteClass(bug.severite)">
+                  {{getSeveriteLabel(bug.severite)}}
+                </span>
+                <span [class]="'status-badge ' + getStatutClass(bug.statut)">
+                  {{getStatutLabel(bug.statut)}}
+                </span>
+              </div>
+            </div>
+            <p class="bug-description">{{bug.description}}</p>
+            <div class="bug-meta">
+              <span class="meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                {{bug.projetNom}}
+              </span>
+              <span class="meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                {{bug.dateCreation | date:'dd MMM yyyy'}}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Recent Test Cases -->
+    <section class="tests-section">
+      <div class="section-header">
+        <h2>Test Cases Récents</h2>
+        <button (click)="navigateToTests()" class="btn-link">Voir tout</button>
+      </div>
+      
+      <div class="tests-list">
+        @for (test of filteredTestCases().slice(0, 4); track test.id) {
+          <div class="test-item">
+            <div class="test-header">
+              <h3>{{test.nom}}</h3>
+              <span [class]="'status-badge ' + getStatutClass(test.statut)">
+                {{getStatutLabel(test.statut)}}
+              </span>
+            </div>
+            <p class="test-description">{{test.description}}</p>
+            <div class="test-results">
+              <div class="result-item passes">
+                <span class="result-count">{{test.resultats.passes}}</span>
+                <span class="result-label">Passes</span>
+              </div>
+              <div class="result-item failures">
+                <span class="result-count">{{test.resultats.echecs}}</span>
+                <span class="result-label">Échecs</span>
+              </div>
+              <div class="result-item total">
+                <span class="result-count">{{test.resultats.total}}</span>
+                <span class="result-label">Total</span>
+              </div>
+            </div>
+            <div class="test-meta">
+              <span class="meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                {{test.projetNom}}
+              </span>
+              @if (test.dateExecution) {
+                <span class="meta-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  {{test.dateExecution | date:'dd MMM yyyy'}}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+
+  <!-- Bug Modal -->
+  @if (showBugModal()) {
+    <div class="modal-overlay" (click)="closeBugModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Signaler un Bug</h2>
+          <button class="btn-icon" (click)="closeBugModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        <form [formGroup]="bugForm" (ngSubmit)="submitBug()">
+          <div class="form-grid">
+            <div class="form-field full-width">
+              <label>Titre *</label>
+              <input formControlName="titre" type="text" placeholder="Titre du bug">
+            </div>
+            
+            <div class="form-field full-width">
+              <label>Description *</label>
+              <textarea formControlName="description" rows="4" placeholder="Description détaillée du bug"></textarea>
+            </div>
+            
+            <div class="form-field">
+              <label>Sévérité *</label>
+              <select formControlName="severite">
+                <option value="critique">Critique</option>
+                <option value="elevee">Élevée</option>
+                <option value="moyenne">Moyenne</option>
+                <option value="basse">Basse</option>
+              </select>
+            </div>
+            
+            <div class="form-field">
+              <label>Projet *</label>
+              <select formControlName="projetId">
+                <option value="">Sélectionner un projet</option>
+                <!-- Options à remplir dynamiquement -->
+              </select>
+            </div>
+            
+            <div class="form-field full-width">
+              <label>Étapes de reproduction *</label>
+              <textarea formControlName="steps" rows="3" placeholder="Étapes pour reproduire le bug..."></textarea>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" (click)="closeBugModal()" class="btn btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="bugForm.invalid" class="btn btn-primary">Signaler</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Test Case Modal -->
+  @if (showTestModal()) {
+    <div class="modal-overlay" (click)="closeTestModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Créer un Test Case</h2>
+          <button class="btn-icon" (click)="closeTestModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        
+        <form [formGroup]="testCaseForm" (ngSubmit)="submitTestCase()">
+          <div class="form-grid">
+            <div class="form-field full-width">
+              <label>Nom du Test *</label>
+              <input formControlName="nom" type="text" placeholder="Nom du test case">
+            </div>
+            
+            <div class="form-field full-width">
+              <label>Description *</label>
+              <textarea formControlName="description" rows="4" placeholder="Description du test case"></textarea>
+            </div>
+            
+            <div class="form-field">
+              <label>Projet *</label>
+              <select formControlName="projetId">
+                <option value="">Sélectionner un projet</option>
+                <!-- Options à remplir dynamiquement -->
+              </select>
+            </div>
+            
+            <div class="form-field">
+              <label>Type de Test</label>
+              <select formControlName="type">
+                <option value="manuel">Manuel</option>
+                <option value="automatique">Automatique</option>
+                <option value="integration">Intégration</option>
+              </select>
+            </div>
+            
+            <div class="form-field">
+              <label>Priorité</label>
+              <select formControlName="priorite">
+                <option value="critique">Critique</option>
+                <option value="elevee">Élevée</option>
+                <option value="moyenne">Moyenne</option>
+                <option value="basse">Basse</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" (click)="closeTestModal()" class="btn btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="testCaseForm.invalid" class="btn btn-primary">Créer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

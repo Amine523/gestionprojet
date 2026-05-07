@@ -14,13 +14,21 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
     [Route("api/societes")]
     [Route("api/societe")]
     [AllowAnonymous]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     public class SocieteController : ControllerBase
     {
         private readonly ISocieteBusiness _societeBusiness;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string _coreApiUrl;
 
-        public SocieteController(ISocieteBusiness societeBusiness)
-            => _societeBusiness = societeBusiness;
+        public SocieteController(ISocieteBusiness societeBusiness, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        {
+            _societeBusiness = societeBusiness;
+            _httpClientFactory = httpClientFactory;
+            _coreApiUrl = configuration.GetSection("URL").GetValue<string>("ApiParamSociete") ?? "http://localhost:5050";
+        }
+
+        private HttpClient GetClient() => _httpClientFactory.CreateClient("ApiParamSociete");
 
         private bool IsValidEmail(string email)
         {
@@ -58,10 +66,10 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
             }
 
             if (entity == null) return BadRequest("Données Societe invalides (Body null)");
-            
+
             if (string.IsNullOrWhiteSpace(entity.Nom) || entity.Nom.Length < 2)
                 return BadRequest("Le nom de la société doit contenir au moins 2 caractères");
-            
+
             var result = await _societeBusiness.AjouterOuModifierAsync(entity);
             return result.Success ? Ok(result.Message) : BadRequest(result.Message);
         }
@@ -98,8 +106,35 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         public async Task<IActionResult> Modifier([FromBody] SocieteCore entity)
         {
             if (entity == null) return BadRequest("Données Societe invalides");
-            var result = await _societeBusiness.AjouterOuModifierAsync(entity);
-            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+            if (string.IsNullOrWhiteSpace(entity.Id)) return BadRequest("Id de la société requis pour la modification");
+
+            try
+            {
+                // Fetch existing to preserve fields not sent by the frontend
+                var existing = await _societeBusiness.ObtenirAsync(entity.Id);
+                if (existing != null)
+                {
+                    entity.Nom = entity.Nom ?? existing.Nom;
+                    entity.Adresse = entity.Adresse ?? existing.Adresse;
+                    entity.Email = entity.Email ?? existing.Email;
+                    entity.TelephoneContact = entity.TelephoneContact ?? existing.TelephoneContact;
+                    entity.Ville = entity.Ville ?? existing.Ville;
+                    entity.Pays = entity.Pays ?? existing.Pays;
+                    entity.PlanAbonnement = entity.PlanAbonnement ?? existing.PlanAbonnement;
+                    entity.Actif = entity.Actif ?? existing.Actif;
+                    entity.CodePostale = entity.CodePostale ?? existing.CodePostale;
+                    entity.PersonneContact = entity.PersonneContact ?? existing.PersonneContact;
+                    entity.Fax = entity.Fax ?? existing.Fax;
+                    entity.SiteWeb = entity.SiteWeb ?? existing.SiteWeb;
+                }
+
+                var result = await _societeBusiness.AjouterOuModifierAsync(entity);
+                return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Erreur modification société: {ex.Message}" });
+            }
         }
 
         [HttpPost("ListeParCritere")]
@@ -142,6 +177,65 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         public async Task<IActionResult> ListeParPageRoute(int pageNumero, int pageTaille)
             => Ok(await _societeBusiness.ListeParPageAsync(pageNumero, pageTaille));
 
+        [HttpPut("{id}/modules")]
+        public async Task<IActionResult> UpdateModules(string id, [FromBody] dynamic body)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
+            string modules = body?.enabledModules?.ToString() ?? "[]";
+
+            // Persistance via Activite (Action spéciale pour retrouver la config)
+            var activite = new
+            {
+                Id = Guid.NewGuid().ToString(),
+                Action = "SOCIETE_MODULES_CONFIG",
+                Description = modules,
+                Type = "Config",
+                SocieteId = id,
+                UtilisateurId = "System",
+                Date = DateTime.Now
+            };
+
+            try
+            {
+                await GetClient().PostAsJsonAsync($"{_coreApiUrl}/api/Activite", activite);
+                return Ok(new { success = true, message = "Modules enregistrés" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("{id}/modules")]
+        public async Task<IActionResult> GetModules(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Id requis");
+
+            try
+            {
+                var response = await GetClient().GetAsync($"{_coreApiUrl}/api/Activite");
+                if (!response.IsSuccessStatusCode) return Ok(new List<string>());
+
+                var allActivities = await response.Content.ReadFromJsonAsync<List<dynamic>>();
+                var lastConfig = allActivities?
+                    .Where(a => a.societeId == id && a.action == "SOCIETE_MODULES_CONFIG")
+                    .OrderByDescending(a => a.date)
+                    .FirstOrDefault();
+
+                if (lastConfig != null)
+                {
+                    var desc = lastConfig.description.ToString();
+                    return Ok(Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(desc));
+                }
+
+                return Ok(new List<string>());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
         [HttpPost("Inscription")]
         public async Task<IActionResult> Inscription([FromBody] InscriptionRequest request)
         {
@@ -168,8 +262,12 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
                     Id = societeId,
                     Nom = request.Societe.Nom,
                     Adresse = request.Societe.Adresse ?? "",
-                    PlanAbonnement = "Basic",
-                    Actif = true
+                    PlanAbonnement = request.Societe.PlanAbonnement ?? "Basic",
+                    Actif = true,
+                    // Email = request.Societe.Email ?? request.Admin.Email,
+                    // TelephoneContact = request.Societe.TelephoneContact ?? "",
+                    // Ville = request.Societe.Ville ?? "",
+                    // Pays = request.Societe.Pays ?? ""
                 };
 
                 var resultSociete = await _societeBusiness.AjouterOuModifierAsync(societe);

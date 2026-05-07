@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
 {
-    [Route("/attachement")]
+    [Route("api/attachement")]
     [ApiController]
     public class AttachementController : ControllerBase
     {
@@ -84,7 +84,7 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         /// Liste Attachement.
         /// </summary>
         /// <returns></returns>
-        [HttpGet("liste-legacy-1")]
+        [HttpGet("liste")]
         public async Task<ActionResult<List<AttachementCore>>> ListeAttachement()
         {
             List<AttachementCore> resultat = await _attachementCoreBusiness.ListeAttachementAsync();

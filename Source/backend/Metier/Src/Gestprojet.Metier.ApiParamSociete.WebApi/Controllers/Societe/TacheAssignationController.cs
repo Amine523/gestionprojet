@@ -11,7 +11,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 {
     [ApiController]
     [Route("api/tacheassignees")]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     [AllowAnonymous]
     public class TacheAssignationController : ControllerBase
     {

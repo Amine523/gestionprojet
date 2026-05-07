@@ -92,6 +92,16 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Models.DTOs
         public int CongesEnAttente { get; set; }
         public int CongesValides { get; set; }
         public int CongesRefuses { get; set; }
+        public DateTime DateEmbauche { get; set; }
+        public decimal SoldeAcquis { get; set; }
+        public decimal SoldeAjustement { get; set; }
+    }
+
+    public class AjustementCongeDTO
+    {
+        public string UtilisateurId { get; set; } = string.Empty;
+        public DateTime? DateEmbauche { get; set; }
+        public decimal? SoldeAjustement { get; set; }
     }
 
     // Task DTOs for EnhancedTaches
@@ -145,6 +155,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Models.DTOs
         public string SocieteId { get; set; } = string.Empty;
         
         public string? PointageId { get; set; }
+        public DateTime Date { get; set; } = DateTime.UtcNow;
         public string? Note { get; set; }
     }
 

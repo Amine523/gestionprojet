@@ -37,6 +37,15 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
             </svg>
             Lancer Campagne
           </a>
+          <div class="timer-card" [class.active]="isClockedIn">
+            <div class="timer-info">
+              <span class="timer-label">{{isClockedIn ? 'Session en cours' : 'Hors ligne'}}</span>
+              <span class="timer-val">{{currentTimeDisplay}}</span>
+            </div>
+            <button (click)="toggleClock()" class="btn-clock" [class.btn-out]="isClockedIn">
+              {{isClockedIn ? 'Fin de session' : 'Démarrer session'}}
+            </button>
+          </div>
           <button (click)="loadData()" class="btn-icon btn-ghost btn-white">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 4v6h-6"/>
@@ -371,6 +380,37 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
     .btn-ghost:hover {
       background: rgba(255, 255, 255, 0.1);
     }
+
+    .timer-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .timer-card.active {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.2);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+    }
+    .timer-info { display: flex; flex-direction: column; }
+    .timer-label { font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.05em; }
+    .timer-val { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .btn-clock {
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.75rem;
+      background: #10b981;
+      color: white;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-clock:hover { transform: scale(1.05); filter: brightness(1.1); }
+    .btn-clock.btn-out { background: #ef4444; }
 
     .card {
       background: white;
@@ -725,12 +765,48 @@ export class QaDashboardComponent implements OnInit {
   alertes: any[] = [];
   candidats: any[] = [];
 
+  isClockedIn = false;
+  currentTimeDisplay = '00:00:00';
+  private timer: any;
+
   ngOnInit() {
     const user = this.api.getCurrentUser();
     this.societeId = user?.societeId || '';
     this.societeNom = user?.societe?.nom || 'Votre société';
     this.loadData();
     this.loadCandidats();
+    this.checkClockStatus();
+    this.startClock();
+  }
+
+  checkClockStatus() {
+    const userId = this.api.getCurrentUserId();
+    this.api.getPointageAujourdhui(userId).subscribe(p => {
+      this.isClockedIn = !!(p && !p.heureSortie && !p.HeureSortie);
+    });
+  }
+
+  toggleClock() {
+    const userId = this.api.getCurrentUserId();
+    const societeId = this.api.getCurrentSocieteId();
+    if (this.isClockedIn) {
+      this.api.clockOut(userId, societeId, 'Fin de session dashboard').subscribe(() => {
+        this.isClockedIn = false;
+        this.snackBar.open('Session terminée.', 'OK', { duration: 3000 });
+      });
+    } else {
+      this.api.clockIn(userId, societeId).subscribe(() => {
+        this.isClockedIn = true;
+        this.snackBar.open('Session démarrée.', 'OK', { duration: 3000 });
+      });
+    }
+  }
+
+  startClock() {
+    this.timer = setInterval(() => {
+      const now = new Date();
+      this.currentTimeDisplay = now.toLocaleTimeString();
+    }, 1000);
   }
 
   loadData() {
@@ -798,7 +874,11 @@ export class QaDashboardComponent implements OnInit {
 
   loadCandidats() {
     this.api.getCandidatures().subscribe(applications => {
-      this.candidats = applications.map((c: any) => ({
+      this.candidats = (applications || []).sort((a: any, b: any) => {
+        const dA = new Date(a.dateCreation || a.DateCreation || 0).getTime();
+        const dB = new Date(b.dateCreation || b.DateCreation || 0).getTime();
+        return dB - dA;
+      }).slice(0, 5).map((c: any) => ({
         id: c.id,
         nom: c.nom + ' ' + c.prenom,
         email: c.email,

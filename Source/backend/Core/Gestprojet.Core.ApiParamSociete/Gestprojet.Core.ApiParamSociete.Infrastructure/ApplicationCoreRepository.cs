@@ -45,14 +45,30 @@ namespace Gestprojet.Core.ApiParamSociete.Infrastructure
             {
                 using (var connection = _context.CreateConnection())
                 {
-                    var response = await connection.QueryFirstOrDefaultAsync<int>
-                        (Constants.Ps_Application_u, ApplicationCoreMapper.GetParameters(applicationCore), commandType: CommandType.StoredProcedure);
+                    var sql = @"
+                        UPDATE [dbo].[Application]
+                        SET [UtilisateurId] = @UtilisateurId,
+                            [SocieteId] = @SocieteId,
+                            [OffreId] = @OffreId,
+                            [Titre] = @Titre,
+                            [Description] = @Description,
+                            [Lieu] = @Lieu,
+                            [Salaire] = @Salaire,
+                            [Poste] = @Poste,
+                            [Quiz] = @Quiz,
+                            [AppelDate] = @AppelDate,
+                            [Statut] = @Statut,
+                            [Type] = @Type,
+                            [Actif] = @Actif
+                        WHERE [Id] = @Id;
+                    ";
+                    var response = await connection.ExecuteAsync(sql, ApplicationCoreMapper.GetParameters(applicationCore));
                     return response > 0;
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Probl�me de modification : {ex.Message}");
+                throw new Exception($"Problème de modification : {ex.Message}");
             }
         }
 

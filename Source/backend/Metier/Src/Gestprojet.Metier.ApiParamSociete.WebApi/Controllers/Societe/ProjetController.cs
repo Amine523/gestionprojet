@@ -13,7 +13,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
     [Route("api/projets")]
     [Route("api/projet")]
     [AllowAnonymous]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
+    [Microsoft.AspNetCore.Cors.EnableCors("AllowAll")]
     public class ProjetController : ControllerBase
     {
         private readonly IProjetBusiness _projetBusiness;

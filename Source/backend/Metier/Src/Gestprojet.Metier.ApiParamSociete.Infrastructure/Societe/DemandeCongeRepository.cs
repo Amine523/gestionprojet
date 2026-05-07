@@ -14,9 +14,9 @@ namespace Gestprojet.Metier.ApiParamSociete.Infrastructure.Societe
         private readonly ILogger<DemandeCongeRepository> _logger;
         private static readonly List<DemandeCongeCore> _inMemoryList = new List<DemandeCongeCore>
         {
-            new DemandeCongeCore { Id = "CNG001", UtilisateurId = "USR_TTS004", TypePointageId = "TP001", DateDebut = DateTime.Parse("2026-05-15"), DateFin = DateTime.Parse("2026-05-20"), Status = "En_attente", Motif = "Vacances printemps", ValideParId = "USR_TTS002" },
-            new DemandeCongeCore { Id = "CNG002", UtilisateurId = "USR_TTS005", TypePointageId = "TP002", DateDebut = DateTime.Parse("2026-04-10"), DateFin = DateTime.Parse("2026-04-12"), Status = "Approuve", Motif = "Rendez-vous medical", ValideParId = "USR_TTS002" },
-            new DemandeCongeCore { Id = "CNG003", UtilisateurId = "USR_TTS007", TypePointageId = "TP001", DateDebut = DateTime.Parse("2026-05-01"), DateFin = DateTime.Parse("2026-05-05"), Status = "En_attente", Motif = "Voyage", ValideParId = "USR_TTS002" }
+            new DemandeCongeCore { Id = "CNG001", UtilisateurId = "USR_TTS004", TypePointageId = "TP001", DateDebut = DateTime.Parse("2026-05-15"), DateFin = DateTime.Parse("2026-05-20"), Status = "En_attente", Motif = "Vacances printemps", ValideParId = "USR_TTS002", Jours = 5 },
+            new DemandeCongeCore { Id = "CNG002", UtilisateurId = "USR_TTS005", TypePointageId = "TP002", DateDebut = DateTime.Parse("2026-04-10"), DateFin = DateTime.Parse("2026-04-12"), Status = "Approuve", Motif = "Rendez-vous medical", ValideParId = "USR_TTS002", Jours = 2 },
+            new DemandeCongeCore { Id = "CNG003", UtilisateurId = "USR_TTS007", TypePointageId = "TP001", DateDebut = DateTime.Parse("2026-05-01"), DateFin = DateTime.Parse("2026-05-05"), Status = "En_attente", Motif = "Voyage", ValideParId = "USR_TTS002", Jours = 4 }
         };
 
         public DemandeCongeRepository(IDemandeCongeApi api, ILogger<DemandeCongeRepository> logger)

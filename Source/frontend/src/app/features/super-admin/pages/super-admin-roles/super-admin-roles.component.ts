@@ -749,7 +749,7 @@ export class SuperAdminRolesComponent implements OnInit {
         const savedPerms = this.loadSavedPermissions();
         this.roles = (data || []).map((item: any) => {
           const id = item.id || item.Id;
-          const nom = item.nom || item.Nom || id;
+          const nom = ApiService.getRoleLabel(item.nom || item.Nom || id);
           const desc = item.description || item.Description || '';
           const actif = item.actif ?? item.Actif ?? true;
           const enabledIds: string[] = savedPerms[id] || ROLE_PERMISSIONS[id] || [];
@@ -786,7 +786,20 @@ export class SuperAdminRolesComponent implements OnInit {
   }
 
   toggleRoleExpand(role: RoleData) { role.expanded = !role.expanded; }
-  toggleRoleActif(role: RoleData, event: any) { role.actif = event.checked; }
+  toggleRoleActif(role: RoleData, event: any) { 
+    const prevStatus = role.actif;
+    role.actif = event.checked; 
+    
+    this.api.updateRole(role).subscribe({
+      next: () => {
+        this.snackBar.open(`Statut du rôle ${role.nom} mis à jour : ${role.actif ? 'ACTIF' : 'INACTIF'}`, 'OK', { duration: 3000 });
+      },
+      error: (err) => {
+        role.actif = prevStatus;
+        this.snackBar.open('Erreur lors de la mise à jour du statut', 'Fermer', { duration: 3000 });
+      }
+    });
+  }
   togglePermission(role: RoleData, perm: Permission) { perm.selected = !perm.selected; }
 
   toggleModule(role: RoleData, group: any) {

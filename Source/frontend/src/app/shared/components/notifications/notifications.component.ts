@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
+import { NotificationService, Notification } from '@core/services/notification.service';
 
 @Component({
   selector: 'app-notifications',
@@ -35,34 +36,50 @@ import { ApiService } from '@core/services/api.service';
           </div>
 
           <div class="notifications-list">
-            <div *ngFor="let n of filteredNotifications" class="notification-item" [class.unread]="!n.read">
-              <div class="item-icon" [ngClass]="n.type">
-                <svg *ngIf="n.type === 'project'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                <svg *ngIf="n.type === 'task'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                <svg *ngIf="n.type === 'system'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                <svg *ngIf="n.type === 'alert'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              </div>
-              <div class="item-content">
-                <div class="item-header">
-                  <h4 class="item-title">{{n.title}}</h4>
-                  <span class="item-time">{{n.time}}</span>
+            @for (n of filteredNotifications(); track n.id) {
+              <div class="notification-item" [class.unread]="!n.read" [class.clickable]="n.actionUrl" (click)="handleNotificationClick(n, $event)">
+                <div class="item-icon" [ngClass]="n.type">
+                  @if (n.type === 'project' || n.type === 'success') {
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                  } @else if (n.type === 'task') {
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  } @else if (n.type === 'system' || n.type === 'info') {
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  } @else if (n.type === 'alert' || n.type === 'error' || n.type === 'warning') {
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  }
                 </div>
-                <p class="item-desc">{{n.message}}</p>
-                <div class="item-actions">
-                  <button class="btn-text" (click)="markAsRead(n)" *ngIf="!n.read">Marquer comme lu</button>
-                  <button class="btn-text danger" (click)="deleteNotification(n)">Supprimer</button>
+                <div class="item-content">
+                  <div class="item-header">
+                    <h4 class="item-title">{{n.title}}</h4>
+                    <span class="item-time">{{ getTimeLabel(n.timestamp) }}</span>
+                  </div>
+                  <p class="item-desc">{{n.message}}</p>
+                  <div class="item-actions">
+                    @if (!n.read) {
+                      <button class="btn-text" (click)="markAsRead(n); $event.stopPropagation()">Marquer comme lu</button>
+                    }
+                    <button class="btn-text danger" (click)="deleteNotification(n); $event.stopPropagation()">Supprimer</button>
+                    @if (n.actionUrl) {
+                      <button class="btn-text" style="color: var(--color-brand-500)">Voir les détails <span aria-hidden="true">&rarr;</span></button>
+                    }
+                  </div>
                 </div>
+                @if (!n.read) {
+                  <div class="unread-dot"></div>
+                }
               </div>
-              <div class="unread-dot" *ngIf="!n.read"></div>
-            </div>
+            }
 
-            <div *ngIf="filteredNotifications.length === 0" class="empty-state">
-              <div class="empty-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            @if (filteredNotifications().length === 0) {
+              <div class="empty-state">
+                <div class="empty-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </div>
+                <h3>Aucune notification</h3>
+                <p>Vous êtes à jour ! Toutes vos notifications ont été consultées.</p>
               </div>
-              <h3>Aucune notification</h3>
-              <p>Vous êtes à jour ! Toutes vos notifications ont été consultées.</p>
-            </div>
+            }
           </div>
         </div>
 
@@ -142,10 +159,20 @@ import { ApiService } from '@core/services/api.service';
       overflow: hidden;
     }
 
+    :host-context(.dark) .card {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
     .card-header {
       padding: var(--space-md) var(--space-xl);
       border-bottom: 1px solid var(--color-border);
       background: #f8fafc;
+    }
+
+    :host-context(.dark) .card-header {
+      background: #0f172a;
+      border-bottom-color: #334155;
     }
 
     .tabs {
@@ -183,13 +210,29 @@ import { ApiService } from '@core/services/api.service';
       position: relative;
       transition: background 0.2s;
     }
+    
+    .notification-item.clickable {
+      cursor: pointer;
+    }
+
+    :host-context(.dark) .notification-item {
+      border-bottom-color: #334155;
+    }
 
     .notification-item:hover {
       background: #f8fafc;
     }
 
+    :host-context(.dark) .notification-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
     .notification-item.unread {
       background: rgba(99, 102, 241, 0.03);
+    }
+
+    :host-context(.dark) .notification-item.unread {
+      background: rgba(99, 102, 241, 0.1);
     }
 
     .item-icon {
@@ -202,10 +245,10 @@ import { ApiService } from '@core/services/api.service';
       flex-shrink: 0;
     }
 
-    .item-icon.project { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .item-icon.project, .item-icon.success { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
     .item-icon.task { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .item-icon.system { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-    .item-icon.alert { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+    .item-icon.system, .item-icon.info { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+    .item-icon.alert, .item-icon.error, .item-icon.warning { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
 
     .item-content {
       flex: 1;
@@ -282,6 +325,10 @@ import { ApiService } from '@core/services/api.service';
       border-bottom: 1px solid var(--color-border);
     }
 
+    :host-context(.dark) .card-title {
+      border-bottom-color: #334155;
+    }
+
     .toggle-list {
       padding: var(--space-lg);
       display: flex;
@@ -333,7 +380,10 @@ import { ApiService } from '@core/services/api.service';
     }
 
     .btn-primary { background: #0f172a; color: white; border: none; }
+    :host-context(.dark) .btn-primary { background: #6366f1; }
+
     .btn-ghost { background: transparent; border: 1px solid var(--color-border); }
+    :host-context(.dark) .btn-ghost { border-color: #334155; color: white; }
 
     .space-y-6 > * + * { margin-top: var(--space-lg); }
 
@@ -343,25 +393,64 @@ import { ApiService } from '@core/services/api.service';
   `]
 })
 export class NotificationsComponent implements OnInit {
+  private notifService = inject(NotificationService);
+  private router = inject(Router);
   filter = 'all';
-  notifications: any[] = [
-    { id: 1, type: 'project', title: 'Nouveau projet assigné', message: 'Vous avez été assigné au projet "Alpha Web Redesign".', time: 'Il y a 10 min', read: false },
-    { id: 2, type: 'task', title: 'Tâche complétée', message: 'Le développeur Amine a terminé la tâche "Intégration API".', time: 'Il y a 1h', read: false },
-    { id: 3, type: 'system', title: 'Mise à jour système', message: 'La plateforme GestProjet a été mise à jour en version 3.2.', time: 'Hier', read: true },
-    { id: 4, type: 'alert', title: 'Bug critique détecté', message: 'Un bug critique a été signalé sur le module de paiement.', time: '2 jours', read: true }
-  ];
 
-  get filteredNotifications() {
-    if (this.filter === 'unread') return this.notifications.filter(n => !n.read);
-    if (this.filter === 'system') return this.notifications.filter(n => n.type === 'system');
-    return this.notifications;
+  notifications = computed(() => this.notifService.notificationsSignal());
+
+  filteredNotifications = computed(() => {
+    const list = this.notifications();
+    if (this.filter === 'unread') return list.filter(n => !n.read);
+    if (this.filter === 'system') return list.filter(n => n.type === 'system' || n.type === 'alert');
+    return list;
+  });
+
+  ngOnInit() {
+    this.notifService.fetchNotifications();
   }
 
-  ngOnInit() {}
-
   setFilter(f: string) { this.filter = f; }
-  markAsRead(n: any) { n.read = true; }
-  markAllAsRead() { this.notifications.forEach(n => n.read = true); }
-  deleteNotification(n: any) { this.notifications = this.notifications.filter(x => x.id !== n.id); }
-  loadNotifications() { /* Refresh logic */ }
+
+  handleNotificationClick(n: Notification, event: Event) {
+    if (n.id && !n.read) {
+      this.notifService.markAsRead(n.id);
+    }
+    
+    if (n.actionUrl) {
+      this.router.navigateByUrl(n.actionUrl);
+    }
+  }
+
+  markAsRead(n: Notification) {
+    if (n.id) this.notifService.markAsRead(n.id);
+  }
+
+  markAllAsRead() {
+    this.notifService.markAllAsRead();
+  }
+
+  deleteNotification(n: Notification) {
+    if (n.id) this.notifService.deleteNotification(n.id);
+  }
+
+  loadNotifications() {
+    this.notifService.fetchNotifications();
+  }
+
+  getTimeLabel(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 1) return 'À l\'instant';
+    if (minutes < 60) return `Il y a ${minutes} min`;
+    if (hours < 24) return `Il y a ${hours}h`;
+    if (days === 1) return 'Hier';
+    return date.toLocaleDateString();
+  }
 }
+
+

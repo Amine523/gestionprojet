@@ -84,6 +84,7 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
         /// Liste TacheAssignation.
         /// </summary>
         /// <returns></returns>
+        [HttpGet("liste")]
         [HttpGet("liste-legacy-1")]
         public async Task<ActionResult<List<TacheAssignationCore>>> ListeTacheAssignation()
         {

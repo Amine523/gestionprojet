@@ -365,7 +365,7 @@ export class ClientRapportsComponent implements OnInit {
   isLoading = true;
 
   private get apiBase() {
-    return (this.api as any).baseUrl || 'http://localhost:5221';
+    return (this.api as any).baseUrl || '/api';
   }
 
   get globalAvancement(): number {
@@ -385,7 +385,7 @@ export class ClientRapportsComponent implements OnInit {
     const user = this.api.getCurrentUser();
     const userId = user?.id || user?.Id || '';
     if (userId) {
-      this.http.get<Rapport[]>(`${this.apiBase}/api/client-projet/rapports/${userId}`)
+      this.http.get<Rapport[]>(`${this.apiBase}/client-projet/rapports/${userId}`)
         .subscribe({
           next: (data) => { this.rapports = data || []; this.isLoading = false; },
           error: () => { this.rapports = []; this.isLoading = false; }
@@ -402,7 +402,7 @@ export class ClientRapportsComponent implements OnInit {
     }
     const user = this.api.getCurrentUser();
     const userId = user?.id || user?.Id || '';
-    this.http.get<BurndownPoint[]>(`${this.apiBase}/api/client-projet/burndown/${userId}/${projetId}`)
+    this.http.get<BurndownPoint[]>(`${this.apiBase}/client-projet/burndown/${userId}/${projetId}`)
       .subscribe({
         next: (data) => { this.burndownData = data || []; this.selectedProjetId = projetId; },
         error: () => { this.burndownData = []; this.selectedProjetId = projetId; }

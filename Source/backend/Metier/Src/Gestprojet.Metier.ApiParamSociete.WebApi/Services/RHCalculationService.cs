@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Gestprojet.Core.ApiParamSociete.Client.Model;
 using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Business;
@@ -10,6 +12,11 @@ using Gestprojet.Metier.ApiParamSociete.Domain.Models.Messages;
 
 namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
 {
+    public class CongeInfoModel {
+        public string UtilisateurId { get; set; } = "";
+        public DateTime DateEmbauche { get; set; }
+        public decimal SoldeAjustement { get; set; }
+    }
     public class RHCalculationService
     {
         private readonly IPointageBusiness _pointageBusiness;
@@ -29,7 +36,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
             _logger = logger;
         }
 
-        public async Task<decimal> CalculateWorkedHoursAsync(string utilisateurId, DateTime date)
+        public async Task<decimal> CalculateWorkedHoursAsync(string utilisateurId, DateTime date, DateTime? currentNow = null)
         {
             var pointages = await _pointageBusiness.ListeAsync();
             var userPointages = pointages.Where(p => 
@@ -38,8 +45,83 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
                 p.Date.Value.Date == date.Date &&
                 p.Actif == true).ToList();
 
-            double totalHours = userPointages.Sum(p => p.Duree ?? 0);
+            double totalHours = userPointages.Sum(p => {
+                if (p.Duree.HasValue && p.Duree.Value > 0) return p.Duree.Value;
+                
+                // If currently clocked in (no HeureSortie), calculate duration until now
+                if (!string.IsNullOrEmpty(p.HeureEntree) && (string.IsNullOrEmpty(p.HeureSortie) || p.HeureSortie == "00:00:00" || p.HeureSortie == "00:00"))
+                {
+                    if (TimeSpan.TryParse(p.HeureEntree, out TimeSpan entree))
+                    {
+                        var now = (currentNow ?? DateTime.Now).TimeOfDay;
+                        if (now > entree)
+                        {
+                            return (now - entree).TotalHours;
+                        }
+                    }
+                }
+                return 0;
+            });
             return (decimal)totalHours;
+        }
+
+        private readonly string _congeInfoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EmployeCongesInfo.json");
+
+        private List<CongeInfoModel> ReadCongesInfo() {
+            if (!File.Exists(_congeInfoPath)) return new List<CongeInfoModel>();
+            try {
+                var content = File.ReadAllText(_congeInfoPath);
+                return JsonSerializer.Deserialize<List<CongeInfoModel>>(content) ?? new List<CongeInfoModel>();
+            } catch { return new List<CongeInfoModel>(); }
+        }
+
+        private void SaveCongesInfo(List<CongeInfoModel> data) {
+            try {
+                var content = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(_congeInfoPath, content);
+            } catch {}
+        }
+
+        public CongeInfoModel GetCongeInfoForUser(string uId) {
+            var data = ReadCongesInfo();
+            var info = data.FirstOrDefault(x => x.UtilisateurId == uId);
+            if (info == null) {
+                info = new CongeInfoModel { UtilisateurId = uId, DateEmbauche = new DateTime(DateTime.Today.Year, 1, 1), SoldeAjustement = 0 };
+            }
+            return info;
+        }
+
+        public void UpdateCongeInfo(string uId, DateTime? dateEmbauche, decimal? soldeAjustement) {
+            var data = ReadCongesInfo();
+            var info = data.FirstOrDefault(x => x.UtilisateurId == uId);
+            if (info == null) {
+                info = new CongeInfoModel { UtilisateurId = uId, DateEmbauche = new DateTime(DateTime.Today.Year, 1, 1), SoldeAjustement = 0 };
+                data.Add(info);
+            }
+            if (dateEmbauche.HasValue) info.DateEmbauche = dateEmbauche.Value;
+            if (soldeAjustement.HasValue) info.SoldeAjustement = soldeAjustement.Value;
+            SaveCongesInfo(data);
+        }
+
+        private decimal CalculateAcquiredLeave(DateTime dateEmbauche) {
+            DateTime today = DateTime.Today;
+            if (dateEmbauche > today) return 0;
+            
+            int months = 0;
+            DateTime cursor = dateEmbauche;
+            
+            if (cursor.Day > 15) {
+                cursor = new DateTime(cursor.Year, cursor.Month, 1).AddMonths(1);
+            } else {
+                cursor = new DateTime(cursor.Year, cursor.Month, 1);
+            }
+
+            while (cursor <= new DateTime(today.Year, today.Month, 1)) {
+                months++;
+                cursor = cursor.AddMonths(1);
+            }
+
+            return Math.Round((decimal)(months * 1.66), 2);
         }
 
         public async Task<SoldeCongeDTO> CalculateSoldeCongeAsync(string utilisateurId)
@@ -49,7 +131,9 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
                 if (utilisateur == null)
                     throw new KeyNotFoundException($"User {utilisateurId} not found");
 
-                decimal soldeTotal = 30; // Default annual leave balance
+                var info = GetCongeInfoForUser(utilisateurId);
+                decimal soldeAcquis = CalculateAcquiredLeave(info.DateEmbauche);
+                decimal soldeTotal = soldeAcquis + info.SoldeAjustement;
                 
                 IEnumerable<DemandeCongeCore> demandes = new List<DemandeCongeCore>();
                 try {
@@ -68,17 +152,23 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
                     {
                         if (demande.DateDebut.HasValue && demande.DateFin.HasValue)
                         {
-                            var nombreJours = (demande.DateFin.Value - demande.DateDebut.Value).Days + 1;
+                            var isMaladie = (demande.Motif?.ToLower()?.Contains("maladie") == true || demande.TypePointageId?.ToUpper() == "MALADIE") && demande.AvecCertificat == true;
+                            
+                            var nombreJours = (demande.DateFin.Value - demande.DateDebut.Value).Days; // Changed to non-inclusive as per user request
+                            if (demande.Jours > 0) nombreJours = demande.Jours;
 
                             switch (demande.Status?.ToLower())
                             {
                                 case "validée":
                                 case "validee":
                                 case "approved":
-                                    soldeUtilise += nombreJours;
+                                    if (!isMaladie) {
+                                        soldeUtilise += nombreJours;
+                                    }
                                     congesValides++;
                                     break;
                                 case "en attente":
+                                case "en_attente":
                                 case "pending":
                                     congesEnAttente++;
                                     break;
@@ -96,21 +186,24 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
 
                 return new SoldeCongeDTO
                 {
-                    UtilisateurId = utilisateur.Id,
-                    UtilisateurNom = utilisateur.Nom,
-                    SoldeTotal = soldeTotal,
-                    SoldeUtilise = soldeUtilise,
-                    SoldeRestant = soldeRestant,
+                    UtilisateurId = utilisateur.Id ?? "",
+                    UtilisateurNom = utilisateur.Nom ?? "",
+                    SoldeTotal = Math.Round(soldeTotal, 2),
+                    SoldeUtilise = Math.Round(soldeUtilise, 2),
+                    SoldeRestant = Math.Round(soldeRestant, 2),
                     CongesEnAttente = congesEnAttente,
                     CongesValides = congesValides,
-                    CongesRefuses = congesRefuses
+                    CongesRefuses = congesRefuses,
+                    DateEmbauche = info.DateEmbauche,
+                    SoldeAcquis = soldeAcquis,
+                    SoldeAjustement = info.SoldeAjustement
                 };
             } catch (Exception ex) {
                 _logger.LogError(ex, $"Critical error calculating leave balance for {utilisateurId}");
                 return new SoldeCongeDTO { 
                     UtilisateurId = utilisateurId, 
                     UtilisateurNom = "Inconnu",
-                    SoldeRestant = 30 
+                    SoldeRestant = 0 
                 };
             }
         }
@@ -257,7 +350,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
 
             _logger.LogInformation($"ClockOutAsync: Closing pointage {lastPointage.Id} for user {request.UtilisateurId}");
 
-            lastPointage.HeureSortie = DateTime.Now.ToString("HH:mm");
+            lastPointage.HeureSortie = request.Date.ToString("HH:mm:ss");
             
             // Calculate duration if possible
             if (!string.IsNullOrEmpty(lastPointage.HeureEntree) && !string.IsNullOrEmpty(lastPointage.HeureSortie))
@@ -318,7 +411,7 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Services
                 int joursConge = empDemandes.Sum(d =>
                 {
                     if (d.DateDebut.HasValue && d.DateFin.HasValue)
-                        return (d.DateFin.Value - d.DateDebut.Value).Days + 1;
+                        return (d.DateFin.Value - d.DateDebut.Value).Days;
                     return 0;
                 });
 

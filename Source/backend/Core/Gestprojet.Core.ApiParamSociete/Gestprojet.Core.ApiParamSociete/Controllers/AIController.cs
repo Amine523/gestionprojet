@@ -42,6 +42,17 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
             return Ok(new { analysis = result });
         }
 
+        [HttpPost("generate-tests")]
+        public async Task<IActionResult> GenerateTests([FromBody] AITestGenerationRequest request)
+        {
+            var result = await _ollamaService.GenerateTestQuestionsAsync(
+                request.Topic,
+                request.QuestionCount,
+                request.QuestionType
+            );
+            return Ok(new { topic = request.Topic, generatedQuestions = result, generatedAt = DateTime.UtcNow });
+        }
+
         [HttpGet("health")]
         public IActionResult Health()
         {
@@ -69,5 +80,12 @@ namespace Gestprojet.Core.ApiParamSociete.WebApi.Controllers
     public class AIDeveloperRequest
     {
         public string DeveloperData { get; set; } = "";
+    }
+
+    public class AITestGenerationRequest
+    {
+        public string Topic { get; set; } = "";
+        public int QuestionCount { get; set; } = 5;
+        public string QuestionType { get; set; } = "QCM";
     }
 }

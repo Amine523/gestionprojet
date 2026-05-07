@@ -1,0 +1,297 @@
+<div class="module-bg bg-module-projects">
+  <div class="content-wrapper dashboard-container">
+    <!-- Header -->
+    <header class="dashboard-header glass-card">
+      <div class="header-content">
+        <div class="header-badges">
+          <span class="badge badge-primary">Projets</span>
+        </div>
+        <h1 class="header-title">
+          Contrôle des <span class="gradient-text">Missions.</span>
+        </h1>
+        <p class="header-subtitle">
+          Orchestration stratégique des projets pour {{societeNom}}.
+        </p>
+      </div>
+      <div class="header-actions">
+        <button (click)="openAddDialog()" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Nouvelle Mission
+        </button>
+      </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar glass-card">
+      <div class="search-input">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" (keyup.enter)="applyFilter()" placeholder="Rechercher des missions par nom...">
+      </div>
+      <div class="filter-selects">
+        <select [ngModel]="filterStatut()" (ngModelChange)="filterStatut.set($event); applyFilter()">
+          <option value="">Tous les Statuts</option>
+          <option value="En cours">En cours</option>
+          <option value="Terminé">Terminé</option>
+          <option value="En attente">En attente</option>
+        </select>
+        <button (click)="exportExcel()" class="btn-icon" title="Excel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="8" y1="13" x2="16" y2="13"/>
+            <line x1="8" y1="17" x2="16" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </button>
+        <button (click)="exportPdf()" class="btn-icon" title="PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="table-wrapper glass-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Nom</th>
+            <th>NomClient</th>
+            <th>Status</th>
+            <th>Chef de Projet</th>
+            <th>StartDate</th>
+            <th>EndDate</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of paginatedProjets(); track p.id) {
+            <tr>
+              <td><small class="id-tag">{{p.id}}</small></td>
+              <td><span class="project-name">{{p.nom}}</span></td>
+              <td><span class="project-client">{{ p.nomClient }}</span></td>
+              <td>
+                <span class="badge" [class]="getStatusClass(p.status)">{{p.status}}</span>
+              </td>
+              <td>
+                <span class="project-chef">{{p.chefName}}</span>
+              </td>
+              <td>{{p.startDate | date:'dd/MM/yyyy'}}</td>
+              <td>{{p.endDate | date:'dd/MM/yyyy'}}</td>
+              <td class="text-right">
+                <div class="project-actions">
+                  <button (click)="generateReport(p)" class="btn-icon" title="Rapport d'Intelligence">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                      <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                  </button>
+                  <button (click)="editProjet(p)" class="btn-icon" title="Configurer Mission">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button (click)="deleteProjet(p)" class="btn-icon btn-danger" title="Supprimer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2 2v6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination-footer">
+        <div class="pagination-info">
+          Affichage de {{ Math.min((page() - 1) * pageSize() + 1, filteredProjets().length) }} à {{ Math.min(page() * pageSize(), filteredProjets().length) }} sur {{ filteredProjets().length }} projets
+        </div>
+        <div class="pagination-actions">
+          <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">Précédent</button>
+          <div class="page-numbers">
+            @for (p of totalPagesArray(); track $index) {
+              <button class="btn-number" [class.active]="$index + 1 === page()" (click)="changePage($index + 1)">{{$index + 1}}</button>
+            }
+          </div>
+          <button class="btn-page" [disabled]="page() === totalPages()" (click)="nextPage()">Suivant</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    @if (showAddDialog()) {
+      <div class="modal-overlay" (click)="closeAddDialog()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Ajouter un Projet</h2>
+            <button class="btn-icon" (click)="closeAddDialog()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <form [formGroup]="projetForm" (ngSubmit)="onSubmit()">
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Nom *</label>
+                <input formControlName="nom" type="text" placeholder="Nom du projet">
+                @if (formErrors['nom']) {
+                  <small class="error">{{formErrors['nom'].errors?.['required'] ? 'Nom requis' : ''}}</small>
+                }
+              </div>
+              <div class="form-field">
+                <label>Nom Client *</label>
+                <select formControlName="nomClient">
+                  <option value="">Sélectionner un client</option>
+                  @for (c of clients(); track c.id) {
+                    <option [value]="c.nom">{{c.nom}}</option>
+                  }
+                </select>
+                @if (formErrors['nomClient']) {
+                  <small class="error">{{formErrors['nomClient'].errors?.['required'] ? 'Nom client requis' : ''}}</small>
+                }
+              </div>
+              <div class="form-field">
+                <label>Description</label>
+                <textarea formControlName="description" placeholder="Description du projet"></textarea>
+              </div>
+              <div class="form-field">
+                <label>Chef de projet *</label>
+                <select formControlName="chef">
+                  <option value="">Sélectionner un chef</option>
+                  @for (e of employes(); track e.id) {
+                    <option [value]="e.id">{{e.prenom}} {{e.nom}}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Statut *</label>
+                <select formControlName="status">
+                  <option value="En cours">En cours</option>
+                  <option value="Terminé">Terminé</option>
+                  <option value="En attente">En attente</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Date de début *</label>
+                <input formControlName="startDate" type="date">
+              </div>
+              <div class="form-field">
+                <label>Date de fin</label>
+                <input formControlName="endDate" type="date">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" (click)="closeAddDialog()" class="btn btn-secondary">Annuler</button>
+              <button type="submit" [disabled]="projetForm.invalid" class="btn btn-primary">Ajouter</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    @if (showEditDialog() && selectedProjet()) {
+      <div class="modal-overlay" (click)="closeEditDialog()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Modifier le Projet</h2>
+            <button class="btn-icon" (click)="closeEditDialog()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Nom *</label>
+                <input formControlName="nom" type="text">
+                @if (editErrors['nom']) {
+                  <small class="error">{{editErrors['nom'].errors?.['required'] ? 'Nom requis' : ''}}</small>
+                }
+              </div>
+              <div class="form-field">
+                <label>Nom Client *</label>
+                <select formControlName="nomClient">
+                  <option value="">Sélectionner un client</option>
+                  @for (c of clients(); track c.id) {
+                    <option [value]="c.nom">{{c.nom}}</option>
+                  }
+                </select>
+                @if (editErrors['nomClient']) {
+                  <small class="error">{{editErrors['nomClient'].errors?.['required'] ? 'Nom client requis' : ''}}</small>
+                }
+              </div>
+              <div class="form-field">
+                <label>Description</label>
+                <textarea formControlName="description"></textarea>
+              </div>
+              <div class="form-field">
+                <label>Chef de projet *</label>
+                <select formControlName="chef">
+                  <option value="">Sélectionner un chef</option>
+                  @for (e of employes(); track e.id) {
+                    <option [value]="e.id">{{e.prenom}} {{e.nom}}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Statut *</label>
+                <select formControlName="status">
+                  <option value="En cours">En cours</option>
+                  <option value="Terminé">Terminé</option>
+                  <option value="En attente">En attente</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Date de début *</label>
+                <input formControlName="startDate" type="date">
+              </div>
+              <div class="form-field">
+                <label>Date de fin</label>
+                <input formControlName="endDate" type="date">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" (click)="closeEditDialog()" class="btn btn-secondary">Annuler</button>
+              <button type="submit" [disabled]="editForm.invalid" class="btn btn-primary">Mettre à jour</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    @if (filteredProjets().length === 0) {
+      <div class="empty-state">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2h12a2 2 0 0 0 2-2V8z"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <p>Aucun projet trouvé</p>
+      </div>
+    }
+  </div>
+</div>

@@ -43,7 +43,7 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
         /// <param name="societeId">societeId.</param>
         /// <param name="roleId">roleId.</param>
         /// <param name="actif">actif.</param>
-        public UtilisateurCore(string id = default(string), string nom = default(string), string email = default(string), string motDePasse = default(string), string cv = default(string), string typeUtilisateurId = default(string), string societeId = default(string), string roleId = default(string), bool? actif = default(bool?))
+        public UtilisateurCore(string id = default(string), string nom = default(string), string email = default(string), string motDePasse = default(string), string cv = default(string), string typeUtilisateurId = default(string), string societeId = default(string), string roleId = default(string), bool? actif = default(bool?), string telephone = default(string))
         {
             this.Id = id;
             this.Nom = nom;
@@ -54,6 +54,7 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
             this.SocieteId = societeId;
             this.RoleId = roleId;
             this.Actif = actif;
+            this.Telephone = telephone;
         }
 
         /// <summary>
@@ -109,6 +110,12 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
         /// </summary>
         [DataMember(Name = "actif", EmitDefaultValue = true)]
         public bool? Actif { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Telephone
+        /// </summary>
+        [DataMember(Name = "telephone", EmitDefaultValue = true)]
+        public string Telephone { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object

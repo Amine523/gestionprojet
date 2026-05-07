@@ -1,12 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '@core/services/api.service';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-self-pointage',
   standalone: true,
-  imports: [CommonModule, MatSnackBarModule],
+  imports: [CommonModule],
   template: `
     <div class="pointage-container">
       <header class="page-header">

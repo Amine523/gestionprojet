@@ -1,0 +1,231 @@
+<div class="module-bg bg-module-dashboard">
+  <div class="content-wrapper dashboard-container">
+    <!-- Header -->
+    <header class="dashboard-header glass-card">
+      <div class="header-content">
+            <div class="header-badges">
+              <span class="badge badge-primary">Centre de Commande v4.5</span>
+              <span class="badge badge-success">
+                <span class="status-dot"></span>
+                FLUX OPÉRATIONNEL OPTIMAL
+              </span>
+            </div>
+            <h1 class="header-title">
+              SYNTHÈSE <span class="gradient-text">STRATÉGIQUE</span>
+            </h1>
+            <p class="header-subtitle">
+              Bienvenue, <strong>{{societeNom}}</strong>. Analyse globale des ressources, suivi des missions et journalisation des activités.
+            </p>
+          </div>
+          <div class="header-actions">
+            <button (click)="analyserDashboard()" [disabled]="aiLoading" class="btn btn-ai">
+              <i class="bi bi-cpu"></i>
+              Audit IA
+            </button>
+            <button (click)="exportRapport()" class="btn btn-primary">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Exporter Rapport
+            </button>
+            <button (click)="loadData()" class="btn-icon btn-ghost">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+    </header>
+
+    <!-- AI Insights -->
+    @if (aiInsights || aiLoading) {
+      <div class="card card-ai glass-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="bi bi-stars"></i>
+                <h3>Intelligence Stratégique</h3>
+              </div>
+              <button (click)="aiInsights = null" class="btn-icon small">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+            <div class="ai-body">
+              @if (aiLoading) {
+                <div class="ai-loader">
+                  <div class="spinner"></div>
+                  <p>Analyse des vecteurs de performance...</p>
+                </div>
+              } @else {
+                <div class="ai-content markdown" [innerHTML]="aiInsights"></div>
+              }
+            </div>
+          </div>
+    }
+
+    <!-- Performance Metrics -->
+    <div class="metrics-grid">
+      <app-metric-card 
+            title="CAPITAL HUMAIN" 
+            [value]="stats.employes.toString()" 
+            icon="bi-people-fill"
+            color="indigo"
+            trend="12%"
+            [isPositive]="true">
+          </app-metric-card>
+          
+          <app-metric-card 
+            title="MISSIONS ACTIVES" 
+            [value]="stats.projetsActifs.toString()" 
+            icon="bi-rocket-takeoff-fill"
+            color="emerald"
+            trend="Stable">
+          </app-metric-card>
+
+          <app-metric-card 
+            title="VOLUME HORAIRE" 
+            [value]="stats.heuresTravaillees + 'H'" 
+            icon="bi-clock-history"
+            color="amber"
+            trend="5%"
+            [isPositive]="true">
+          </app-metric-card>
+
+          <app-metric-card 
+            title="EFFICACITÉ GLOBALE" 
+            [value]="stats.productivite + '%'" 
+            icon="bi-lightning-charge-fill"
+            color="rose"
+            trend="92/100">
+          </app-metric-card>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Main Column -->
+      <div class="main-column">
+            <!-- Historique des Activités -->
+            <div class="card card-activities glass-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <h3>Historique des Activités</h3>
+                  <p class="card-subtitle">Journal des événements au sein de {{societeNom}}</p>
+                </div>
+                <div class="card-actions">
+                  <div class="search-input">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Filtrer les actions..." (input)="onFilterActivities($event)">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="table-container">
+                <table class="premium-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Action & Ressource</th>
+                      <th>Utilisateur</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (act of filteredActivities; track act.id) {
+                      <tr>
+                        <td>
+                          <span class="badge" [ngClass]="getTypeBadgeClass(act.type)">
+                            {{act.type}}
+                          </span>
+                        </td>
+                        <td>
+                          <div class="action-cell">
+                            <span class="action-text">{{act.action}}</span>
+                            <span class="resource-text">{{act.resource}}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="user-chip">
+                            <div class="avatar-mini" [style.background-color]="getUserColor(act.utilisateur)">
+                              {{act.utilisateur.charAt(0).toUpperCase()}}
+                            </div>
+                            <span>{{act.utilisateur}}</span>
+                          </div>
+                        </td>
+                        <td class="date-cell">
+                          <span class="time">{{act.date | date:'HH:mm'}}</span>
+                          <span class="date">{{act.date | date:'dd/MM'}}</span>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="4" class="empty-state">
+                          <i class="bi bi-journal-x"></i>
+                          <p>Aucune activité récente détectée</p>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="card card-chart glass-card">
+              <div class="card-header">
+                <h3>Pouls de l'Organisation</h3>
+                <div class="chart-legend">
+                  <span class="dot primary"></span> Taux de Présence
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas #activityChart></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="sidebar">
+            <!-- Mission Flows -->
+            <div class="card card-missions glass-card">
+              <div class="card-header">
+                <h3>Flux de Mission</h3>
+              </div>
+              <div class="missions-list">
+                @for (projet of projets; track projet.id) {
+                  <div class="mission-item">
+                    <div class="mission-head">
+                      <span class="name">{{projet.nom}}</span>
+                      <span class="val">{{projet.avancee || projet.progression}}%</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="fill" [style.width.%]="projet.avancee || projet.progression"></div>
+                    </div>
+                  </div>
+                } @empty {
+                  <p class="empty-text">Aucun projet actif</p>
+                }
+              </div>
+              <button routerLink="/admin/projets" class="btn btn-ghost-white w-full">
+                Contrôler tout
+                <i class="bi bi-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- Quick Stats / Teams -->
+            <div class="card card-teams glass-card">
+              <div class="card-header">
+                <h3>Performance Équipes</h3>
+              </div>
+              <div class="teams-list">
+                @for (equipe of equipes; track equipe.id) {
+                  <div class="team-item">
+                    <div class="team-info">
+                      <span class="team-name">{{equipe.nom}}</span>
+                      <span class="team-count">{{equipe.membres}} membres</span>
+                    </div>
+                    <div class="team-status">
+                      <span class="perf" [style.color]="equipe.performance > 80 ? '#10b981' : '#f59e0b'">
+                        {{equipe.performance}}%
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+  </div>
+</div>

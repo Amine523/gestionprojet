@@ -125,6 +125,7 @@ interface Transaction {
                 <table>
                   <thead>
                     <tr>
+                      <th>Id</th>
                       <th>Date</th>
                       <th>Description</th>
                       <th>Montant</th>
@@ -132,12 +133,13 @@ interface Transaction {
                     </tr>
                   </thead>
                   <tbody>
-                    @for (t of transactions; track t.id) {
+                    @for (t of paginatedTransactions; track t.id) {
                       <tr>
-                        <td>{{t.date | date:'shortDate'}}</td>
+                        <td><small>{{t.id}}</small></td>
+                        <td>{{t.date | date:'dd/MM/yyyy'}}</td>
                         <td>{{t.description}}</td>
                         <td class="amount">{{t.montant}} DT</td>
-                        <td><span class="status-pill success">Payé</span></td>
+                        <td><span class="status-pill success">{{t.statut}}</span></td>
                       </tr>
                     }
                     @if (transactions.length === 0) {
@@ -148,6 +150,14 @@ interface Transaction {
                   </tbody>
                 </table>
               </div>
+
+              @if (transactions.length > pageSize) {
+                <div class="pagination-mini">
+                  <button class="btn-p" [disabled]="page === 1" (click)="page = page - 1">&lt;</button>
+                  <span>Page {{page}} / {{totalPages}}</span>
+                  <button class="btn-p" [disabled]="page === totalPages" (click)="page = page + 1">&gt;</button>
+                </div>
+              }
             </div>
           </div>
 
@@ -199,18 +209,18 @@ interface Transaction {
                 <div class="form-group">
                   <label>Numéro de carte</label>
                   <div class="card-input-wrapper">
-                    <input type="text" placeholder="0000 0000 0000 0000" required>
+                    <input type="text" placeholder="0000 0000 0000 0000" required pattern="[0-9\\s]{13,19}" maxlength="19">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                   </div>
                 </div>
                 <div class="form-row">
                   <div class="form-group">
                     <label>Expiration</label>
-                    <input type="text" placeholder="MM/YY" required>
+                    <input type="text" placeholder="MM/YY" required pattern="^(0[1-9]|1[0-2])\\/([0-9]{2})$" maxlength="5">
                   </div>
                   <div class="form-group">
                     <label>CVC</label>
-                    <input type="password" placeholder="•••" required>
+                    <input type="password" placeholder="•••" required pattern="[0-9]{3,4}" maxlength="4">
                   </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block" [disabled]="loading">
@@ -673,6 +683,11 @@ interface Transaction {
       width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
       border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px;
     }
+     .pagination-mini { display: flex; justify-content: center; align-items: center; gap: 1rem; padding: 1rem; font-size: 12px; font-weight: 700; color: #64748b; }
+    .btn-p { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #e2e8f0; background: white; cursor: pointer; transition: all 0.2s; }
+    .btn-p:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+    .btn-p:disabled { opacity: 0.5; cursor: not-allowed; }
+
     @keyframes spin { to { transform: rotate(360deg); } }
   `]
 })
@@ -687,6 +702,19 @@ export class AdminPaiementsComponent implements OnInit {
   loading = false;
   showCheckout = false;
   selectedPlan: Plan | null = null;
+
+  // Pagination
+  page = 1;
+  pageSize = 5;
+
+  get totalPages(): number {
+    return Math.ceil(this.transactions.length / this.pageSize) || 1;
+  }
+
+  get paginatedTransactions() {
+    const start = (this.page - 1) * this.pageSize;
+    return this.transactions.slice(start, start + this.pageSize);
+  }
 
   plans: Plan[] = [
     {
@@ -718,7 +746,16 @@ export class AdminPaiementsComponent implements OnInit {
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    
+    // Initialize societeNom from user object if available
+    const rawNom = user?.societe?.nom || user?.SocieteNom;
+    if (rawNom) {
+      this.societeNom = (typeof rawNom === 'string') ? rawNom.replace(/undefined/g, '').trim() : 'Votre société';
+    } else {
+      this.societeNom = 'Chargement...';
+    }
+
     this.loadSocieteInfo();
     this.loadAbonnement();
     this.loadTransactions();
@@ -726,23 +763,44 @@ export class AdminPaiementsComponent implements OnInit {
 
   loadSocieteInfo() {
     if (!this.societeId) return;
-    this.api.get(`api/societe/obtenir/id/${this.societeId}`).subscribe((res: any) => {
-      this.societeNom = res?.nom || 'Votre Société';
+    this.api.get(`societes/obtenir/id/${this.societeId}`).subscribe((res: any) => {
+      this.societeNom = res?.nom || res?.Nom || 'Votre Société';
     });
   }
 
   loadAbonnement() {
-    this.api.get(`api/abonnements`).subscribe((res: any) => {
-      // Filtrer pour la société actuelle
-      const mine = res.find((a: any) => a.societeId === this.societeId && a.actif);
-      this.currentAbonnement = mine;
+    this.api.get(`abonnements`).subscribe((res: any) => {
+      // Filtrer pour la société actuelle en tenant compte de la casse
+      const mine = res.find((a: any) => 
+        (a.societeId === this.societeId || a.SocieteId === this.societeId) && 
+        (a.actif === true || a.Actif === true)
+      );
+      
+      if (mine) {
+        this.currentAbonnement = {
+          ...mine,
+          typeAbonnement: mine.typeAbonnement || mine.TypeAbonnement,
+          dateDebut: mine.dateDebut || mine.DateDebut,
+          dateFin: mine.dateFin || mine.DateFin
+        };
+      } else {
+        this.currentAbonnement = null;
+      }
     });
   }
 
   loadTransactions() {
-    this.api.get(`api/paiements`).subscribe((res: any) => {
+    this.api.get(`paiements`).subscribe((res: any) => {
       this.transactions = (res || [])
-        .filter((t: any) => t.societeId === this.societeId)
+        .filter((t: any) => t.societeId === this.societeId || t.SocieteId === this.societeId)
+        .map((t: any) => ({
+            id: t.id || t.Id,
+            date: t.date || t.Date,
+            description: t.description || t.Description,
+            montant: t.montant || t.Montant,
+            statut: t.statut || t.Statut,
+            type: t.type || t.Type
+        }))
         .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
     });
   }
@@ -779,14 +837,20 @@ export class AdminPaiementsComponent implements OnInit {
       };
 
       // 1. Enregistrer le paiement
-      this.api.post('api/paiements', payloadPaiement).subscribe(() => {
+      this.api.post('paiements', payloadPaiement).subscribe(() => {
         // 2. Créer l'abonnement
-        this.api.post('api/abonnements', payloadAbonnement).subscribe(() => {
-          this.loading = false;
-          this.showCheckout = false;
-          this.snack.open('Paiement réussi ! Votre abonnement est actif.', 'OK', { duration: 5000 });
-          this.loadAbonnement();
-          this.loadTransactions();
+        this.api.post('abonnements', payloadAbonnement).subscribe(() => {
+          // 3. Mettre à jour le plan de la société
+          this.api.updateSociete({
+            Id: this.societeId,
+            PlanAbonnement: this.selectedPlan?.nom
+          }).subscribe(() => {
+            this.loading = false;
+            this.showCheckout = false;
+            this.snack.open('Paiement réussi ! Votre abonnement est actif.', 'OK', { duration: 5000 });
+            this.loadAbonnement();
+            this.loadTransactions();
+          });
         });
       });
     }, 2000);

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-chef-suivi',
@@ -29,11 +31,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       <!-- Filters -->
       <div class="filters-bar">
         <select class="form-select form-select-sm" [(ngModel)]="selectedProjet" (ngModelChange)="updateData()">
+          <option value="" disabled>Sélectionner un projet</option>
           @for (p of projets; track p.id) {
-            <option [value]="p.nom">{{p.nom}}</option>
+            <option [value]="p.id">{{p.nom}}</option>
           }
         </select>
-        <button class="btn btn-primary">
+        <button class="btn btn-primary" (click)="exporter()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
@@ -111,23 +114,28 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Tâche</th>
-                    <th>Responsable</th>
+                    <th>Id</th>
+                    <th>Titre</th>
+                    <th>UtilisateurId</th>
                     <th>Statut</th>
-                    <th>Temps</th>
+                    <th>TempsEstime</th>
                     <th>Progression</th>
-                    <th>Alerte</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (t of taches; track t.id) {
+                  @for (t of paginatedTaches; track t.id) {
                     <tr [ngClass]="t.retard ? 'row-warning' : ''">
+                      <td><small class="id-tag">{{t.id}}</small></td>
                       <td>{{t.titre}}</td>
-                      <td>{{t.responsable}}</td>
+                      <td>{{t.responsable || t.utilisateurId}}</td>
                       <td>
-                        <span class="badge" [ngClass]="t.statut === 'To Do' ? 'badge-secondary' : t.statut === 'In Progress' ? 'badge-primary' : 'badge-success'">{{t.statut}}</span>
+                        <span class="badge" [ngClass]="{
+                          'badge-secondary': t.statut?.includes('todo') || t.statut?.includes('attente'),
+                          'badge-primary': t.statut?.includes('progress') || t.statut?.includes('cours'),
+                          'badge-success': t.statut?.includes('done') || t.statut?.includes('termin')
+                        }">{{t.statutLabel || t.statut}}</span>
                       </td>
-                      <td>{{t.temps}}h</td>
+                      <td>{{t.tempsEstime}}h</td>
                       <td>
                         <div class="progress-display">
                           <div class="progress-bar">
@@ -136,14 +144,23 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                           <span class="progress-text">{{t.progression}}%</span>
                         </div>
                       </td>
-                      <td>
-                        @if (t.retard) {
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                            <line x1="12" y1="9" x2="12" y2="13"/>
-                            <line x1="12" y1="17" x2="12.01" y2="17"/>
-                          </svg>
-                        }
+                    </tr>
+                  }
+                  @if (taches.length > 0) {
+                    <tr>
+                      <td colspan="6">
+                        <div class="pagination-mini">
+                          <button class="btn-p" [disabled]="page === 1" (click)="page = page - 1">&lt;</button>
+                          <span>Page {{page}} / {{totalPages}}</span>
+                          <button class="btn-p" [disabled]="page === totalPages" (click)="page = page + 1">&gt;</button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                  @if (taches.length === 0) {
+                    <tr>
+                      <td colspan="6" style="text-align: center; padding: var(--space-xl); color: var(--color-text-muted);">
+                        Aucune tâche trouvée pour ce projet.
                       </td>
                     </tr>
                   }
@@ -196,7 +213,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
               </div>
               <div class="time-item">
                 <span class="time-label">Réel</span>
-                <div class="time-bar" [style.width.%]="(tempsReel/tempsEstime)*100" style="background: #f59e0b;"></div>
+                <div class="time-bar" [style.width.%]="tempsEstime > 0 ? (tempsReel/tempsEstime)*100 : 0" style="background: #f59e0b; max-width: 100%;"></div>
                 <span class="time-value">{{tempsReel}}h</span>
               </div>
             </div>
@@ -206,32 +223,38 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
         @if (activeTab === 'alertes') {
           <div class="tab-content">
             <h3 class="tab-title">Alertes actives</h3>
-            <div class="alerts-list">
-              @for (a of alertes; track a.id) {
-                <div class="alert-item" [ngClass]="a.critique ? 'alert-danger' : 'alert-warning'">
-                  <div class="alert-icon">
-                    @if (a.critique) {
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                      </svg>
-                    } @else {
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                        <line x1="12" y1="9" x2="12" y2="13"/>
-                        <line x1="12" y1="17" x2="12.01" y2="17"/>
-                      </svg>
-                    }
-                  </div>
-                  <div class="alert-content">
-                    <div class="alert-title">{{a.titre}}</div>
-                    <div class="alert-desc">{{a.description}}</div>
-                    <div class="alert-date">{{a.date}}</div>
-                  </div>
-                  <button class="btn btn-sm btn-primary">Résoudre</button>
-                </div>
-              }
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Gravité</th>
+                    <th>Alerte</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (a of alertes; track a.id) {
+                    <tr>
+                      <td>
+                        <span class="badge" [class.badge-danger]="a.critique" [class.badge-warning]="!a.critique">
+                          {{a.critique ? 'CRITIQUE' : 'ATTENTION'}}
+                        </span>
+                      </td>
+                      <td>
+                        <strong>{{a.titre}}</strong><br/>
+                        <small>{{a.description}}</small>
+                      </td>
+                      <td>{{a.date}}</td>
+                      <td>
+                        <button class="btn btn-sm btn-primary" (click)="resoudreAlerte(a.id)">Résoudre</button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" class="empty-state">Aucune alerte.</td></tr>
+                  }
+                </tbody>
+              </table>
             </div>
           </div>
         }
@@ -252,11 +275,11 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                     <div class="alert-desc">{{fb.message}}</div>
                     <div class="alert-date">{{fb.date}}</div>
                   </div>
-                  <button class="btn btn-sm btn-primary">Répondre</button>
+                  <button class="btn btn-sm btn-primary" (click)="repondreFeedback(fb.id)">Répondre</button>
                 </div>
               }
               @if (feedbacks.length === 0) {
-                <p style="color: #94a3b8;">Aucun feedback récent pour ce projet.</p>
+                <p style="color: #94a3b8; text-align: center; padding: var(--space-lg);">Aucun feedback récent pour ce projet.</p>
               }
             </div>
           </div>
@@ -330,6 +353,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
     .form-select-sm {
       width: auto;
+      min-width: 200px;
     }
 
     .btn {
@@ -456,6 +480,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
     .tab-content {
       padding: var(--space-lg);
+      min-height: 300px;
     }
 
     .tab-title {
@@ -716,6 +741,36 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       background: rgba(255, 255, 255, 0.05);
     }
 
+     .pagination-mini {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.5rem;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+    }
+
+    .btn-p {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      cursor: pointer;
+    }
+
+    .btn-p:disabled { opacity: 0.5; }
+
+    .badge-danger { background: #fee2e2; color: #ef4444; }
+    .badge-warning { background: #fffbeb; color: #f59e0b; }
+
+    .empty-state { text-align: center; color: #94a3b8; padding: 2rem; font-size: 14px; }
+
     @media (max-width: 768px) {
       .suivi-container {
         padding: var(--space-md);
@@ -748,11 +803,11 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 export class ChefSuiviComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
-  
+
   societeId = '';
   societeNom = 'Votre société';
   activeTab = 'tableau';
-  
+
   selectedProjet = '';
   projets: any[] = [];
 
@@ -764,96 +819,233 @@ export class ChefSuiviComponent implements OnInit {
   stats = { todo: 0, inProgress: 0, done: 0 };
 
   taches: any[] = [];
+  allRawTaches: any[] = [];
   displayedColumns = ['tache', 'responsable', 'statut', 'temps', 'progression', 'alerte'];
 
   alertes: any[] = [];
   feedbacks: any[] = [];
+  employeeMap = new Map<string, string>();
+
+  // Pagination
+  page = 1;
+  pageSize = 5;
+  protected readonly Math = Math;
+
+  get totalPages(): number {
+    return Math.ceil(this.taches.length / this.pageSize) || 1;
+  }
+
+  get paginatedTaches() {
+    const start = (this.page - 1) * this.pageSize;
+    return this.taches.slice(start, start + this.pageSize);
+  }
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
+    this.societeId = user?.societeId || user?.SocieteId || '';
     this.societeNom = user?.societe?.nom || 'Votre société';
     this.loadData();
   }
-  
+
   loadData() {
-    const user = this.api.getCurrentUser();
-    this.api.getProjetsBySociete(this.societeId).subscribe({
-      next: (projets) => {
+    forkJoin({
+      projets: this.api.getProjetsBySociete(this.societeId),
+      employes: this.api.getEmployesBySociete(this.societeId),
+      taches: this.api.getTaches(),
+      assignations: this.api.get<any>('tacheassignees/Liste').pipe(catchError(() => of([])))
+    }).subscribe({
+      next: ({ projets, employes, taches, assignations }: any) => {
+        // 1. Map Projets
         this.projets = (projets || [])
-          .filter((p: any) => p.utilisateurId === user?.id)
-          .map((p: any) => ({ id: p.id, nom: p.nom }));
+          .map((p: any) => ({
+            id: String(p.id || p.Id),
+            nom: p.nom || p.Nom || p.titre || p.Titre,
+            chefId: String(p.utilisateurId || p.UtilisateurId || '')
+          }));
+
         if (this.projets.length > 0 && !this.selectedProjet) {
-          this.selectedProjet = this.projets[0].nom;
+          this.selectedProjet = this.projets[0].id;
         }
-        this.updateData();
-      },
-      error: () => {}
-    });
-    
-    this.api.getTaches().subscribe({
-      next: (taches) => {
-        const societeTaches = (taches || []).filter((t: any) => (t.societeId || t.SocieteId) === this.societeId);
-        this.taches = societeTaches.map((t: any, idx: number) => {
-          // Utiliser les vrais assignés si disponibles
-          let responsable = 'Non assigné';
-          const assignees = t.assignees || t.Assignees || [];
-          if (assignees.length > 0) {
-            responsable = assignees[0].nom || assignees[0].Nom;
-          } else {
-            responsable = t.utilisateurNom || t.UtilisateurNom || 'Non assigné';
-          }
+
+        // 2. Map Employees for name resolution
+        const employeeMap = new Map<string, string>();
+        
+        // Add current user to map for self-resolution
+        const currentUser = this.api.getCurrentUser();
+        if (currentUser) {
+          const cid = String(currentUser.id || currentUser.Id || '');
+          const cname = ((currentUser.prenom || currentUser.Prenom || '') + ' ' + (currentUser.nom || currentUser.Nom || '')).trim() || currentUser.nom || currentUser.Nom || currentUser.email || currentUser.Email || 'Moi';
+          if (cid) employeeMap.set(cid, cname);
+        }
+
+        const list = Array.isArray(employes) ? employes : (employes?.value || []);
+        list.forEach((e: any) => {
+          const firstName = (e.prenom || e.Prenom || '').trim();
+          const lastName = (e.nom || e.Nom || '').trim();
+          let name = (firstName + ' ' + lastName).trim();
           
-          const status = (t.status || t.Status || t.statut || t.Statut || 'To Do').toLowerCase();
-          let progression = t.progression || t.Progression || 0;
-          if (progression === 0) {
-            if (status === 'done' || status === 'terminé' || status === 'terminée') progression = 100;
-            else if (status === 'in progress' || status === 'en cours') progression = 50;
+          if (!name) name = e.nom || e.Nom || e.email || e.Email || e.utilisateurNom || e.UtilisateurNom || 'Utilisateur';
+          
+          employeeMap.set(String(e.id || e.Id), name);
+        });
+
+        // 3. Map Assignations
+        const assigns = Array.isArray(assignations) ? assignations : (assignations?.value || assignations?.items || []);
+        const assignationMap = new Map<string, string[]>();
+        assigns.forEach((a: any) => {
+          const tid = String(a.tacheId || a.TacheId || '');
+          const uid = String(a.utilisateurId || a.UtilisateurId || '');
+          if (tid && uid) {
+            if (!assignationMap.has(tid)) assignationMap.set(tid, []);
+            const currentUids = assignationMap.get(tid)!;
+            if (!currentUids.includes(uid)) currentUids.push(uid);
+          }
+        });
+
+        // 4. Store raw tasks for project-specific filtering
+        this.allRawTaches = (taches || []).map((t: any) => {
+          const tid = String(t.id || t.Id);
+          const uids = assignationMap.get(tid) || [];
+          
+          // Add creator/primary user as an assignee if not already there
+          const directId = t.assigneeId || t.AssigneeId || t.utilisateurId || t.UtilisateurId;
+          if (directId) uids.push(String(directId));
+
+          const uniqueUids = Array.from(new Set(uids));
+          
+          const creatorId = String(t.utilisateurId || t.UtilisateurId || '');
+          const proj = this.projets.find(p => p.id === String(t.projetId || t.ProjetId));
+          const chefId = proj?.chefId;
+
+          let resp = t.responsable || t.Responsable || t.assigneeNom || t.AssigneeNom || t.utilisateurNom || t.UtilisateurNom || '';
+
+          if (!resp && uniqueUids.length > 0) {
+            // Prioritize assignees that are NOT the chef if there are multiple
+            const nonChefUids = uniqueUids.filter(id => id !== chefId);
+            const targetId = nonChefUids.length > 0 ? nonChefUids[0] : uniqueUids[0];
+            resp = employeeMap.get(targetId) || '';
           }
 
+          if (!resp && creatorId && creatorId !== chefId) {
+            resp = employeeMap.get(creatorId) || '';
+          }
+
+          // If still no name, we will try to resolve it via project chef in updateData
           return {
-            id: t.id || t.Id || idx + 1,
-            titre: t.nom || t.Nom || t.titre || t.Titre || 'Tâche sans nom',
-            responsable: responsable,
-            statut: t.status || t.Status || t.statut || t.Statut || 'To Do',
-            temps: t.tempsEstime || t.TempsEstime || 0,
-            progression: progression,
-            retard: t.estEnRetard || t.EstEnRetard || false
+            ...t,
+            id: tid,
+            projetId: String(t.projetId || t.ProjetId),
+            titre: t.titre || t.Titre || t.nom || t.Nom || 'Tâche sans titre',
+            responsable: resp,
+            statut: (t.statut || t.Statut || t.status || t.Status || 'To Do').toLowerCase().trim(),
+            tempsEstime: t.tempsEstime || t.TempsEstime || 0,
+            tempsReel: t.tempsReel || t.TempsReel || 0,
+            dateLimite: t.dateLimite || t.DateLimite || t.dateFin || t.DateFin
           };
         });
-        this.stats.done = this.taches.filter(t => {
-          const s = t.statut.toLowerCase();
-          return s === 'done' || s === 'terminé';
-        }).length;
-        this.stats.inProgress = this.taches.filter(t => {
-          const s = t.statut.toLowerCase();
-          return s === 'in progress' || s === 'en cours';
-        }).length;
-        this.stats.todo = this.taches.filter(t => {
-          const s = t.statut.toLowerCase();
-          return s === 'to do' || s === 'en attente';
-        }).length;
-        if (this.taches.length > 0) {
-          this.avancement = Math.round(this.stats.done / this.taches.length * 100);
-        }
+
+        this.employeeMap = employeeMap; // Store for later use in updateData
+        this.updateData();
       },
-      error: () => {}
+      error: (err) => {
+        console.error('ChefSuivi - Erreur chargement:', err);
+        this.snackBar.open('Erreur de chargement des données', 'Fermer', { duration: 3000 });
+      }
     });
   }
 
   updateData() {
-    if (this.selectedProjet) {
-      const projet = this.projets.find(p => p.nom === this.selectedProjet);
-      this.tempsEstime = projet ? (projet.taches?.length || 10) * 8 : 80;
-      this.tempsReel = Math.floor(this.tempsEstime * (1 + Math.random() * 0.3));
-      this.tauxRetard = Math.round((this.tempsReel - this.tempsEstime) / this.tempsEstime * 100);
-      
-      this.feedbacks = [
-        { id: 1, projet: this.selectedProjet, type: 'Commentaire', message: 'Livrable reçu, merci de vérifier le design final.', date: 'Aujourd\'hui' },
-        { id: 2, projet: this.selectedProjet, type: 'Validation', message: 'L\'étape 1 est validée par notre équipe.', date: 'Hier' }
-      ];
+    if (!this.selectedProjet) return;
+
+    // Filter tasks for selected project
+    const filteredTaches = this.allRawTaches.filter(t => t.projetId === this.selectedProjet);
+
+    // Calculate Stats
+    this.tempsEstime = filteredTaches.reduce((acc, t) => acc + (t.tempsEstime || 0), 0);
+    this.tempsReel = filteredTaches.reduce((acc, t) => acc + (t.tempsReel || 0), 0);
+
+    const doneCount = filteredTaches.filter(t => ['done', 'terminé', 'terminee', 'terminée'].includes(t.statut)).length;
+    const progressCount = filteredTaches.filter(t => ['in progress', 'en cours', 'inprogress', 'encours'].includes(t.statut)).length;
+    const todoCount = filteredTaches.length - doneCount - progressCount;
+
+    this.stats = {
+      todo: filteredTaches.length ? Math.round((todoCount / filteredTaches.length) * 100) : 0,
+      inProgress: filteredTaches.length ? Math.round((progressCount / filteredTaches.length) * 100) : 0,
+      done: filteredTaches.length ? Math.round((doneCount / filteredTaches.length) * 100) : 0
+    };
+
+    this.avancement = this.stats.done;
+    this.tauxRetard = this.tempsEstime > 0 ? Math.round(Math.max(0, (this.tempsReel - this.tempsEstime) / this.tempsEstime * 100)) : 0;
+
+    // Normalize task display
+    const currentProjet = this.projets.find(p => p.id === this.selectedProjet);
+    const chefName = currentProjet?.chefId ? this.employeeMap.get(currentProjet.chefId) : '';
+
+    this.taches = filteredTaches.map(t => {
+      let progress = 0;
+      if (['done', 'terminé', 'terminee', 'terminée'].includes(t.statut)) progress = 100;
+      else if (['in progress', 'en cours', 'inprogress', 'encours'].includes(t.statut)) progress = 50;
+
+      const isLate = t.dateLimite ? (new Date(t.dateLimite) < new Date() && progress < 100) : false;
+
+      let resp = t.responsable;
+      if (!resp || resp === 'Non assigné' || resp === 'Utilisateur' || resp === 'Responsable') {
+        resp = 'À assigner';
+      }
+
+      return {
+        ...t,
+        progression: progress,
+        retard: isLate,
+        responsable: resp,
+        statutLabel: t.statut.charAt(0).toUpperCase() + t.statut.slice(1)
+      };
+    });
+
+    // Mock Alerts & Feedbacks based on real data
+    this.alertes = [];
+    if (this.tauxRetard > 10) {
+      this.alertes.push({
+        id: 1,
+        titre: 'Dépassement de budget temps',
+        description: 'Le projet a dépassé l\'estimation de ' + this.tauxRetard + '%.',
+        critique: true,
+        date: 'Aujourd\'hui'
+      });
     }
-    this.snackBar.open('Données mises à jour pour: ' + this.selectedProjet, 'Fermer', { duration: 3000 });
+    this.taches.filter(t => t.retard).forEach((t, i) => {
+      if (i < 2) {
+        this.alertes.push({
+          id: 2 + i,
+          titre: 'Tâche en retard',
+          description: 'La tâche "' + t.titre + '" a dépassé son échéance.',
+          critique: false,
+          date: 'Hier'
+        });
+      }
+    });
+
+    const projetObj = this.projets.find(p => p.id === this.selectedProjet);
+    this.feedbacks = [
+      { id: 1, projet: projetObj?.nom || 'Projet', type: 'Commentaire', message: 'Progression satisfaisante sur les derniers modules.', date: 'Aujourd\'hui' }
+    ];
+  }
+
+  exporter() {
+    this.snackBar.open('Exportation du rapport en cours...', 'Fermer', { duration: 2000 });
+    // Simulation d'exportation
+    setTimeout(() => {
+      this.snackBar.open('Rapport exporté avec succès (Simulation)', 'Fermer', { duration: 3000 });
+    }, 1500);
+  }
+
+  resoudreAlerte(id: any) {
+    this.alertes = this.alertes.filter(a => a.id !== id);
+    this.snackBar.open('Alerte marquée comme résolue', 'Fermer', { duration: 2000 });
+  }
+
+  repondreFeedback(id: any) {
+    this.snackBar.open('Ouverture de la messagerie pour répondre au feedback...', 'Fermer', { duration: 2000 });
   }
 }
 

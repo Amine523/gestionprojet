@@ -14,6 +14,17 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 
+interface ChatMessage {
+  id: string | number;
+  auteur: string;
+  auteurInitials: string;
+  texte: string;
+  heure: string;
+  mien: boolean;
+  lu?: boolean;
+  attachments?: any[];
+}
+
 @Component({
   selector: 'app-chat',
   standalone: true,
@@ -30,10 +41,9 @@ import { ApiService } from '@core/services/api.service';
           </div>
           <button class="btn-icon btn-ghost" (click)="showNewGroupDialog = true" title="Nouveau groupe">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <line x1="19" y1="8" x2="19" y2="14"/>
-              <line x1="22" y1="11" x2="16" y2="11"/>
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
             </svg>
           </button>
         </div>
@@ -85,7 +95,7 @@ import { ApiService } from '@core/services/api.service';
                 <span>Aucune conversation récente</span>
               </div>
             } @else {
-              @for (conv of conversations; track conv.id) {
+              @for (conv of filteredConversations; track conv.id) {
                 <div class="contact-item" 
                      [class.active]="selectedConversation?.id === conv.id"
                      [class.unread]="conv.unread > 0"
@@ -110,7 +120,7 @@ import { ApiService } from '@core/services/api.service';
             }
           }
           @if (activeTab === 'contacts') {
-            @for (contact of contacts; track contact.id) {
+            @for (contact of filteredContacts; track contact.id) {
               <div class="contact-item" [class.online]="contact.online" (click)="startChat(contact)">
                 <div class="contact-avatar" [class.online]="contact.online">
                   {{contact.initials}}
@@ -127,7 +137,7 @@ import { ApiService } from '@core/services/api.service';
             }
           }
           @if (activeTab === 'groups') {
-            @for (group of groups; track group.id) {
+            @for (group of filteredGroups; track group.id) {
               <div class="contact-item" [class.active]="selectedConversation?.id === group.id" (click)="selectConversation(group)">
                 <div class="contact-avatar group-avatar">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -169,17 +179,6 @@ import { ApiService } from '@core/services/api.service';
               </div>
             </div>
             <div class="header-actions">
-              <button class="btn-icon btn-ghost" title="Appeler">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-              </button>
-              <button class="btn-icon btn-ghost" title="Vidéo">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m23 7-7 5 7 5V7Z"/>
-                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                </svg>
-              </button>
               <button class="btn-icon btn-ghost" (click)="showInfo()" title="Infos">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"/>
@@ -203,6 +202,26 @@ import { ApiService } from '@core/services/api.service';
                     <span class="message-sender">{{msg.auteur}}</span>
                   }
                   <p class="message-text">{{msg.texte}}</p>
+                  
+                  @if (msg.attachments && msg.attachments.length > 0) {
+                    <div class="message-attachments">
+                      @for (att of msg.attachments; track att.name) {
+                        <div class="attachment-item" (click)="downloadAttachment(att)">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                            <polyline points="13 2 13 9 20 9"/>
+                          </svg>
+                          <span class="attachment-name text-xs truncate flex-1">{{att.name}}</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-70">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                          </svg>
+                        </div>
+                      }
+                    </div>
+                  }
+
                   <div class="message-meta">
                     <span class="message-time">{{msg.heure}}</span>
                     @if (msg.mien) {
@@ -218,7 +237,8 @@ import { ApiService } from '@core/services/api.service';
 
           <!-- Input Area -->
           <div class="input-area">
-            <button class="btn-icon btn-ghost" title="Pièce jointe">
+            <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none">
+            <button class="btn-icon btn-ghost" (click)="fileInput.click()" title="Pièce jointe">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
               </svg>
@@ -969,6 +989,38 @@ import { ApiService } from '@core/services/api.service';
     :host-context(.dark) .dialog-content {
       background: var(--color-surface);
     }
+
+    .message-attachments {
+      margin-top: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .attachment-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm);
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .message-bubble.from-them .attachment-item {
+      background: var(--color-bg);
+      border-color: var(--color-border);
+    }
+
+    .attachment-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .message-bubble.from-them .attachment-item:hover {
+      background: var(--color-surface);
+    }
   `]
 })
 export class ChatComponent implements OnInit {
@@ -976,10 +1028,10 @@ export class ChatComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   
   conversations = [
-    { id: 1, nom: 'Équipe Mobile', initials: 'EM', dernierMessage: 'Le projet avance bien 👍', heure: '17:30', unread: 3, online: true, about: 'Équipe desenvolvimento app mobile', membres: 5 },
-    { id: 2, nom: 'Ahmed Ben Ali', initials: 'AB', dernierMessage: 'Merci pour le code', heure: '16:45', unread: 0, online: true, about: 'Développeur Senior', membres: 1 },
-    { id: 3, nom: 'Sofia Karoui', initials: 'SK', dernierMessage: 'Les designs sont prêts', heure: '14:20', unread: 1, online: false, derniereActivite: 'Il y a 2h', about: 'Designer UI/UX', membres: 1 },
-    { id: 4, nom: 'API REST Team', initials: 'AR', dernierMessage: 'Réunion demain à 10h', heure: '11:00', unread: 0, online: true, about: 'Gestion API backend', membres: 3, isGroup: true }
+    { id: 1, nom: 'Équipe Mobile', initials: 'EM', dernierMessage: 'Le projet avance bien 👍', heure: '17:30', timestamp: Date.now() - 3600000, unread: 3, online: true, about: 'Équipe desenvolvimento app mobile', membres: 5 },
+    { id: 2, nom: 'Ahmed Ben Ali', initials: 'AB', dernierMessage: 'Merci pour le code', heure: '16:45', timestamp: Date.now() - 7200000, unread: 0, online: true, about: 'Développeur Senior', membres: 1 },
+    { id: 3, nom: 'Sofia Karoui', initials: 'SK', dernierMessage: 'Les designs sont prêts', heure: '14:20', timestamp: Date.now() - 10800000, unread: 1, online: false, derniereActivite: 'Il y a 2h', about: 'Designer UI/UX', membres: 1 },
+    { id: 4, nom: 'API REST Team', initials: 'AR', dernierMessage: 'Réunion demain à 10h', heure: '11:00', timestamp: Date.now() - 14400000, unread: 0, online: true, about: 'Gestion API backend', membres: 3, isGroup: true }
   ];
   
   [key: string]: any;
@@ -992,12 +1044,12 @@ export class ChatComponent implements OnInit {
   
   groups: any[] = [];
   
-  messages = [
-    { id: 1, auteur: 'Ahmed Ben Ali', auteurInitials: 'AB', texte: 'Salut! Comment ça va?', heure: '17:25', mien: false },
-    { id: 2, auteur: 'Moi', auteurInitials: 'CP', texte: 'Ça va bien! Tu as vu les последiers commits?', heure: '17:26', mien: true, lu: true },
-    { id: 3, auteur: 'Ahmed Ben Ali', auteurInitials: 'AB', texte: 'Oui, tout a l\'air bon. Le module d\'auth fonctionne parfaitement.', heure: '17:28', mien: false },
-    { id: 4, auteur: 'Moi', auteurInitials: 'CP', texte: 'Parfait! On fait la démo demain?', heure: '17:29', mien: true, lu: true },
-    { id: 5, auteur: 'Ahmed Ben Ali', auteurInitials: 'AB', texte: 'Le projet avance bien 👍', heure: '17:30', mien: false }
+  messages: ChatMessage[] = [
+    { id: 1, auteur: 'Ahmed Ben Ali', auteurInitials: 'AB', texte: 'Salut! Comment ça va?', heure: '17:25', mien: false, lu: true, attachments: [] },
+    { id: 2, auteur: 'Moi', auteurInitials: 'CP', texte: 'Ça va bien! Tu as vu les derniers commits?', heure: '17:26', mien: true, lu: true, attachments: [] },
+    { id: 3, auteur: 'Ahmed Ben Ali', auteurInitials: 'AB', texte: 'Oui, tout a l\'air bon. Le module d\'auth fonctionne parfaitement.', heure: '17:28', mien: false, lu: true, attachments: [] },
+    { id: 4, auteur: 'Moi', auteurInitials: 'CP', texte: 'Parfait! On fait la démo demain?', heure: '17:29', mien: true, lu: true, attachments: [] },
+    { id: 5, auteur: 'Ahmed Ben Ali', auteurInitials: 'AB', texte: 'Le projet avance bien 👍', heure: '17:30', mien: false, lu: true, attachments: [] }
   ];
   
   selectedConversation: any = null;
@@ -1008,6 +1060,24 @@ export class ChatComponent implements OnInit {
   showNewGroupDialog = false;
   newGroupName = '';
   selectedMembers: any[] = [];
+
+  get filteredConversations() {
+    return this.conversations.filter(c => 
+      !this.searchQuery || c.nom.toLowerCase().includes(this.searchQuery.toLowerCase())
+    );
+  }
+
+  get filteredContacts() {
+    return this.contacts.filter(c => 
+      !this.searchQuery || c.nom.toLowerCase().includes(this.searchQuery.toLowerCase())
+    );
+  }
+
+  get filteredGroups() {
+    return this.groups.filter(g => 
+      !this.searchQuery || g.nom.toLowerCase().includes(this.searchQuery.toLowerCase())
+    );
+  }
 
   ngOnInit() {
     const user = this.api.getCurrentUser();
@@ -1022,15 +1092,49 @@ export class ChatComponent implements OnInit {
   }
   
   loadContacts() {
-    this.api.getEmployesBySociete(this.societeId).subscribe({
+    this.api.getEmployesBySociete(this.societeId, true).subscribe({
       next: (employes) => {
-        this.contacts = employes.map((e: any, idx: number) => ({
-          id: e.id || idx + 1,
-          nom: e.nom,
-          initials: e.nom?.charAt(0) || 'E',
-          role: e.typeUtilisateurId || 'Employé',
-          online: Math.random() > 0.5
-        }));
+        let filteredEmployes = employes;
+        const currentUserRole = (this.currentUser?.typeUtilisateurId || this.currentUser?.TypeUtilisateurId || this.currentUser?.role || '').toLowerCase();
+        
+        if (currentUserRole === 'super_admin' || currentUserRole === 't001') {
+           // Super admin only sees Admin societe
+           filteredEmployes = employes.filter((e: any) => {
+             const r = (e.typeUtilisateurId || e.TypeUtilisateurId || e.role || '').toLowerCase();
+             return r === 'admin_societe' || r === 't002';
+           });
+        } else if (currentUserRole === 'admin_societe' || currentUserRole === 't002') {
+           // Admin societe sees employees of same societe, candidats, clients, AND super admin
+           filteredEmployes = employes; 
+        } else {
+           // RH and others see employees of same societe, candidats, clients, but NOT super admin
+           filteredEmployes = employes.filter((e: any) => {
+             const r = (e.typeUtilisateurId || e.TypeUtilisateurId || e.role || '').toLowerCase();
+             return r !== 'super_admin' && r !== 't001';
+           });
+        }
+
+        this.contacts = filteredEmployes.map((e: any, idx: number) => {
+          const roleId = e.typeUtilisateurId || e.TypeUtilisateurId || e.role || 'Employé';
+          let roleLabel = roleId;
+          if (roleId === 'T001' || roleId.toLowerCase() === 'super_admin') roleLabel = 'Super Admin';
+          else if (roleId === 'T002' || roleId.toLowerCase() === 'admin_societe') roleLabel = 'Admin Société';
+          else if (roleId === 'T003' || roleId.toLowerCase() === 'rh') roleLabel = 'RH';
+          else if (roleId === 'T004' || roleId.toLowerCase() === 'chef_projet') roleLabel = 'Chef de Projet';
+          else if (roleId === 'T005' || roleId.toLowerCase() === 'developpeur') roleLabel = 'Développeur';
+          else if (roleId === 'T006' || roleId.toLowerCase() === 'testeur') roleLabel = 'Testeur / QA';
+          else if (roleId === 'T007' || roleId.toLowerCase() === 'candidat') roleLabel = 'Candidat';
+          else if (roleId === 'T008' || roleId.toLowerCase() === 'client') roleLabel = 'Client';
+
+          return {
+            id: e.id || e.Id || idx + 1,
+            nom: e.nom || e.Nom || 'Utilisateur',
+            initials: (e.nom || e.Nom || 'U').charAt(0),
+            role: roleLabel,
+            online: Math.random() > 0.5
+          };
+        });
+        
         this.loadConversations();
         this.loadGroups();
       },
@@ -1058,12 +1162,16 @@ export class ChatComponent implements OnInit {
         initials: c.initials,
         dernierMessage: this.getRandomMessage(),
         heure: this.getRandomTime(),
+        timestamp: Date.now() - (idx * 3600000), // Different timestamps for sorting
         unread: Math.floor(Math.random() * 3),
         online: c.online,
         about: c.role,
         membres: 1
       }));
     }
+    
+    // Sort conversations by timestamp (system date)
+    this.conversations.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     
     if (this.conversations.length > 0) {
       this.selectConversation(this.conversations[0]);
@@ -1104,24 +1212,67 @@ export class ChatComponent implements OnInit {
     localStorage.setItem('chat_data', JSON.stringify(chatData));
   }
 
+  private getRoomId(id1: string | number, id2: string | number): string {
+    const ids = [id1.toString(), id2.toString()].sort();
+    return `room_${ids[0]}_${ids[1]}`;
+  }
+
   selectConversation(conv: any) {
     this.selectedConversation = conv;
     conv.unread = 0;
     this.loadMessages(conv);
+    this.scrollToBottom();
+  }
+
+  scrollToBottom() {
+    setTimeout(() => {
+      const zone = document.querySelector('.messages-area');
+      if (zone) {
+        zone.scrollTop = zone.scrollHeight;
+      }
+    }, 100);
   }
   
   loadMessages(conv: any) {
-    const allMessages = JSON.parse(localStorage.getItem('chat_messages') || '{}');
-    const key = `conv_${conv.id}_${this.societeId}`;
-    const saved = allMessages[key];
-    if (saved && saved.length > 0) {
-      this.messages = saved;
-    } else {
-      this.messages = [
-        { id: 1, auteur: conv.nom, auteurInitials: conv.initials, texte: 'Salut!', heure: '09:00', mien: false },
-        { id: 2, auteur: 'Moi', auteurInitials: 'CP', texte: 'Bonjour', heure: '09:05', mien: true, lu: true }
-      ];
-    }
+    const roomId = this.getRoomId(this.currentUser.id, conv.id);
+    this.api.getChatMessages(roomId).subscribe({
+      next: (data) => {
+        this.messages = (data || []).map((m: any) => {
+          const fromId = m.from || m.From;
+          const fromName = m.fromName || m.FromName;
+          const attachments = m.attachments || m.Attachments || [];
+          
+          return {
+            id: m.id || m.Id,
+            auteur: fromId === this.currentUser.id ? 'Moi' : (fromName || 'Utilisateur'),
+            auteurInitials: ((fromId === this.currentUser.id ? this.currentUser.nom : fromName) || 'U').charAt(0),
+            texte: m.text || m.Text || '',
+            heure: m.time || m.Time || '',
+            mien: fromId === this.currentUser.id,
+            lu: m.lu !== undefined ? m.lu : (m.Lu !== undefined ? m.Lu : true),
+            attachments: attachments.map((a: any) => ({
+              name: a.name || a.Name,
+              url: a.url || a.Url
+            }))
+          };
+        });
+        this.scrollToBottom();
+      },
+      error: () => {
+        // Fallback to localStorage if API fails
+        const allMessages = JSON.parse(localStorage.getItem('chat_messages') || '{}');
+        const key = `conv_${conv.id}_${this.societeId}`;
+        const saved = allMessages[key];
+        if (saved && saved.length > 0) {
+          this.messages = saved;
+        } else {
+          this.messages = [
+            { id: 1, auteur: conv.nom, auteurInitials: conv.initials, texte: 'Salut!', heure: '09:00', mien: false, attachments: [] },
+            { id: 2, auteur: 'Moi', auteurInitials: 'CP', texte: 'Bonjour', heure: '09:05', mien: true, lu: true, attachments: [] }
+          ] as ChatMessage[];
+        }
+      }
+    });
   }
 
   startChat(contact: any) {
@@ -1135,6 +1286,7 @@ export class ChatComponent implements OnInit {
         initials: contact.initials,
         dernierMessage: '',
         heure: '',
+        timestamp: Date.now(),
         unread: 0,
         online: contact.online,
         about: contact.role,
@@ -1147,24 +1299,124 @@ export class ChatComponent implements OnInit {
 
   sendMessage() {
     if (!this.newMessage.trim() || !this.selectedConversation) return;
-    this.messages.push({
-      id: Date.now(),
-      auteur: 'Moi',
-      auteurInitials: 'CP',
-      texte: this.newMessage,
-      heure: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      mien: true,
-      lu: true
+    
+    const roomId = this.getRoomId(this.currentUser.id, this.selectedConversation.id);
+    const now = new Date();
+    const isoTimestamp = now.toISOString();
+    const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    const msg = {
+      Id: Date.now().toString(),
+      Text: this.newMessage,
+      From: this.currentUser.id,
+      FromName: this.currentUser.nom || 'Moi',
+      Time: timeStr,
+      Timestamp: isoTimestamp,
+      ChatRoomId: roomId
+    };
+
+    this.api.sendChatMessage(msg).subscribe({
+      next: () => {
+        this.messages.push({
+          id: msg.Id,
+          auteur: 'Moi',
+          auteurInitials: (this.currentUser.nom || 'M').charAt(0),
+          texte: msg.Text,
+          heure: msg.Time,
+          mien: true,
+          lu: true,
+          attachments: []
+        } as ChatMessage);
+        
+        this.selectedConversation.dernierMessage = this.newMessage;
+        this.selectedConversation.heure = timeStr;
+        this.selectedConversation.timestamp = Date.now();
+        
+        const convIdx = this.conversations.findIndex(c => c.id === this.selectedConversation.id);
+        if (convIdx >= 0) {
+          this.conversations[convIdx] = this.selectedConversation;
+        }
+        
+        this.saveConversations();
+        this.saveMessages();
+        this.newMessage = '';
+        this.conversations.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        this.scrollToBottom();
+      },
+      error: () => {
+        this.snackBar.open('Erreur lors de l\'envoi du message', 'Fermer', { duration: 3000 });
+      }
     });
-    this.selectedConversation.dernierMessage = this.newMessage;
-    this.selectedConversation.heure = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    const convIdx = this.conversations.findIndex(c => c.id === this.selectedConversation.id);
-    if (convIdx >= 0) {
-      this.conversations[convIdx] = this.selectedConversation;
-    }
-    this.saveConversations();
-    this.saveMessages();
-    this.newMessage = '';
+  }
+  
+  onFileSelected(event: any) {
+    const files: FileList = event.target.files;
+    if (!files || files.length === 0 || !this.selectedConversation) return;
+
+    this.snackBar.open('Téléchargement en cours...', 'Fermer', { duration: 2000 });
+    const roomId = this.getRoomId(this.currentUser.id, this.selectedConversation.id);
+
+    Array.from(files).forEach(file => {
+      this.api.uploadFile(file, roomId, 'ChatAttachment').subscribe({
+        next: (res: any) => {
+          const now = new Date();
+          const isoTimestamp = now.toISOString();
+          const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+          const chatMsg = {
+            Id: Date.now().toString(),
+            Text: `Document envoyé : ${file.name}`,
+            From: this.currentUser.id,
+            FromName: this.currentUser.nom || 'Moi',
+            Time: timeStr,
+            Timestamp: isoTimestamp,
+            ChatRoomId: roomId,
+            Attachments: [{ Name: file.name, Url: res.url || res.Url }]
+          };
+
+          this.api.sendChatMessage(chatMsg).subscribe({
+            next: () => {
+              const msg: ChatMessage = {
+                id: chatMsg.Id,
+                auteur: 'Moi',
+                auteurInitials: (this.currentUser.nom || 'M').charAt(0),
+                texte: chatMsg.Text,
+                heure: chatMsg.Time,
+                mien: true,
+                lu: true,
+                attachments: chatMsg.Attachments.map(a => ({ name: a.Name, url: a.Url }))
+              };
+
+              this.messages.push(msg);
+              this.messages = [...this.messages]; // Force change detection
+              this.selectedConversation.dernierMessage = msg.texte;
+              this.selectedConversation.heure = msg.heure;
+              this.selectedConversation.timestamp = Date.now();
+              
+              this.saveConversations();
+              this.saveMessages();
+              this.scrollToBottom();
+              this.snackBar.open('Document envoyé avec succès', 'Fermer', { duration: 2000 });
+            },
+            error: () => {
+              this.snackBar.open('Erreur lors de l\'envoi du message de chat', 'Fermer', { duration: 3000 });
+            }
+          });
+        },
+        error: () => {
+          this.snackBar.open('Erreur lors du téléchargement de ' + file.name, 'Fermer', { duration: 3000 });
+        }
+      });
+    });
+    event.target.value = '';
+  }
+
+  downloadAttachment(att: { name: string; url: string }) {
+    const link = document.createElement('a');
+    link.href = att.url;
+    link.download = att.name;
+    link.target = '_blank';
+    link.click();
   }
   
   saveMessages() {
@@ -1200,6 +1452,7 @@ export class ChatComponent implements OnInit {
       initials: this.newGroupName.charAt(0),
       dernierMessage: 'Groupe créé',
       heure: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: Date.now(),
       unread: 0,
       online: true,
       about: this.selectedMembers.length + ' membres',

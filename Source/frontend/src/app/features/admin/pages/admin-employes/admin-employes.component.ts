@@ -1,13 +1,17 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { FormStateService } from '@core/services/form-state.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ValidationErrorComponent } from '@shared/components';
+import { Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-employes',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatSnackBarModule, ValidationErrorComponent],
   template: `
 
     <div class="dashboard-container">
@@ -63,57 +67,73 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
         </div>
       </div>
 
-      <!-- Personnel Grid -->
-      <div class="personnel-grid">
-        @for (e of filteredEmployes; track e.id) {
-          <div class="card employee-card" [class.active]="e.actif">
-            <div class="employee-header">
-              <div class="employee-avatar">{{e.nom.charAt(0)}}</div>
-              <div class="employee-info">
-                <h3 class="employee-name">{{e.nom}}</h3>
-                <span class="badge badge-role">{{getPosteLabel(e.typeUtilisateurId || e.poste)}}</span>
-              </div>
-            </div>
-            <div class="employee-details">
-              <div class="detail-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-                <span>{{e.email}}</span>
-              </div>
-              <div class="detail-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-                <span>{{e.telephone || '—'}}</span>
-              </div>
-              <div class="detail-item">
-                <div class="status-dot" [class.active]="e.actif"></div>
-                <span [class.active]="e.actif">{{e.actif ? 'Déploiement Actif' : 'État Hors Ligne'}}</span>
-              </div>
-            </div>
-            <div class="employee-actions">
-              <button (click)="editEmploye(e)" class="btn btn-action">
-                Matrice Profil
-              </button>
-              <button (click)="toggleStatut(e)" class="btn-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-              </button>
-              <button (click)="deleteEmploye(e)" class="btn-icon btn-danger">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  <line x1="10" y1="11" x2="10" y2="17"/>
-                  <line x1="14" y1="11" x2="14" y2="17"/>
-                </svg>
-              </button>
-            </div>
+       <!-- Personnel Table -->
+      <div class="card table-card animate-scale-in">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Nom</th>
+                <th>Rôle</th>
+                <th>Email</th>
+                <th>Actif</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (e of paginatedEmployes; track e.id) {
+                <tr class="hover-row">
+                  <td><span class="id-tag">{{e.id}}</span></td>
+                  <td><span class="name">{{e.nom}}</span></td>
+                  <td>
+                    <span class="role-badge" [ngClass]="e.typeUtilisateurId?.toLowerCase()">
+                      {{getRoleLabel(e.typeUtilisateurId)}}
+                    </span>
+                  </td>
+                  <td>{{e.email}}</td>
+                  <td>
+                    <span [class]="'badge ' + (e.actif ? 'badge-success' : 'badge-danger')">
+                      {{e.actif ? 'True' : 'False'}}
+                    </span>
+                  </td>
+                  <td class="text-right">
+                    <div class="action-row">
+                      <button (click)="editEmploye(e)" class="btn-table-icon" title="Modifier">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button (click)="toggleStatut(e)" class="btn-table-icon" [title]="e.actif ? 'Désactiver' : 'Activer'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          @if (e.actif) { <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/> }
+                          @else { <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/> }
+                        </svg>
+                      </button>
+                      <button (click)="deleteEmploye(e)" class="btn-table-icon danger" title="Supprimer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-footer">
+          <div class="pagination-info">
+            Affichage de {{ Math.min((page - 1) * pageSize + 1, filteredEmployes.length) }} à {{ Math.min(page * pageSize, filteredEmployes.length) }} sur {{ filteredEmployes.length }} employés
           </div>
-        }
+          <div class="pagination-actions">
+            <button class="btn-page" [disabled]="page === 1" (click)="page = page - 1">Précédent</button>
+            <div class="page-numbers">
+              @for (p of [].constructor(totalPages); track $index) {
+                <button class="btn-number" [class.active]="$index + 1 === page" (click)="page = $index + 1">{{$index + 1}}</button>
+              }
+            </div>
+            <button class="btn-page" [disabled]="page === totalPages" (click)="page = page + 1">Suivant</button>
+          </div>
+        </div>
       </div>
 
       @if (filteredEmployes.length === 0) {
@@ -145,49 +165,62 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                  </button>
               </div>
 
-              <form (ngSubmit)="saveEmploye()">
-                 <div class="form-grid">
-                    <div class="form-field">
-                       <label>Identité</label>
-                       <input [(ngModel)]="formData.nom" name="nom" class="form-input" placeholder="Entrez le nom complet...">
+              <form [formGroup]="employeForm" (ngSubmit)="saveEmploye()">
+                  @if (errorMessage) {
+                    <div class="error-banner">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                      <span>{{errorMessage}}</span>
+                      <button type="button" (click)="errorMessage = null" class="btn-close-error">×</button>
                     </div>
-                    <div class="form-field">
-                       <label>Email de Transmission</label>
-                       <input [(ngModel)]="formData.email" name="email" class="form-input" placeholder="nom@domaine.com">
-                    </div>
-                    <div class="form-field">
-                       <label>Clé de Sécurité</label>
-                       <input type="password" [(ngModel)]="formData.password" name="password" class="form-input" placeholder="••••••••">
-                    </div>
-                    <div class="form-field">
-                       <label>Unité Fonctionnelle</label>
-                       <select [(ngModel)]="formData.typeUtilisateurId" name="role" class="form-input">
-                          <option value="developpeur">Développeur</option>
-                          <option value="testeur">Testeur</option>
-                          <option value="chef_projet">Chef de projet</option>
-                          <option value="rh">RH</option>
-                          <option value="admin_societe">Admin Société</option>
-                       </select>
-                    </div>
-                 </div>
+                  }
+                  <div class="form-grid">
+                     <div class="form-field">
+                        <label>Identité</label>
+                        <input formControlName="nom" class="form-input" placeholder="Entrez le nom complet...">
+                        <app-validation-error [control]="employeForm.get('nom')"></app-validation-error>
+                     </div>
+                     <div class="form-field">
+                        <label>Email de Transmission</label>
+                        <input formControlName="email" type="email" class="form-input" placeholder="nom@domaine.com">
+                        <app-validation-error [control]="employeForm.get('email')"></app-validation-error>
+                     </div>
+                     <div class="form-field">
+                        <label>Clé de Sécurité</label>
+                        <input type="password" formControlName="password" class="form-input" placeholder="••••••••">
+                        <app-validation-error [control]="employeForm.get('password')"></app-validation-error>
+                     </div>
+                     <div class="form-field">
+                        <label>Unité Fonctionnelle</label>
+                        <select formControlName="typeUtilisateurId" class="form-input">
+                            <option value="T005">Développeur</option>
+                            <option value="T006">Testeur</option>
+                            <option value="T004">Chef de projet</option>
+                            <option value="T003">RH</option>
+                            <option value="T002">Admin Société</option>
+                        </select>
+                        <app-validation-error [control]="employeForm.get('typeUtilisateurId')"></app-validation-error>
+                     </div>
+                  </div>
 
-                 <div class="toggle-section">
-                    <div class="toggle-info">
-                       <p>Droits d'Accès Système</p>
-                       <span>Autoriser la synchronisation du nœud</span>
-                    </div>
-                    <button (click)="formData.actif = !formData.actif" class="toggle-btn" [class.active]="formData.actif">
-                      <span class="toggle-knob"></span>
-                    </button>
-                 </div>
-              </form>
+                  <div class="toggle-section">
+                     <div class="toggle-info">
+                        <p>Droits d'Accès Système</p>
+                        <span>Autoriser la synchronisation du nœud</span>
+                     </div>
+                     <button type="button" (click)="employeForm.get('actif')?.setValue(!employeForm.get('actif')?.value)" class="toggle-btn" [class.active]="employeForm.get('actif')?.value">
+                       <span class="toggle-knob"></span>
+                     </button>
+                  </div>
+               </form>
 
-              <div class="modal-actions">
-                 <button type="button" (click)="closeDialog()" class="btn btn-ghost">Séquence d'Avortement</button>
-                 <button type="button" (click)="saveEmploye()" class="btn btn-primary">
-                    {{editingEmploye ? 'Valider Mise à Jour' : 'Initialiser Talent'}}
-                 </button>
-              </div>
+               <div class="modal-actions">
+                  <button type="button" (click)="closeDialog()" class="btn btn-ghost">Séquence d'Avortement</button>
+                  <button type="button" (click)="saveEmploye()" class="btn btn-primary" [disabled]="employeForm.invalid">
+                     {{editingEmploye ? 'Valider Mise à Jour' : 'Initialiser Talent'}}
+                  </button>
+               </div>
            </div>
         </div>
       }
@@ -430,101 +463,186 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       gap: var(--space-lg);
     }
 
-    .card {
-      background: white;
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--color-border);
-      box-shadow: var(--shadow-sm);
-      transition: all var(--transition-base);
+     .table-card {
+      padding: 0;
+      overflow: hidden;
     }
 
-    .card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
+    .table-container {
+      overflow-x: auto;
     }
 
-    .employee-card {
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      text-align: left;
       padding: var(--space-lg);
+      background: #f8fafc;
+      color: #64748b;
+      font-size: var(--font-size-xs);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-border);
     }
 
-    .employee-card.active {
-      background: rgba(16, 185, 129, 0.02);
-      border-color: rgba(16, 185, 129, 0.2);
+    .data-table td {
+      padding: var(--space-lg);
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
     }
 
-    .employee-header {
-      display: flex;
-      gap: var(--space-md);
-      margin-bottom: var(--space-lg);
+    .hover-row:hover {
+      background: #f8fafc;
     }
 
-    .employee-avatar {
-      width: 56px;
-      height: 56px;
-      border-radius: var(--radius-md);
-      background: var(--color-bg);
+    .employee-identity {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
+      gap: var(--space-md);
     }
 
-    .employee-info {
-      flex: 1;
-    }
-
-    .employee-name {
-      font-size: var(--font-size-base);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-      margin: 0 0 var(--space-xs);
-    }
-
-    .employee-details {
+    .identity-info {
       display: flex;
       flex-direction: column;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-lg);
     }
 
-    .detail-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      color: var(--color-text-muted);
+    .identity-info .name {
+      font-weight: 700;
+      color: var(--color-text);
       font-size: var(--font-size-sm);
     }
 
-    .detail-item svg {
-      width: 14px;
-      height: 14px;
+    .identity-info .id-tag {
+      font-size: 10px;
+      color: var(--color-text-muted);
+      font-family: monospace;
     }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #d1d5db;
+    .role-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
     }
 
-    .status-dot.active {
-      background: #10b981;
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
-    }
+    .role-badge.t005 { background: #eef2ff; color: #6366f1; } /* Dev */
+    .role-badge.t006 { background: #ecfdf5; color: #10b981; } /* Test */
+    .role-badge.t004 { background: #fffbeb; color: #f59e0b; } /* Chef */
+    .role-badge.t003 { background: #fdf2f8; color: #ec4899; } /* RH */
+    .role-badge.t002 { background: #f8fafc; color: #475569; } /* Admin */
 
-    .detail-item span.active {
-      color: #10b981;
-      font-weight: var(--font-weight-semibold);
-    }
-
-    .employee-actions {
+    .contact-box {
       display: flex;
-      gap: var(--space-sm);
-      padding-top: var(--space-md);
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+    }
+
+    .system-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn-table-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      background: white;
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-table-icon:hover {
+      background: #f1f5f9;
+      color: var(--color-text);
+    }
+
+    .btn-table-icon.danger:hover {
+      background: #fee2e2;
+      color: #ef4444;
+      border-color: #fecaca;
+    }
+
+    .pagination-footer {
+      padding: var(--space-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
       border-top: 1px solid var(--color-border);
     }
+
+    .pagination-info {
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      color: #64748b;
+    }
+
+    .pagination-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .page-numbers {
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-page {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      background: white;
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      background: white;
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-number.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+
+    .text-right { text-align: right; }
 
     .empty-state {
       display: flex;
@@ -593,6 +711,30 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
     .modal-container form {
       padding: var(--space-lg);
+    }
+
+    .error-banner {
+      background: #fef2f2;
+      border: 1px solid #fee2e2;
+      color: #b91c1c;
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+    }
+ 
+    .btn-close-error {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #b91c1c;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
     }
 
     .form-grid {
@@ -759,8 +901,16 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   `]
 })
 export class AdminEmployesComponent implements OnInit {
+  private fb = inject(FormBuilder);
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
+  private formState = inject(FormStateService);
+
+  private subs: Subscription[] = [];
+  private readonly DRAFT_KEY = 'admin_employe_draft';
+  private readonly STATE_KEY = 'admin_employe_state';
+
+  employeForm!: FormGroup;
 
   employes: any[] = [];
   filteredEmployes: any[] = [];
@@ -769,15 +919,87 @@ export class AdminEmployesComponent implements OnInit {
   filterStatut = '';
   showAddDialog = false;
   editingEmploye: any = null;
-  formData: any = { nom: '', email: '', telephone: '', typeUtilisateurId: 'developpeur', password: '', actif: true };
   societeId = '';
   societeNom = '';
+  errorMessage: string | null = null;
+
+  // Pagination
+  page = 1;
+  pageSize = 6;
+  protected readonly Math = Math;
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredEmployes.length / this.pageSize);
+  }
+
+  get paginatedEmployes() {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredEmployes.slice(start, start + this.pageSize);
+  }
+
+  getRoleLabel(id: string) {
+    return ApiService.getRoleLabel(id);
+  }
 
   ngOnInit() {
+    this.initForm();
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    
+    // Robust societeNom initialization
+    const rawNom = user?.societe?.nom || user?.SocieteNom || 'Votre société';
+    this.societeNom = (typeof rawNom === 'string') ? rawNom.replace(/undefined/g, '').trim() : 'Votre société';
+    if (!this.societeNom) this.societeNom = 'Votre société';
+
+    this.restoreState();
     this.loadEmployes();
+  }
+
+  private restoreState() {
+    const state = this.formState.getDraft(this.STATE_KEY);
+    if (state) {
+      if (state.searchQuery) this.searchQuery = state.searchQuery;
+      if (state.filterPoste) this.filterPoste = state.filterPoste;
+      if (state.filterStatut) this.filterStatut = state.filterStatut;
+    }
+
+    const draft = this.formState.getDraft(this.DRAFT_KEY);
+    if (draft) {
+      this.employeForm.patchValue(draft, { emitEvent: false });
+      if (this.formState.hasDraft(this.DRAFT_KEY)) {
+        this.showAddDialog = true;
+      }
+    }
+  }
+
+  saveGeneralState() {
+    this.formState.saveDraft(this.STATE_KEY, {
+      searchQuery: this.searchQuery,
+      filterPoste: this.filterPoste,
+      filterStatut: this.filterStatut
+    });
+  }
+
+  initForm() {
+    this.employeForm = this.fb.group({
+      nom: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.minLength(8)]],
+      typeUtilisateurId: ['T005', [Validators.required]],
+      actif: [true]
+    });
+
+    this.subs.push(
+      this.employeForm.valueChanges.pipe(debounceTime(500)).subscribe(val => {
+        if (!this.editingEmploye) {
+          this.formState.saveDraft(this.DRAFT_KEY, val);
+        }
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subs.forEach(s => s.unsubscribe());
   }
 
   loadEmployes() {
@@ -788,7 +1010,11 @@ export class AdminEmployesComponent implements OnInit {
   }
 
   filterEmployes() {
+    this.saveGeneralState();
     this.filteredEmployes = this.employes.filter(e => {
+      const isClient = (e.typeUtilisateurId || '').toUpperCase() === 'T008';
+      if (isClient) return false;
+      
       const matchesSearch = !this.searchQuery || e.nom?.toLowerCase().includes(this.searchQuery.toLowerCase()) || e.email?.toLowerCase().includes(this.searchQuery.toLowerCase());
       const matchesPoste = !this.filterPoste || (e.typeUtilisateurId || e.poste || '').toLowerCase() === this.filterPoste.toLowerCase();
       const matchesStatut = !this.filterStatut || (this.filterStatut === 'actif' ? e.actif : !e.actif);
@@ -796,29 +1022,80 @@ export class AdminEmployesComponent implements OnInit {
     });
   }
 
-  getPosteLabel(p: string): string {
-    const labels: any = { developpeur: 'Ingénieur', testeur: 'QA', chef_projet: 'Chef de Projet', rh: 'RH', admin_societe: 'Administrateur' };
-    return labels[p?.toLowerCase()] || p;
+   getPosteLabel(p: string): string {
+    const R = ApiService.ROLES;
+    const labels: any = { 
+      [R.DEVELOPPEUR]: 'Ingénieur', 
+      [R.TESTEUR]: 'QA', 
+      [R.CHEF_PROJET]: 'Chef de Projet', 
+      [R.RH]: 'RH', 
+      [R.ADMIN_SOCIETE]: 'Administrateur', 
+      [R.CLIENT]: 'Client',
+      'developpeur': 'Ingénieur',
+      'testeur': 'QA',
+      'chef_projet': 'Chef de Projet',
+      'rh': 'RH',
+      'admin_societe': 'Administrateur'
+    };
+    return labels[p?.toUpperCase()] || labels[p?.toLowerCase()] || p;
   }
 
-  openAddDialog() { this.formData = { nom: '', email: '', telephone: '', typeUtilisateurId: 'developpeur', password: '', actif: true }; this.showAddDialog = true; }
-  editEmploye(e: any) { this.editingEmploye = e; this.formData = { ...e }; this.showAddDialog = false; }
+  openAddDialog() { 
+    this.errorMessage = null;
+    this.editingEmploye = null; 
+    this.employeForm.reset({ 
+      typeUtilisateurId: 'T005', 
+      actif: true 
+    }); 
+    this.employeForm.get('password')?.setValidators([Validators.required, Validators.minLength(8)]);
+    this.employeForm.get('password')?.updateValueAndValidity();
+    this.restoreState();
+    this.showAddDialog = true; 
+  }
+  editEmploye(e: any) { 
+    this.errorMessage = null;
+    this.editingEmploye = e; 
+    this.employeForm.patchValue({ ...e }); 
+    this.employeForm.get('password')?.setValidators([Validators.minLength(8)]);
+    this.employeForm.get('password')?.updateValueAndValidity();
+    this.showAddDialog = true; 
+  }
   closeDialog() { this.showAddDialog = false; this.editingEmploye = null; }
 
-  saveEmploye() {
-    if (!this.formData.nom || !this.formData.email) return;
-    const payload = { ...this.formData, societeId: this.societeId };
+   saveEmploye() {
+    if (this.employeForm.invalid) {
+      this.employeForm.markAllAsTouched();
+      return;
+    }
+    const formVal = this.employeForm.value;
+    const payload = { ...formVal, societeId: this.societeId };
     if (this.editingEmploye) {
-      this.api.updateUtilisateur(this.editingEmploye.id, payload).subscribe(() => { 
-        this.loadEmployes(); 
-        this.closeDialog(); 
-        this.snackBar.open('Talent mis à jour', 'OK', { duration: 2000 });
+      this.api.updateUtilisateur(this.editingEmploye.id, payload).subscribe({
+        next: () => { 
+          this.loadEmployes(); 
+          this.closeDialog(); 
+          this.snackBar.open('Talent mis à jour', 'OK', { duration: 2000 });
+        },
+        error: (err) => {
+          this.errorMessage = typeof err.error === 'string' ? err.error : (err.error?.message || 'Échec de la mise à jour');
+          this.snackBar.open('Erreur: ' + this.errorMessage, 'Fermer', { duration: 5000 });
+        }
       });
     } else {
-      this.api.createUtilisateur(payload).subscribe(() => { 
-        this.loadEmployes(); 
-        this.closeDialog(); 
-        this.snackBar.open('Nouveau talent intégré', 'OK', { duration: 2000 });
+      this.api.createUtilisateur(payload).subscribe({
+        next: () => { 
+          this.loadEmployes(); 
+          this.closeDialog(); 
+          this.formState.clearDraft(this.DRAFT_KEY);
+          this.snackBar.open('Nouveau talent intégré', 'OK', { duration: 2000 });
+        },
+        error: (err) => {
+          const errorMsg = typeof err.error === 'string' ? err.error : (err.error?.message || 'Échec de la création');
+          this.errorMessage = (errorMsg.includes('UNIQUE KEY') || errorMsg.includes('email'))
+             ? "Cet email est déjà utilisé par un autre utilisateur"
+             : errorMsg;
+          this.snackBar.open('Erreur: ' + this.errorMessage, 'Fermer', { duration: 5000 });
+        }
       });
     }
   }

@@ -5,30 +5,30 @@ import { ApiService } from '@core/services/api.service';
 import { AiService } from '@core/services/ai.service';
 import { marked } from 'marked';
 
+import { FormsModule } from '@angular/forms';
 import { MetricCardComponent } from '@shared/components/metric-card/metric-card.component';
 
 @Component({
   selector: 'app-rh-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, MetricCardComponent],
+  imports: [CommonModule, RouterModule, MetricCardComponent, FormsModule],
   template: `
-
     <div class="dashboard-container">
       <!-- Header -->
       <header class="dashboard-header">
         <div class="header-content">
           <div class="header-badges">
-            <span class="badge badge-primary">Centre de Commande RH v4.0</span>
+            <span class="badge badge-primary">Plateforme de Gestion RH</span>
             <span class="badge badge-success">
               <span class="status-dot"></span>
-              Actif
+              En ligne
             </span>
           </div>
           <h1 class="header-title">
-            DASHBOARD <span class="gradient-text">INTELLIGENCE RH</span>
+            DASHBOARD <span class="gradient-text">RESSOURCES HUMAINES</span>
           </h1>
           <p class="header-subtitle">
-            {{societeNom}} • Suivi en temps réel de la performance du capital humain, des indicateurs de recrutement et de la santé organisationnelle.
+            {{societeNom}} • Vue d'ensemble de l'effectif, de la présence et des indicateurs de performance RH.
           </p>
         </div>
         <div class="header-actions">
@@ -40,7 +40,7 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
             </svg>
             Analyste IA
           </button>
-          <button (click)="loadData()" class="btn-icon btn-ghost btn-white">
+          <button (click)="loadData()" class="btn-icon btn-ghost">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 4v6h-6"/>
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
@@ -49,15 +49,14 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
         </div>
       </header>
 
-      <!-- Critical Metrics Grid -->
+      <!-- Metrics Grid -->
       <div class="metrics-grid">
         <app-metric-card
           title="EFFECTIF TOTAL"
           [value]="stats.totalEmployes.toString()"
           icon="bi-people-fill"
           color="indigo"
-          [trend]="'+4.2%'"
-          [isPositive]="true">
+          [trend]="'Équipe complète'">
         </app-metric-card>
 
         <app-metric-card
@@ -65,32 +64,31 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
           [value]="stats.presents.toString()"
           icon="bi-person-check-fill"
           color="emerald"
-          [trend]="tauxPresence + '% Taux'"
-          [isPositive]="true">
+          [trend]="tauxPresence + '% de présence'"
+          [isPositive]="tauxPresence > 80">
         </app-metric-card>
 
         <app-metric-card
-          title="DEMANDES DE CONGÉS"
+          title="CONGÉS EN ATTENTE"
           [value]="stats.congesEnAttente.toString()"
           icon="bi-calendar-event"
           color="amber"
-          [trend]="'Attention Urgente'"
-          [isPositive]="false">
+          [trend]="stats.congesEnAttente > 0 ? 'À traiter' : 'Tout à jour'"
+          [isPositive]="stats.congesEnAttente === 0">
         </app-metric-card>
 
         <app-metric-card
-          title="TURNOVER DU PERSONNEL"
-          [value]="turnover + '%'"
-          icon="bi-arrow-repeat"
-          color="rose"
-          [trend]="stats.absences + ' Absences'"
-          [isPositive]="false">
+          title="RECRUTEMENT"
+          [value]="stats.candidatures.toString()"
+          icon="bi-briefcase-fill"
+          color="purple"
+          [trend]="'Candidatures actives'">
         </app-metric-card>
       </div>
 
       <!-- AI Insights Panel -->
       @if (aiLoading || aiInsights) {
-        <div class="card card-ai">
+        <div class="card card-ai animate-in slide-in-from-top duration-500">
           <div class="card-header">
             <div class="ai-header">
               <div class="ai-icon">
@@ -101,8 +99,8 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
                 </svg>
               </div>
               <div class="ai-info">
-                <h3>Analyse Cognitive</h3>
-                <p class="ai-subtitle">Moteur Stratégique Llama 3.2</p>
+                <h3>Analyse Cognitive RH</h3>
+                <p class="ai-subtitle">Propulsé par Llama 3.2</p>
               </div>
             </div>
           </div>
@@ -110,72 +108,100 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
           @if (aiLoading) {
             <div class="ai-loading">
               <div class="spinner"></div>
-              <p>Synthèse des données RH...</p>
+              <p>Synthèse des données en cours...</p>
             </div>
           } @else {
-            <div class="ai-content" [innerHTML]="aiInsights"></div>
+            <div class="ai-content markdown-body" [innerHTML]="aiInsights"></div>
           }
         </div>
       }
 
       <div class="dashboard-grid">
-        <!-- Activity Timeline -->
-        <div class="card card-activity">
+        <!-- Recruitment Funnel -->
+        <div class="card">
           <div class="card-header">
-            <h3>Activité en Temps Réel</h3>
-            <span class="badge badge-gray">10 derniers événements</span>
+            <h3>État du Recrutement</h3>
           </div>
-          <div class="activity-list">
-            @for (act of activities; track act.id) {
-              <div class="activity-item">
-                <div class="activity-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
-                </div>
-                <div class="activity-details">
-                  <p class="activity-title">{{act.title.split(': ')[1]}}</p>
-                  <p class="activity-meta">{{act.time}}</p>
-                </div>
+          <div class="recruitment-stats">
+            <div class="stat-item">
+              <span class="stat-label">Nouveaux Candidats</span>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="100"></div>
               </div>
-            }
+              <span class="stat-value">{{recrutementStats.nouveaux}}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">En Entretien</span>
+              <div class="progress-bar">
+                <div class="progress-fill warning" [style.width.%]="(recrutementStats.entretiens / (recrutementStats.nouveaux || 1)) * 100"></div>
+              </div>
+              <span class="stat-value">{{recrutementStats.entretiens}}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Acceptés</span>
+              <div class="progress-bar">
+                <div class="progress-fill success" [style.width.%]="(recrutementStats.acceptes / (recrutementStats.nouveaux || 1)) * 100"></div>
+              </div>
+              <span class="stat-value">{{recrutementStats.acceptes}}</span>
+            </div>
           </div>
         </div>
 
-        <!-- Heatmap & Performance -->
-        <div class="sidebar">
-          <div class="card">
-            <div class="card-header">
-              <h3>Matrice de Présence</h3>
-            </div>
-            <div class="heatmap-grid">
-              @for (day of heatmapDays; track day.date) {
-                <div [style.background-color]="getHeatmapColor(day.level)" 
-                     class="heatmap-cell"></div>
-              }
-            </div>
-            <div class="heatmap-legend">
-              <span>Faible</span>
-              <div class="legend-scale">
-                <div class="scale-item"></div>
-                <div class="scale-item"></div>
-                <div class="scale-item"></div>
-                <div class="scale-item"></div>
-              </div>
-              <span>Optimal</span>
+         <!-- Activity Timeline -->
+        <div class="card card-activity">
+          <div class="card-header">
+            <h3>Historique des Activités</h3>
+            <div class="header-filters">
+               <div class="search-box">
+                 <input type="text" [(ngModel)]="activitySearch" placeholder="Filtrer...">
+               </div>
             </div>
           </div>
-
-          <div class="card card-metric">
-            <h3>Vélocité de Recrutement</h3>
-            <div class="metric-value">
-              <span class="metric-number">{{delaiMoyenRecrutement}}</span>
-              <span class="metric-unit">Jours en Moyenne</span>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Action & Ressource</th>
+                  <th>Utilisateur</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (act of paginatedActivities; track act.id) {
+                  <tr class="hover-lift">
+                    <td>
+                      <span class="type-badge" [ngClass]="act.type">
+                        {{act.type === 'presence' ? 'Présence' : (act.type === 'recrutement' ? 'Recrutement' : 'Congé')}}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="activity-info">
+                        <span class="activity-title">{{act.title}}</span>
+                      </div>
+                    </td>
+                    <td><span class="user-tag">{{act.user}}</span></td>
+                    <td>{{act.time | date:'dd/MM HH:mm'}}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="empty-state">Aucune activité récente.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <!-- Pagination -->
+          <div class="pagination-container">
+            <div class="pagination-info">Page {{activityPage}} sur {{totalActivityPages}}</div>
+            <div class="pagination-controls">
+              <button class="btn-page" [disabled]="activityPage === 1" (click)="activityPage = activityPage - 1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <button class="btn-page" [disabled]="activityPage === totalActivityPages" (click)="activityPage = activityPage + 1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
-            <p class="metric-description">
-              Temps moyen pour pourvoir les postes ouverts sur toutes les offres actives.
-            </p>
           </div>
         </div>
       </div>
@@ -185,558 +211,341 @@ import { MetricCardComponent } from '@shared/components/metric-card/metric-card.
     .dashboard-container {
       display: flex;
       flex-direction: column;
-      gap: var(--space-xl);
-      padding-bottom: var(--space-2xl);
+      gap: 2rem;
+      padding: 1rem;
     }
 
     .dashboard-header {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-radius: var(--radius-xl);
-      padding: var(--space-2xl);
+      border-radius: 1.5rem;
+      padding: 2.5rem;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: var(--space-lg);
+      color: white;
       position: relative;
       overflow: hidden;
-      box-shadow: var(--shadow-xl);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
 
-    .dashboard-header::before {
+    .dashboard-header::after {
       content: '';
       position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+      top: -10%;
+      right: -5%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
       border-radius: 50%;
     }
 
     .header-content {
-      flex: 1;
-      position: relative;
       z-index: 1;
     }
 
     .header-badges {
       display: flex;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-md);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
     }
 
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
-    .badge-primary {
-      background: rgba(245, 158, 11, 0.1);
-      color: #f59e0b;
-      border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-
-    .badge-success {
-      background: rgba(16, 185, 129, 0.1);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .badge-gray {
-      background: rgba(148, 163, 184, 0.1);
-      color: #94a3b8;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-    }
+    .badge-primary { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
 
     .status-dot {
+      display: inline-block;
       width: 8px;
       height: 8px;
-      background: currentColor;
+      background: #10b981;
       border-radius: 50%;
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      margin-right: 4px;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
     .header-title {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      color: white;
-      margin: 0 0 var(--space-sm);
-      letter-spacing: -0.02em;
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
     }
 
     .gradient-text {
-      background: linear-gradient(135deg, #f59e0b, #f97316);
+      background: linear-gradient(to right, #6366f1, #a855f7);
       -webkit-background-clip: text;
-      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .header-subtitle {
       color: #94a3b8;
-      font-size: var(--font-size-base);
       max-width: 600px;
-      line-height: var(--line-height-relaxed);
-      margin: 0;
     }
 
     .header-actions {
       display: flex;
-      gap: var(--space-sm);
-      position: relative;
+      gap: 1rem;
       z-index: 1;
     }
 
     .btn {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-lg);
-      border-radius: var(--radius-md);
-      font-weight: var(--font-weight-semibold);
-      font-size: var(--font-size-sm);
-      border: none;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all var(--transition-base);
+      transition: all 0.2s;
     }
 
     .btn-primary {
       background: white;
       color: #0f172a;
-      box-shadow: var(--shadow-md);
+      border: none;
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .btn-disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
 
     .btn-icon {
-      display: inline-flex;
+      width: 3rem;
+      height: 3rem;
+      display: flex;
       align-items: center;
       justify-content: center;
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-md);
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-base);
-      background: transparent;
-      color: inherit;
-    }
-
-    .btn-ghost {
+      border-radius: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       background: rgba(255, 255, 255, 0.05);
       color: white;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .btn-ghost:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .card {
-      background: white;
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--color-border);
-      box-shadow: var(--shadow-sm);
-      padding: var(--space-lg);
-      transition: all var(--transition-base);
-    }
-
-    .card:hover {
-      box-shadow: var(--shadow-md);
+      cursor: pointer;
     }
 
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: var(--space-lg);
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 1.5rem;
     }
 
     .dashboard-grid {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: var(--space-lg);
+      grid-template-columns: 1.5fr 1fr;
+      gap: 1.5rem;
     }
 
-    .sidebar {
+    .recruitment-stats {
       display: flex;
       flex-direction: column;
-      gap: var(--space-lg);
+      gap: 1.5rem;
     }
 
-    .card-header {
+    .stat-item {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--space-lg);
+      flex-direction: column;
+      gap: 0.5rem;
     }
 
-    .card-header h3 {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0;
-      text-transform: uppercase;
-      letter-spacing: -0.01em;
+    .stat-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #64748b;
     }
 
-    .card-ai {
-      position: relative;
+    .progress-bar {
+      height: 0.5rem;
+      background: #f1f5f9;
+      border-radius: 9999px;
       overflow: hidden;
     }
 
-    .ai-header {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
+    .progress-fill {
+      height: 100%;
+      background: #6366f1;
+      border-radius: 9999px;
     }
 
-    .ai-icon {
-      width: 48px;
-      height: 48px;
-      background: rgba(245, 158, 11, 0.1);
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #f59e0b;
-      animation: bounce 2s infinite;
-    }
+    .progress-fill.warning { background: #f59e0b; }
+    .progress-fill.success { background: #10b981; }
 
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-
-    .ai-info h3 {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin: 0;
-    }
-
-    .ai-subtitle {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin: var(--space-xs) 0 0;
-    }
-
-    .ai-loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: var(--space-xl);
-      gap: var(--space-md);
-    }
-
-    .spinner {
-      width: 48px;
-      height: 48px;
-      border: 4px solid rgba(245, 158, 11, 0.1);
-      border-top-color: #f59e0b;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .ai-loading p {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin: 0;
-    }
-
-    .ai-content {
-      color: var(--color-text);
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      align-self: flex-end;
     }
 
     .activity-list {
       display: flex;
       flex-direction: column;
-      gap: var(--space-md);
+      gap: 1.25rem;
     }
 
     .activity-item {
       display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      padding: var(--space-md);
-      border-radius: var(--radius-md);
-      border: 1px solid transparent;
-      transition: all var(--transition-base);
-    }
-
-    .activity-item:hover {
-      background: var(--color-bg);
-      border-color: var(--color-border);
+      gap: 1rem;
+      align-items: flex-start;
     }
 
     .activity-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-md);
-      background: var(--color-bg);
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.75rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--color-text-muted);
-      flex-shrink: 0;
+      background: #f1f5f9;
+      color: #64748b;
     }
 
-    .activity-item:hover .activity-icon {
-      transform: scale(1.1);
-    }
-
-    .activity-details {
-      flex: 1;
-    }
+    .activity-icon.conge { background: #fef3c7; color: #d97706; }
+    .activity-icon.recrutement { background: #f3e8ff; color: #9333ea; }
+    .activity-icon.presence { background: #d1fae5; color: #059669; }
 
     .activity-title {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-      margin: 0 0 var(--space-xs);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0;
     }
 
     .activity-meta {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      margin: 0;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin: 0.25rem 0 0;
     }
 
-    .heatmap-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: var(--space-xs);
-      margin-bottom: var(--space-md);
+     .table-container {
+      margin-top: 1rem;
+      overflow-x: auto;
     }
 
-    .heatmap-cell {
-      aspect-ratio: 1;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: all var(--transition-base);
-      cursor: pointer;
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
     }
 
-    .heatmap-cell:hover {
-      transform: scale(1.1);
-    }
-
-    .heatmap-legend {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: var(--space-md);
-      border-top: 1px solid var(--color-border);
-    }
-
-    .heatmap-legend span {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .legend-scale {
-      display: flex;
-      gap: var(--space-xs);
-    }
-
-    .scale-item {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .scale-item:nth-child(1) { background: #f1f5f9; }
-    .scale-item:nth-child(2) { background: #bae6fd; }
-    .scale-item:nth-child(3) { background: #38bdf8; }
-    .scale-item:nth-child(4) { background: #0284c7; }
-
-    .card-metric {
-      background: linear-gradient(135deg, #f59e0b, #f97316);
-      color: white;
-      box-shadow: var(--shadow-lg), rgba(245, 158, 11, 0.2);
-    }
-
-    .card-metric h3 {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: white;
-      margin: 0 0 var(--space-md);
-    }
-
-    .metric-value {
-      display: flex;
-      align-items: baseline;
-      gap: var(--space-xs);
-      margin-bottom: var(--space-md);
-    }
-
-    .metric-number {
-      font-size: var(--font-size-6xl);
-      font-weight: var(--font-weight-bold);
-      line-height: 1;
-    }
-
-    .card-talent {
-      background: white;
-      border-radius: var(--radius-xl);
-    }
-
-    .btn-link {
-      background: transparent;
-      border: none;
-      color: #6366f1;
-      font-weight: 700;
-      font-size: 12px;
-      cursor: pointer;
-      text-transform: uppercase;
-    }
-
-    .talent-podium {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .talent-medal {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      padding: 10px;
-      border-radius: 12px;
+    .data-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
       background: #f8fafc;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
     }
 
-    .talent-rank {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #6366f1;
-      color: white;
+    .data-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+
+    .hover-lift:hover {
+      background: #f8fafc;
+      transform: translateX(4px);
+      transition: all 0.2s;
+    }
+
+    .type-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .type-badge.presence { background: #d1fae5; color: #059669; }
+    .type-badge.recrutement { background: #f3e8ff; color: #9333ea; }
+    .type-badge.conge { background: #fef3c7; color: #d97706; }
+
+    .user-tag {
+      font-weight: 600;
+      color: #6366f1;
+    }
+
+    .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .pagination-info {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-page {
+      width: 2rem;
+      height: 2rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-size: 10px;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+      background: white;
+      cursor: pointer;
     }
 
-    .rank-1 { background: #fffbeb; border: 1px solid #fcd34d; }
-    .rank-1 .talent-rank { background: #f59e0b; }
-    
-    .talent-info { flex: 1; display: flex; justify-content: space-between; align-items: center; }
-    .talent-name { font-weight: 700; color: #1e293b; font-size: 14px; }
-    .talent-score { color: #6366f1; font-weight: 800; font-size: 14px; }
+    .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .talent-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      padding-top: 15px;
-      border-top: 1px solid #f1f5f9;
+    .header-filters {
+      display: flex;
+      gap: 1rem;
     }
 
-    .t-stat { display: flex; flex-direction: column; }
-    .t-label { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 700; }
-    .t-value { font-weight: 800; color: #1e293b; }
-    .t-value.danger { color: #ef4444; }
-
-    .metric-unit {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
+    .search-box input {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+      font-size: 0.875rem;
+      outline: none;
     }
 
-    .metric-description {
-      font-size: var(--font-size-xs);
-      color: rgba(255, 255, 255, 0.7);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin: 0;
-    }
-
-    /* Dark mode */
-    :host-context(.dark) .card {
-      background: var(--color-surface);
-      border-color: var(--color-border);
-    }
-
-    :host-context(.dark) .card-header h3 {
-      color: var(--color-text);
-    }
-
-    :host-context(.dark) .activity-icon {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    :host-context(.dark) .activity-title {
-      color: var(--color-text);
-    }
-
-    :host-context(.dark) .activity-meta {
-      color: var(--color-text-muted);
-    }
-
-    :host-context(.dark) .heatmap-cell {
-      border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    :host-context(.dark) .scale-item:nth-child(1) { background: rgba(255, 255, 255, 0.1); }
-    :host-context(.dark) .scale-item:nth-child(2) { background: rgba(56, 189, 248, 0.5); }
-    :host-context(.dark) .scale-item:nth-child(3) { background: #38bdf8; }
-    :host-context(.dark) .scale-item:nth-child(4) { background: #0284c7; }
-
-    :host-context(.dark) .activity-item:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-border);
-    }
+    .activity-title { font-weight: 600; }
 
     @media (max-width: 1024px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .metrics-grid {
-        grid-template-columns: 1fr;
-      }
+      .dashboard-grid { grid-template-columns: 1fr; }
     }
   `]
 })
@@ -747,149 +556,106 @@ export class RhDashboardComponent implements OnInit {
   societeId = '';
   societeNom = '';
 
-  stats = { totalEmployes: 0, presents: 0, congesEnAttente: 0, absences: 0, tauxAbsent: 0 };
+  stats = { totalEmployes: 0, presents: 0, congesEnAttente: 0, candidatures: 0 };
+  recrutementStats = { nouveaux: 0, entretiens: 0, acceptes: 0 };
   activities: any[] = [];
-  
-  delaiMoyenRecrutement = 0;
-  turnover = 0;
   tauxPresence = 0;
-  heatmapDays: any[] = [];
 
   aiLoading = false;
   aiInsights: string | null = null;
-  topTalents: any[] = [];
-  riskCount = 0;
+
+  // Activity Pagination
+  activityPage = 1;
+  activityPageSize = 4;
+  activitySearch = '';
+
+  get filteredActivities() {
+    return this.activities.filter(a => 
+      !this.activitySearch || a.title.toLowerCase().includes(this.activitySearch.toLowerCase()) ||
+      a.user.toLowerCase().includes(this.activitySearch.toLowerCase())
+    );
+  }
+
+  get totalActivityPages() {
+    return Math.ceil(this.filteredActivities.length / this.activityPageSize) || 1;
+  }
+
+  get paginatedActivities() {
+    const start = (this.activityPage - 1) * this.activityPageSize;
+    return this.filteredActivities.slice(start, start + this.activityPageSize);
+  }
 
   ngOnInit() {
-    const user = this.api.getCurrentUser();
     this.societeId = this.api.getCurrentSocieteId();
+    const user = this.api.getCurrentUser();
     this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.loadData();
-    this.generateHeatmap();
   }
 
   loadData() {
+    // 1. Stats de présence réelles via Dashboard/RH-Stats
     this.api.getRHStats(this.societeId).subscribe({
       next: (data) => {
         this.stats.totalEmployes = data.totalEmployes || 0;
-        this.stats.absences = data.employesAbsents || 0;
         this.stats.presents = data.employesPresents || 0;
         this.stats.congesEnAttente = data.demandesCongesEnAttente || 0;
-        this.stats.tauxAbsent = 100 - (data.tauxPresence || 0);
         this.tauxPresence = data.tauxPresence || 0;
-        
-        this.turnover = data.turnover || 8.5; 
-      },
-      error: () => {
-        // Données par défaut si l'API échoue
-        this.stats.totalEmployes = 24;
-        this.stats.absences = 2;
-        this.stats.presents = 22;
-        this.stats.congesEnAttente = 5;
-        this.stats.tauxAbsent = 8;
-        this.tauxPresence = 92;
-        this.turnover = 8.5;
       }
     });
 
-    this.api.getCandidaturesBySociete(this.societeId).subscribe(societeCandidats => {
-      const acceptedCandidats = societeCandidats.filter((c: any) => c.statut === 'Accepté');
-      if (acceptedCandidats.length > 0) {
-        const delays = acceptedCandidats.map((c: any) => {
-          const start = new Date(c.dateCandidature || Date.now()).getTime();
-          const end = c.dateEntretien ? new Date(c.dateEntretien).getTime() : new Date().getTime();
-          return (end - start) / (1000 * 3600 * 24);
-        });
-        this.delaiMoyenRecrutement = Math.max(1, Math.round(delays.reduce((a:number, b:number) => a + b, 0) / delays.length));
-      } else {
-        this.delaiMoyenRecrutement = 12;
+    // 2. Stats de recrutement réelles
+    this.api.getCandidaturesBySociete(this.societeId).subscribe({
+      next: (data) => {
+        this.stats.candidatures = data.length;
+        this.recrutementStats.nouveaux = data.filter((c: any) => 
+          ['NOUVEAU', 'EN ATTENTE', 'EN_ATTENTE'].includes((c.statut || '').toUpperCase())
+        ).length;
+        this.recrutementStats.entretiens = data.filter((c: any) => 
+          (c.statut || '').toUpperCase().includes('ENTRETIEN') || (c.statut || '').toUpperCase().includes('PLANIFIE')
+        ).length;
+        this.recrutementStats.acceptes = data.filter((c: any) => 
+          (c.statut || '').toUpperCase().includes('ACCEPTE')
+        ).length;
       }
     });
 
-    this.api.getEmployesBySociete(this.societeId).subscribe(employes => {
-      const employesMap: { [id: string]: boolean } = {};
-      employes.forEach((e: any) => employesMap[e.id || e.Id] = true);
-
-      this.api.getPointages().subscribe({
-        next: (pts) => {
-          const societePts = (pts || []).filter((p: any) => employesMap[p.utilisateurId || p.UtilisateurId]);
-          if (societePts.length > 0) {
-            this.activities = societePts.slice(0, 10).map((p: any) => ({
-              id: p.id || 'act_'+Math.random(),
-              title: `Pointage: ${p.utilisateurNom || 'Utilisateur'}`,
-              time: p.heureDebut || p.HeureEntree || '--:--',
-              type: 'pointage'
-            }));
-          } else {
-            // Données par défaut
-            this.activities = [
-              { id: 1, title: 'Pointage: Ahmed Benali', time: '08:00', type: 'pointage' },
-              { id: 2, title: 'Pointage: Sara Karoui', time: '08:15', type: 'pointage' },
-              { id: 3, title: 'Pointage: Mohamed Salah', time: '08:30', type: 'pointage' },
-              { id: 4, title: 'Pointage: Fatima Zahra', time: '08:45', type: 'pointage' },
-              { id: 5, title: 'Pointage: Youssef Amrani', time: '09:00', type: 'pointage' }
-            ];
-          }
-        },
-        error: () => {
-          this.activities = [
-            { id: 1, title: 'Pointage: Ahmed Benali', time: '08:00', type: 'pointage' },
-            { id: 2, title: 'Pointage: Sara Karoui', time: '08:15', type: 'pointage' },
-            { id: 3, title: 'Pointage: Mohamed Salah', time: '08:30', type: 'pointage' }
-          ];
-        }
-      });
+    // 3. Activités récentes filtrées pour la société
+    this.api.getActiviteRecente(20, this.societeId).subscribe({
+      next: (data) => {
+        this.activities = (data || []).map((a: any) => ({
+          id: a.id || Math.random().toString(36).substr(2, 9),
+          title: `${a.action || 'Action'} sur ${a.nom || 'ressource'}`,
+          time: a.date || new Date(),
+          user: a.utilisateur || 'Système',
+          type: (a.type || '').toLowerCase().includes('utilisateur') ? 'presence' : 
+                ((a.type || '').toLowerCase().includes('candidature') ? 'recrutement' : 'conge')
+        })).sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime());
+      }
     });
-  }
-
-  generateHeatmap() {
-    const days = [];
-    const now = new Date();
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(now.getDate() - i);
-      days.push({
-        date: date.toLocaleDateString(),
-        count: Math.floor(Math.random() * 20) + 80,
-        level: Math.floor(Math.random() * 4) + 1
-      });
-    }
-    this.heatmapDays = days;
-  }
-
-  getHeatmapColor(level: number): string {
-    const colors = ['#f1f5f9', '#bae6fd', '#38bdf8', '#0284c7', '#0369a1'];
-    return colors[level] || colors[0];
   }
 
   async analyserRH() {
     this.aiLoading = true;
     this.aiInsights = null;
     
-    const payload = {
-      totalEmployes: this.stats.totalEmployes,
-      presents: this.stats.presents,
-      absences: this.stats.absences,
-      congesEnAttente: this.stats.congesEnAttente,
-      turnover: this.turnover,
-      tauxPresence: this.tauxPresence,
-      delaiMoyenRecrutement: this.delaiMoyenRecrutement
-    };
+    const context = `
+      SOCIÉTÉ: ${this.societeNom}
+      INDICATEURS:
+      - Effectif total: ${this.stats.totalEmployes}
+      - Présence aujourd'hui: ${this.stats.presents} (${this.tauxPresence}%)
+      - Demandes de congés en attente: ${this.stats.congesEnAttente}
+      - Pipeline Recrutement: ${this.stats.candidatures} candidats, ${this.recrutementStats.entretiens} en cours.
+    `;
 
-    this.aiService.getRhInsights(payload).subscribe({
-      next: async (res) => {
-        if (res?.response) {
-          this.aiInsights = await marked.parse(res.response);
-        } else {
-          this.aiInsights = "L'IA n'a pas pu analyser ces données.";
-        }
-        this.aiLoading = false;
-      },
-      error: () => {
-        this.aiInsights = "Erreur lors de la connexion à l'IA.";
-        this.aiLoading = false;
-      }
-    });
+    const prompt = `Agis en tant qu'expert en ressources humaines. Analyse ces chiffres réels et propose 3 recommandations stratégiques. Sois précis et utilise un ton professionnel.`;
+
+    try {
+      const res = await this.aiService.generateResponse(prompt, context).toPromise();
+      this.aiInsights = String(marked.parse(res || "L'analyse n'a pas pu être générée."));
+    } catch (e) {
+      this.aiInsights = "Une erreur est survenue lors de la connexion à l'intelligence artificielle.";
+    } finally {
+      this.aiLoading = false;
+    }
   }
 }
-

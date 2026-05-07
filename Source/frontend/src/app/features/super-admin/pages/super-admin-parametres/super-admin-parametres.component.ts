@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { LanguageService } from '@core/services/language.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 interface SystemStats {
@@ -50,6 +51,9 @@ interface SystemStats {
 
       <!-- Tabs -->
       <div class="tabs-container">
+        <button class="tab-btn" [class.active]="activeTab === 'profil'" (click)="activeTab = 'profil'">
+          {{lang.translate('profile')}}
+        </button>
         <button class="tab-btn" [class.active]="activeTab === 'general'" (click)="activeTab = 'general'">
           Général
         </button>
@@ -67,6 +71,54 @@ interface SystemStats {
         </button>
       </div>
       <!-- Tab Content -->
+      @if (activeTab === 'profil') {
+        <div class="settings-content">
+          <div class="settings-card">
+            <div class="settings-header">
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+               </svg>
+               <h3>Mon Profil Administrateur</h3>
+            </div>
+            
+            <div class="profile-layout">
+               <div class="profile-photo-zone">
+                  <div class="photo-uploader" (click)="fileInput.click()">
+                    @if (profil.photo) {
+                      <img [src]="profil.photo" class="preview-img">
+                    } @else {
+                      <div class="placeholder-avatar">{{profil.initials}}</div>
+                    }
+                    <div class="photo-overlay">
+                       <span>CHANGER</span>
+                    </div>
+                  </div>
+                  <input #fileInput type="file" (change)="onPhotoSelected($event)" accept="image/*" hidden>
+               </div>
+
+               <div class="form-grid">
+                  <div class="form-field">
+                     <label>{{lang.translate('name')}}</label>
+                     <input type="text" class="form-input" [(ngModel)]="profil.nom">
+                  </div>
+                  <div class="form-field">
+                     <label>{{lang.translate('email')}}</label>
+                     <input type="email" class="form-input" [(ngModel)]="profil.email">
+                  </div>
+                  <div class="form-field">
+                     <label>{{lang.translate('language')}}</label>
+                     <select class="form-input" [ngModel]="lang.lang" (ngModelChange)="lang.setLanguage($event)">
+                        <option value="fr">Français 🇫🇷</option>
+                        <option value="en">English 🇺🇸</option>
+                     </select>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      }
+
       @if (activeTab === 'general') {
         <div class="settings-content">
           <div class="settings-card">
@@ -109,7 +161,7 @@ interface SystemStats {
               <div class="form-field">
                 <label>Fuseau horaire</label>
                 <select class="form-input" [(ngModel)]="settings.timezone">
-                  <option value="Africa/Tunis">Tunisie (GMT+1)</option>
+                  <option value="Africa/Tunis">Tunisie (GMT)</option>
                   <option value="Europe/Paris">France (GMT+1)</option>
                   <option value="UTC">UTC</option>
                 </select>
@@ -1059,6 +1111,68 @@ interface SystemStats {
       box-shadow: var(--shadow-sm);
     }
 
+    .profile-layout {
+      display: flex;
+      gap: var(--space-2xl);
+      align-items: flex-start;
+      padding: var(--space-lg) 0;
+    }
+
+    .profile-photo-zone {
+      flex-shrink: 0;
+    }
+
+    .photo-uploader {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: var(--color-bg);
+      border: 4px solid white;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .placeholder-avatar {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      font-weight: bold;
+      color: white;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+    }
+
+    .photo-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .photo-uploader:hover .photo-overlay {
+      opacity: 1;
+    }
+
     .text-muted {
       color: var(--color-text-muted);
     }
@@ -1123,9 +1237,11 @@ interface SystemStats {
 })
 export class SuperAdminParametresComponent implements OnInit {
   private api = inject(ApiService);
+  public lang = inject(LanguageService);
   private snackBar = inject(MatSnackBar);
 
-  activeTab = 'general';
+  activeTab = 'profil';
+  profil = { nom: '', email: '', initials: '', photo: '' };
   systemStats: SystemStats = { cpu: 23, memory: 47, disk: 62, uptime: '14 jours', users: 42, companies: 10 };
   showApiKey = false;
   selectedFile: File | null = null;
@@ -1172,7 +1288,32 @@ export class SuperAdminParametresComponent implements OnInit {
     maintenanceMode: false
   };
 
-  ngOnInit() {}
+  ngOnInit() { 
+    this.loadProfile();
+  }
+
+  loadProfile() {
+    const user = this.api.getCurrentUser();
+    if (user) {
+      this.profil = {
+        nom: (user.prenom || '') + ' ' + (user.nom || ''),
+        email: user.email || '',
+        initials: (user.nom || 'A').charAt(0).toUpperCase(),
+        photo: user.photo || ''
+      };
+    }
+  }
+
+  onPhotoSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.profil.photo = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
 
   generateApiKey(): string {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -1210,8 +1351,17 @@ export class SuperAdminParametresComponent implements OnInit {
   }
 
   saveSettings() {
-    localStorage.setItem('app_settings', JSON.stringify(this.settings));
-    this.snackBar.open('Paramètres enregistrés avec succès', 'Fermer', { duration: 3000 });
+    if (this.activeTab === 'profil') {
+      this.api.updateCurrentUser({ 
+        nom: this.profil.nom, 
+        email: this.profil.email, 
+        photo: this.profil.photo 
+      });
+      this.snackBar.open(this.lang.translate('success_save'), 'Fermer', { duration: 3000 });
+    } else {
+      localStorage.setItem('app_settings', JSON.stringify(this.settings));
+      this.snackBar.open('Paramètres enregistrés avec succès', 'Fermer', { duration: 3000 });
+    }
   }
 
   resetDefaults() {

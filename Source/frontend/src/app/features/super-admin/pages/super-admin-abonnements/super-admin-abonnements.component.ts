@@ -1105,17 +1105,17 @@ export class SuperAdminAbonnementsComponent implements OnInit {
     this.api.getAbonnements().subscribe({
       next: (abos) => {
         const abosList = abos || [];
-        const societesMap = new Map((this.societes || []).map((s: any) => [s.id, s.nom]));
+        const societesMap = new Map((this.societes || []).map((s: any) => [s.id || s.Id, s.nom || s.Nom]));
         
         this.abonnementsFull = abosList.map((abo: any) => ({
-          id: abo.id,
-          societeId: abo.societeId,
-          societeNom: societesMap.get(abo.societeId) || 'Société',
-          planNom: abo.typeAbonnement || 'Standard',
-          montant: abo.prix || 0,
-          statut: abo.actif ? 'Actif' : 'Inactif',
-          dateDebut: abo.dateDebut ? new Date(abo.dateDebut).toLocaleDateString('fr-FR') : '-',
-          dateFin: abo.dateFin ? new Date(abo.dateFin).toLocaleDateString('fr-FR') : '-'
+          id: abo.id || abo.Id,
+          societeId: abo.societeId || abo.SocieteId,
+          societeNom: societesMap.get(abo.societeId || abo.SocieteId) || 'Organisation Inconnue',
+          planNom: abo.typeAbonnement || abo.TypeAbonnement || 'Standard',
+          montant: abo.prix || abo.Prix || 0,
+          statut: (abo.actif === true || abo.Actif === true) ? 'Actif' : 'Inactif',
+          dateDebut: (abo.dateDebut || abo.DateDebut) ? new Date(abo.dateDebut || abo.DateDebut).toLocaleDateString('fr-FR') : '-',
+          dateFin: (abo.dateFin || abo.DateFin) ? new Date(abo.dateFin || abo.DateFin).toLocaleDateString('fr-FR') : '-'
         }));
         
         this.applyFilters();
@@ -1126,14 +1126,14 @@ export class SuperAdminAbonnementsComponent implements OnInit {
   loadFactures() {
     this.api.getPaiements().subscribe({
       next: (paiements) => {
-        const societesMap = new Map((this.societes || []).map((s: any) => [s.id, s.nom]));
+        const societesMap = new Map((this.societes || []).map((s: any) => [s.id || s.Id, s.nom || s.Nom]));
         this.factures = (paiements || []).map((p: any) => ({
-          id: p.id,
-          numero: 'INV-' + p.id.slice(-6).toUpperCase(),
-          societeNom: societesMap.get(p.societeId) || 'Société',
-          montant: p.montant,
-          date: p.date ? new Date(p.date).toLocaleDateString('fr-FR') : '-',
-          statut: p.statut || 'Payé'
+          id: p.id || p.Id,
+          numero: 'INV-' + (p.id || p.Id || '').toString().slice(-6).toUpperCase(),
+          societeNom: societesMap.get(p.societeId || p.SocieteId) || 'Organisation Inconnue',
+          montant: p.montant || p.Montant || 0,
+          date: (p.date || p.Date) ? new Date(p.date || p.Date).toLocaleDateString('fr-FR') : '-',
+          statut: p.statut || p.Statut || 'Payé'
         }));
       }
     });
@@ -1169,18 +1169,36 @@ export class SuperAdminAbonnementsComponent implements OnInit {
   }
 
   createAbonnement() {
-    if (!this.newAbo.societeId || !this.newAbo.planId) return;
+    if (!this.newAbo.societeId || !this.newAbo.planId) {
+      this.snackBar.open('Veuillez sélectionner une société et un plan', 'Fermer', { duration: 3000 });
+      return;
+    }
+
     const plan = this.plans.find(p => p.id === this.newAbo.planId);
+    
+    // Calcul de la date de fin
+    const startDate = new Date(this.newAbo.dateDebut);
+    const endDate = new Date(startDate);
+    endDate.setMonth(startDate.getMonth() + parseInt(this.newAbo.dureeMois.toString()));
+
     const payload = {
-      ...this.newAbo,
+      societeId: this.newAbo.societeId,
       typeAbonnement: plan?.nom,
-      prix: plan?.prix,
+      prix: plan?.prix ? (plan.prix * parseInt(this.newAbo.dureeMois.toString())) : 0,
+      dateDebut: startDate.toISOString(),
+      dateFin: endDate.toISOString(),
       actif: true
     };
+
     this.api.createAbonnement(payload).subscribe({
       next: () => {
+        this.snackBar.open('Abonnement activé avec succès', 'Fermer', { duration: 3000 });
         this.showAddDialog = false;
         this.loadAllAbonnements();
+      },
+      error: (err) => {
+        console.error('Erreur lors de la création de l\'abonnement:', err);
+        this.snackBar.open('Erreur lors de l\'activation', 'Fermer', { duration: 3000 });
       }
     });
   }

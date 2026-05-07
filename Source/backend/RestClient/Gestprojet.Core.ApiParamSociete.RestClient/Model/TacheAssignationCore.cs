@@ -28,7 +28,7 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
     /// <summary>
     /// TacheAssignationCore
     /// </summary>
-    [DataContract(Name = "TacheAssignationCore")]
+    [JsonObject]
     public partial class TacheAssignationCore : IEquatable<TacheAssignationCore>, IValidatableObject
     {
         /// <summary>
@@ -49,25 +49,25 @@ namespace Gestprojet.Core.ApiParamSociete.Client.Model
         /// <summary>
         /// Gets or Sets Id
         /// </summary>
-        [DataMember(Name = "id", EmitDefaultValue = true)]
+        [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
 
         /// <summary>
         /// Gets or Sets TacheId
         /// </summary>
-        [DataMember(Name = "tacheId", EmitDefaultValue = true)]
+        [JsonProperty(PropertyName = "tacheId")]
         public string TacheId { get; set; }
 
         /// <summary>
         /// Gets or Sets UtilisateurId
         /// </summary>
-        [DataMember(Name = "utilisateurId", EmitDefaultValue = true)]
+        [JsonProperty(PropertyName = "utilisateurId")]
         public string UtilisateurId { get; set; }
 
         /// <summary>
         /// Gets or Sets Actif
         /// </summary>
-        [DataMember(Name = "actif", EmitDefaultValue = true)]
+        [JsonProperty(PropertyName = "actif")]
         public bool? Actif { get; set; }
 
         /// <summary>

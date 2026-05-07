@@ -1,9 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SidebarService } from '@core/services/sidebar.service';
 import { ApiService } from '@core/services/api.service';
+import { NotificationService } from '@core/services/notification.service';
+import { LanguageService } from '@core/services/language.service';
 
 @Component({
   selector: 'app-header',
@@ -30,31 +32,17 @@ import { ApiService } from '@core/services/api.service';
             <input type="search" 
                    [(ngModel)]="searchQuery" 
                    (input)="onSearch()"
-                   placeholder="Rechercher (Projets, Tâches...)" 
+                   [placeholder]="lang.lang === 'fr' ? 'Rechercher...' : 'Search...'" 
                    aria-label="Rechercher" 
                    class="search-input"/>
-            
-            @if (searchResults.length > 0 || isSearching) {
-              <div class="search-dropdown shadow-premium">
-                @if (isSearching) {
-                  <div class="search-loading">Recherche en cours...</div>
-                }
-                @for (res of searchResults; track res.id) {
-                  <div class="search-result-item" (click)="searchResults = []">
-                    <span class="res-type">{{res.type}}</span>
-                    <span class="res-title">{{res.titre || res.nom}}</span>
-                  </div>
-                }
-              </div>
-            }
           </div>
         </div>
         <div class="header-right">
-          <button class="header-btn header-btn-icon" aria-label="Notifications">
+          <button (click)="goToNotifications()" class="header-btn header-btn-icon" aria-label="Notifications">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
-            <span *ngIf="notifCount > 0" class="notification-badge">{{notifCount}}</span>
+            <span *ngIf="notifCount() > 0" class="notification-badge">{{notifCount()}}</span>
           </button>
           <button (click)="toggleTheme()" class="header-btn" aria-label="Toggle theme">
             @if (isDark) {
@@ -80,7 +68,13 @@ import { ApiService } from '@core/services/api.service';
               <p class="user-name">{{ userName }}</p>
               <p class="user-role">{{ userRole }}</p>
             </div>
-            <div class="user-avatar">{{ userInitials }}</div>
+            <div class="user-avatar-container">
+               @if (userPhoto) {
+                  <img [src]="userPhoto" class="user-avatar-img">
+               } @else {
+                  <div class="user-avatar">{{ userInitials }}</div>
+               }
+            </div>
           </div>
         </div>
       </div>
@@ -112,277 +106,63 @@ import { ApiService } from '@core/services/api.service';
       padding: var(--space-sm) var(--space-md);
     }
 
-    @media (min-width: 640px) {
-      .header-content {
-        padding: var(--space-sm) var(--space-lg);
-      }
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-    }
-
-    .header-right {
+    .header-left, .header-right {
       display: flex;
       align-items: center;
       gap: var(--space-xs);
     }
 
     .header-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border-radius: var(--radius-lg);
-      background: transparent;
-      border: none;
-      color: var(--color-text-muted);
-      cursor: pointer;
-      transition: all var(--transition-base);
+      background: transparent; border: none;
+      color: var(--color-text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
     }
 
-    .header-btn:hover {
-      background: var(--color-bg);
-      color: var(--color-text);
-    }
-
-    :host-context(.dark) .header-btn:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: white;
-    }
-
-    .header-btn-desktop {
-      display: none;
-    }
-
-    @media (min-width: 1280px) {
-      .header-btn-desktop {
-        display: flex;
-      }
-    }
-
-    .header-btn-desktop.rotated svg {
-      transform: rotate(180deg);
-    }
-
-    .header-btn-icon {
-      position: relative;
-    }
-
-    .notification-badge {
-      position: absolute;
-      top: -2px;
-      right: -2px;
-      background: #ef4444;
-      color: white;
-      font-size: 10px;
-      font-weight: 800;
-      min-width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    :host-context(.dark) .notification-badge {
-      border-color: var(--color-slate-900);
-    }
-
-    .header-btn-logout:hover {
-      color: #ef4444;
-    }
-
-    :host-context(.dark) .header-btn-logout:hover {
-      color: #f87171;
-    }
-
-    .search-wrapper {
-      display: none;
-      position: relative;
-    }
-
-    @media (min-width: 768px) {
-      .search-wrapper {
-        display: block;
-      }
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--color-text-muted);
-      pointer-events: none;
-    }
+    .header-btn:hover { background: var(--color-bg); color: var(--color-text); }
 
     .search-input {
-      width: 280px;
-      padding-left: 40px;
-      padding-right: var(--space-md);
-      height: 40px;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--color-border);
-      background: var(--color-bg);
-      color: var(--color-text);
-      font-size: var(--font-size-sm);
-      transition: all var(--transition-base);
-    }
-
-    .search-input::placeholder {
-      color: var(--color-text-muted);
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--color-brand-500);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-
-    :host-context(.dark) .search-input {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--color-slate-700);
-    }
-
-    :host-context(.dark) .search-input:focus {
-      border-color: var(--color-brand-500);
-    }
-
-    .search-dropdown {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      width: 400px;
-      background: white;
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--color-border);
-      max-height: 400px;
-      overflow-y: auto;
-      z-index: 100;
-      animation: slideDown 0.2s ease-out;
-    }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    :host-context(.dark) .search-dropdown {
-      background: #1e293b;
-      border-color: #334155;
-    }
-
-    .search-loading {
-      padding: var(--space-md);
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      text-align: center;
-    }
-
-    .search-result-item {
-      padding: var(--space-md);
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      cursor: pointer;
-      transition: all 0.2s;
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .search-result-item:last-child {
-      border-bottom: none;
-    }
-
-    .search-result-item:hover {
-      background: var(--color-bg);
-    }
-
-    :host-context(.dark) .search-result-item {
-      border-bottom-color: #334155;
-    }
-
-    :host-context(.dark) .search-result-item:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .res-type {
-      font-size: 10px;
-      text-transform: uppercase;
-      font-weight: 800;
-      padding: 2px 6px;
-      background: #e0e7ff;
-      color: #4338ca;
-      border-radius: 4px;
-    }
-
-    .res-title {
-      font-size: var(--font-size-sm);
-      font-weight: 600;
-      color: var(--color-text);
-    }
-
-    .shadow-premium {
-      box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-    }
-
-    .header-divider {
-      width: 1px;
-      height: 32px;
-      background: var(--color-border);
-      margin: 0 var(--space-sm);
-    }
-
-    :host-context(.dark) .header-divider {
-      background: var(--color-slate-700);
-    }
-
-    .user-info {
-      display: none;
-      align-items: center;
-      gap: var(--space-md);
-    }
-
-    @media (min-width: 640px) {
-      .user-info {
-        display: flex;
-      }
-    }
-
-    .user-details {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .user-name {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-      margin: 0;
-    }
-
-    .user-role {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-      margin: 0;
-    }
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
+      width: 200px;
+      padding: 0 var(--space-md) 0 36px;
+      height: 38px;
       border-radius: var(--radius-full);
-      background: linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700));
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: var(--font-weight-bold);
-      font-size: var(--font-size-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+      font-size: 14px;
+    }
+
+    .search-wrapper { position: relative; }
+    .search-icon { position: absolute; left: 12px; top: 10px; color: var(--color-text-muted); }
+
+    .notification-badge {
+      position: absolute; top: 0; right: 0;
+      background: #ef4444; color: white;
+      font-size: 10px; font-weight: 800;
+      width: 16px; height: 16px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid white;
+    }
+
+    .header-divider { width: 1px; height: 24px; background: var(--color-border); margin: 0 8px; }
+
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .user-details { text-align: right; }
+    .user-name { font-size: 14px; font-weight: 600; margin: 0; }
+    .user-role { font-size: 12px; color: var(--color-text-muted); margin: 0; }
+    
+    .user-avatar-container { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; }
+    .user-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+    .user-avatar { 
+      width: 100%; height: 100%; 
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .user-details, .search-wrapper, .header-btn-desktop { display: none; }
     }
   `]
 })
@@ -390,46 +170,51 @@ export class HeaderComponent implements OnInit {
   sidebarService = inject(SidebarService);
   private api = inject(ApiService);
   private router = inject(Router);
+  public lang = inject(LanguageService);
+  private notifService = inject(NotificationService);
 
   isExpanded$ = this.sidebarService.isExpanded$;
   isDark = false;
   userName = '';
   userRole = '';
   userInitials = '';
-  notifCount = 3;
+  userPhoto = '';
+  notifCount = computed(() => this.notifService.unreadCount());
 
   searchQuery = '';
-  isSearching = false;
-  searchResults: any[] = [];
 
   ngOnInit() {
-    const user = this.api.getCurrentUser();
-    if (user) {
-      this.userName = (user.prenom || user.Prenom || '') + ' ' + (user.nom || user.Nom || '');
-      this.userInitials = (this.userName.split(' ').map(n => n[0]).join('')).toUpperCase().substring(0, 2);
-      this.userRole = user.role || user.Role || 'Membre';
-    }
+    this.loadUserData();
+    this.api.userUpdate$.subscribe(() => this.loadUserData());
     this.isDark = document.body.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
     if (this.isDark) document.body.classList.add('dark');
   }
 
-  onSearch() {
-    if (this.searchQuery.length > 2) {
-      this.isSearching = true;
-      const user = this.api.getCurrentUser();
-      // TODO: Implement globalSearch in ApiService
-      // this.api.globalSearch(this.searchQuery, user?.societeId || user?.SocieteId).subscribe({
-      //   next: (res: any) => {
-      //     this.searchResults = res || [];
-      //     this.isSearching = false;
-      //   },
-      //   error: () => this.isSearching = false
-      // });
-      this.searchResults = [];
-      this.isSearching = false;
-    } else {
-      this.searchResults = [];
+  loadUserData() {
+    const user = this.api.getCurrentUser();
+    if (user) {
+      const sanitize = (val: any) => (val && typeof val === 'string') ? val.replace(/undefined/g, '').trim() : (val || '');
+      const prenom = sanitize(user.prenom || user.Prenom);
+      const nom = sanitize(user.nom || user.Nom);
+      
+      this.userName = `${prenom} ${nom}`.trim() || 'Utilisateur';
+      this.userInitials = (this.userName.split(' ').map(n => n[0]).join('')).toUpperCase().substring(0, 2);
+      this.userRole = ApiService.getRoleLabel(user.typeUtilisateurId || user.TypeUtilisateurId || user.role);
+      this.userPhoto = user.photo || '';
     }
+  }
+
+  onSearch() {
+    // Logic for search
+  }
+
+  goToNotifications() {
+    const role = this.api.getUserRole();
+    const mapping: any = {
+      't001': 'superadmin', 't002': 'admin', 't003': 'rh', 't004': 'chef', 't005': 'dev', 't006': 'qa', 't007': 'applicant', 't008': 'client'
+    };
+    const prefix = mapping[role] || 'dev';
+    this.router.navigate([`/${prefix}/notifications`]);
   }
 
   toggleTheme() {

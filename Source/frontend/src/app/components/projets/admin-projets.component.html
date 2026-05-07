@@ -1,0 +1,358 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-badges">
+        <span class="badge badge-primary">Projets</span>
+      </div>
+      <h1 class="header-title">
+        Gestion des <span class="gradient-text">Projets.</span>
+      </h1>
+      <p class="header-subtitle">
+        Suivi et gestion centralisée de tous les projets de l'entreprise.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button (click)="openAddDialog()" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Nouveau Projet
+      </button>
+    </div>
+  </header>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().total}}</h3>
+        <p>Total Projets</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon warning">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().enCours}}</h3>
+        <p>En Cours</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon success">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().termines}}</h3>
+        <p>Terminés</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon info">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats().enPause}}</h3>
+        <p>En Pause</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-input">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="filterProjets()" placeholder="Rechercher un projet...">
+    </div>
+    <div class="filter-selects">
+      <select [(ngModel)]="filterStatut" (change)="filterProjets()">
+        <option value="">Tous les États</option>
+        <option value="en_cours">En Cours</option>
+        <option value="termine">Terminé</option>
+        <option value="en_pause">En Pause</option>
+        <option value="annule">Annulé</option>
+      </select>
+      <select [(ngModel)]="filterClient" (change)="filterProjets()">
+        <option value="">Tous les Clients</option>
+        <option value="client1">Client A</option>
+        <option value="client2">Client B</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Projects Table -->
+  <div class="card table-card animate-scale-in">
+    <div class="card-header">
+      <h3>Projets</h3>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Client</th>
+            <th>Chef de Projet</th>
+            <th>Statut</th>
+            <th>Budget</th>
+            <th>Date Début</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (projet of paginatedProjets(); track projet.id) {
+            <tr class="hover-row">
+              <td>
+                <div class="project-info">
+                  <strong>{{projet.nom}}</strong>
+                  <small>{{projet.description | slice:0:50}}...</small>
+                </div>
+              </td>
+              <td>{{projet.clientNom || 'N/A'}}</td>
+              <td>{{projet.chefProjetNom || 'N/A'}}</td>
+              <td>
+                <span [class]="'badge ' + getStatutClass(projet.statut)">
+                  {{getStatutLabel(projet.statut)}}
+                </span>
+              </td>
+              <td>{{projet.budget ? projet.budget + ' €' : 'N/A'}}</td>
+              <td>{{projet.dateDebut | date:'dd/MM/yyyy'}}</td>
+              <td class="text-right">
+                <div class="action-row">
+                  <button (click)="openEditDialog(projet)" class="btn-table-icon" title="Modifier">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button (click)="deleteProjet(projet)" class="btn-table-icon danger" title="Supprimer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                      <line x1="10" y1="11" x2="10" y2="17"/>
+                      <line x1="14" y1="11" x2="14" y2="17"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-footer">
+      <div class="pagination-info">
+        Affichage de {{ Math.min((page() - 1) * pageSize() + 1, filteredProjets().length) }} à {{ Math.min(page() * pageSize(), filteredProjets().length) }} sur {{ filteredProjets().length }} projets
+      </div>
+      <div class="pagination-actions">
+        <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">Précédent</button>
+        <div class="page-numbers">
+          @for (p of totalPagesArray(); track $index) {
+            <button class="btn-number" [class.active]="$index + 1 === page()" (click)="changePage($index + 1)">{{$index + 1}}</button>
+          }
+        </div>
+        <button class="btn-page" [disabled]="page() === totalPages()" (click)="nextPage()">Suivant</button>
+      </div>
+    </div>
+
+    @if (filteredProjets().length === 0) {
+      <div class="empty-state">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <p>Aucun projet trouvé</p>
+      </div>
+    }
+  </div>
+
+  <!-- Add Modal -->
+  @if (showAddDialog()) {
+    <div class="modal-overlay" (click)="closeAddDialog()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Ajouter un Projet</h2>
+          <button class="btn-icon" (click)="closeAddDialog()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <form [formGroup]="projetForm" (ngSubmit)="onSubmit()">
+          <div class="form-grid">
+            <div class="form-field full-width">
+              <label>Nom du projet *</label>
+              <input formControlName="nom" type="text" placeholder="Nom du projet">
+              @if (formErrors['nom']?.invalid && formErrors['nom']?.touched) {
+                <small class="error">Le nom est requis</small>
+              }
+            </div>
+            <div class="form-field full-width">
+              <label>Description *</label>
+              <textarea formControlName="description" placeholder="Description détaillée du projet"></textarea>
+              @if (formErrors['description']?.invalid && formErrors['description']?.touched) {
+                <small class="error">La description est requise</small>
+              }
+            </div>
+            <div class="form-field">
+              <label>Client *</label>
+              <select formControlName="clientId">
+                <option value="">Sélectionner un client</option>
+                @for (client of clients$ | async; track client.id) {
+                  <option [value]="client.id">{{client.nom}}</option>
+                }
+              </select>
+              @if (formErrors['clientId']?.invalid && formErrors['clientId']?.touched) {
+                <small class="error">Le client est requis</small>
+              }
+            </div>
+            <div class="form-field">
+              <label>Chef de Projet *</label>
+              <select formControlName="chefProjetId">
+                <option value="">Sélectionner un chef de projet</option>
+                @for (employe of employes$ | async; track employe.id) {
+                  <option [value]="employe.id">{{employe.nom}} {{employe.prenom}}</option>
+                }
+              </select>
+              @if (formErrors['chefProjetId']?.invalid && formErrors['chefProjetId']?.touched) {
+                <small class="error">Le chef de projet est requis</small>
+              }
+            </div>
+            <div class="form-field">
+              <label>Date de début *</label>
+              <input formControlName="dateDebut" type="date">
+              @if (formErrors['dateDebut']?.invalid && formErrors['dateDebut']?.touched) {
+                <small class="error">La date de début est requise</small>
+              }
+            </div>
+            <div class="form-field">
+              <label>Date de fin</label>
+              <input formControlName="dateFin" type="date">
+            </div>
+            <div class="form-field">
+              <label>Budget (€)</label>
+              <input formControlName="budget" type="number" min="0" placeholder="0">
+              @if (formErrors['budget']?.invalid && formErrors['budget']?.touched) {
+                <small class="error">Le budget doit être positif</small>
+              }
+            </div>
+            <div class="form-field">
+              <label>Statut *</label>
+              <select formControlName="statut">
+                <option value="en_cours">En Cours</option>
+                <option value="termine">Terminé</option>
+                <option value="en_pause">En Pause</option>
+                <option value="annule">Annulé</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" (click)="closeAddDialog()" class="btn btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="projetForm.invalid" class="btn btn-primary">Ajouter</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Edit Modal -->
+  @if (showEditDialog() && selectedProjet()) {
+    <div class="modal-overlay" (click)="closeEditDialog()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Modifier le Projet</h2>
+          <button class="btn-icon" (click)="closeEditDialog()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+          <div class="form-grid">
+            <div class="form-field full-width">
+              <label>Nom du projet *</label>
+              <input formControlName="nom" type="text">
+              @if (editErrors['nom']?.invalid && editErrors['nom']?.touched) {
+                <small class="error">Le nom est requis</small>
+              }
+            </div>
+            <div class="form-field full-width">
+              <label>Description *</label>
+              <textarea formControlName="description"></textarea>
+              @if (editErrors['description']?.invalid && editErrors['description']?.touched) {
+                <small class="error">La description est requise</small>
+              }
+            </div>
+            <div class="form-field">
+              <label>Client *</label>
+              <select formControlName="clientId">
+                @for (client of clients$ | async; track client.id) {
+                  <option [value]="client.id" [selected]="client.id === selectedProjet()?.clientId">{{client.nom}}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Chef de Projet *</label>
+              <select formControlName="chefProjetId">
+                @for (employe of employes$ | async; track employe.id) {
+                  <option [value]="employe.id" [selected]="employe.id === selectedProjet()?.chefProjetId">{{employe.nom}} {{employe.prenom}}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Date de début *</label>
+              <input formControlName="dateDebut" type="date">
+            </div>
+            <div class="form-field">
+              <label>Date de fin</label>
+              <input formControlName="dateFin" type="date">
+            </div>
+            <div class="form-field">
+              <label>Budget (€)</label>
+              <input formControlName="budget" type="number" min="0">
+            </div>
+            <div class="form-field">
+              <label>Statut *</label>
+              <select formControlName="statut">
+                <option value="en_cours">En Cours</option>
+                <option value="termine">Terminé</option>
+                <option value="en_pause">En Pause</option>
+                <option value="annule">Annulé</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" (click)="closeEditDialog()" class="btn btn-secondary">Annuler</button>
+            <button type="submit" [disabled]="editForm.invalid" class="btn btn-primary">Mettre à jour</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

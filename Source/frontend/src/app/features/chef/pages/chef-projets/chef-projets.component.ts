@@ -1,196 +1,180 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
+import { ValidationErrorComponent } from '@shared/components';
 
 @Component({
   selector: 'app-chef-projets',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatSnackBarModule, ValidationErrorComponent],
   template: `
 
     <div class="projets-container">
       <!-- Header -->
-      <header class="page-header">
-        <div class="header-decoration"></div>
-        <div class="header-content-wrapper">
-          <div class="header-left">
-            <div class="header-badge-group">
-              <div class="header-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                </svg>
-              </div>
-              <span class="header-badge">Strategic Portfolio</span>
-            </div>
-            <h1 class="header-title">Mission <span class="gradient-text">Ledger.</span></h1>
-            <p class="header-subtitle">Project lifecycle management & temporal orchestration for {{societeNom}}</p>
+      <div class="page-header">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <div class="header-info">
+          <h1 class="header-title">Mes Projets</h1>
+          <p class="header-subtitle">Gestion des projets pour {{societeNom}}</p>
+        </div>
+        <div class="header-stats">
+          <div class="header-stat">
+            <span class="stat-value">{{projetsSignal().length}}</span>
+            <span class="stat-label">Projets</span>
           </div>
-          <div class="header-right">
-            <div class="tab-switcher">
-              <button class="tab-btn" [class.active]="currentTab === 'grid'" (click)="currentTab = 'grid'">Grid Matrix</button>
-              <button class="tab-btn" [class.active]="currentTab === 'timeline'" (click)="currentTab = 'timeline'">Timeline Ops</button>
-            </div>
-            <button class="btn-create" (click)="openCreateDialog()">
-               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                 <line x1="12" y1="5" x2="12" y2="19"></line>
-                 <line x1="5" y1="12" x2="19" y2="12"></line>
-               </svg>
-               Nouveau Projet
-            </button>
+          <div class="header-stat">
+            <div class="stat-dot"></div>
+            <span class="stat-label">Actif</span>
           </div>
         </div>
-      </header>
+      </div>
 
-      <!-- View Content -->
-      <div class="content-area">
-        @if (currentTab === 'grid') {
-          <div class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Projet</th>
-                  <th>Statut</th>
-                  <th>Client</th>
-                  <th>Commandant</th>
-                  <th>Déploiement</th>
-                  <th>Unités</th>
-                  <th>Nœuds</th>
-                  <th>Échéance</th>
-                  <th class="text-right">Opérations</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (p of projetsSignal(); track p.id) {
-                  <tr>
-                    <td>
-                      <div class="project-info">
-                        <span class="project-name">{{p.nom}}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span class="status-badge" [ngClass]="p.statut === 'En_cours' ? 'status-active' : 'status-completed'">{{p.statut}}</span>
-                    </td>
-                    <td>
-                      <span class="project-client" style="font-size: 11px; font-weight: bold; color: var(--color-text-muted); text-transform: uppercase;">{{p.nomClient || 'Unité Interne'}}</span>
-                    </td>
-                    <td>
-                      <div class="chef-info-display">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <circle cx="12" cy="7" r="4"/>
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        </svg>
-                        <span>{{p.chefName}}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="progress-section">
-                        <div class="progress-header">
-                          <span class="progress-value">{{p.progression}}%</span>
-                        </div>
-                        <div class="progress-bar">
-                          <div class="progress-fill" [style.width.%]="p.progression"></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{{p.membres}}</td>
-                    <td>{{p.taches}}</td>
-                    <td>{{p.echeance}}</td>
-                    <td class="text-right">
-                      <div class="card-actions">
-                        <button class="btn btn-primary" (click)="auditProject(p)">Audit</button>
-                        <button class="btn-icon" (click)="editProject(p)" title="Modifier">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-            @if (projetsSignal().length === 0) {
-              <div class="empty-state">
-                <p>Aucun projet stratégique trouvé.</p>
-              </div>
+      <!-- Control Bar -->
+      <div class="control-bar">
+        <div class="search-group">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" [(ngModel)]="searchQuery" class="search-input" placeholder="Filtrer les projets par nom...">
+        </div>
+        <select [(ngModel)]="filterStatut" class="select-input">
+          <option value="">Tous les Statuts</option>
+          <option value="En_cours">En cours</option>
+          <option value="Terminé">Terminé</option>
+        </select>
+        <button class="btn btn-primary" (click)="openCreateDialog()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nouveau Projet
+        </button>
+      </div>
+
+      <!-- Projects Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Projet</th>
+              <th>Statut</th>
+              <th>Client</th>
+              <th>Membres</th>
+              <th>Tâches</th>
+              <th>Progression</th>
+              <th>Échéance</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of paginatedProjets; track p.id) {
+              <tr>
+                <td>
+                  <div class="project-info">
+                    <span class="project-name">{{p.nom}}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge" [ngClass]="p.statut === 'En_cours' ? 'status-active' : 'status-completed'">{{p.statut}}</span>
+                </td>
+                <td>
+                  <span class="project-client">{{p.nomClient || 'Unité Interne'}}</span>
+                </td>
+                <td>{{p.membres}}</td>
+                <td>{{p.taches}}</td>
+                <td>
+                  <div class="progress-section">
+                    <div class="progress-header">
+                      <span class="progress-value">{{p.progression}}%</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" [style.width.%]="p.progression"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{p.echeance | date:'dd/MM/yyyy'}}</td>
+                <td class="text-right">
+                  <div class="card-actions">
+                    <button class="btn-icon" (click)="editProject(p)" title="Modifier">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
             }
-          </div>
-        }
-
-        @if (currentTab === 'timeline') {
-          <div class="timeline-view">
-            <div class="timeline-header">
-              <div class="timeline-header-left">Mission Codename</div>
-              <div class="timeline-header-right">
-                <span>Cycle Alpha</span>
-                <span>Cycle Beta</span>
-                <span>Cycle Gamma</span>
-                <span>Cycle Delta</span>
-                <span>Cycle Epsilon</span>
-                <span>Final Sync</span>
-              </div>
-            </div>
-            <div class="timeline-body">
-              @for (p of projetsSignal(); track p.id) {
-                <div class="timeline-row">
-                  <div class="timeline-row-left">
-                    <h4 class="project-name">{{p.nom}}</h4>
-                    <span class="project-meta">{{p.taches}} ACTIVE NODES</span>
-                  </div>
-                  <div class="timeline-row-right">
-                    <div class="timeline-grid">
-                      @for (i of [1,2,3,4,5]; track i) { <div class="grid-line"></div> }
-                    </div>
-                    <div class="timeline-bar-wrapper" [style.left.%]="p.id * 8" [style.width.%]="30 + (p.id * 5)">
-                      <div class="timeline-bar">
-                        <div class="timeline-bar-fill" [style.width.%]="p.progression">
-                          <span class="timeline-bar-text">{{p.progression}}% COMPLETE</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
+          </tbody>
+        </table>
+       <!-- Pagination -->
+      <div class="pagination-container">
+        <div class="pagination-info">
+          Affichage de {{ Math.min((page - 1) * pageSize + 1, filteredProjets.length) }} à {{ Math.min(page * pageSize, filteredProjets.length) }} sur {{ filteredProjets.length }} projets
+        </div>
+        <div class="pagination-controls">
+          <button class="btn-pagination" [disabled]="page === 1" (click)="setPage(page - 1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          @for (p of visiblePages; track p) {
+            <button class="btn-pagination" [class.active]="p === page" (click)="p !== '...' ? setPage(p) : null">
+              {{p}}
+            </button>
+          }
+          <button class="btn-pagination" [disabled]="page === totalPages" (click)="setPage(page + 1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
       </div>
 
       <!-- Modal -->
       @if (showDialog) {
         <div class="modal-overlay" (click)="closeDialog()">
           <div class="modal-card" (click)="$event.stopPropagation()">
-            <div class="modal-header-form">
-               <h2>{{editingProjet ? 'AJUSTEMENT STRATÉGIQUE' : 'INITIATION MISSION'}}</h2>
-               <button class="btn-close" (click)="closeDialog()">✕</button>
+            <div class="modal-header">
+               <h3 class="modal-title">{{editingProjet ? 'Modifier le Projet' : 'Nouveau Projet'}}</h3>
+               <button class="btn-close" (click)="closeDialog()">
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                   <line x1="18" y1="6" x2="6" y2="18"></line>
+                   <line x1="6" y1="6" x2="18" y2="18"></line>
+                 </svg>
+               </button>
             </div>
-            <div class="modal-body">
+            <form [formGroup]="projetForm" (ngSubmit)="saveProjet()" class="modal-body">
                <div class="form-group">
-                 <label>Nom du Projet</label>
-                 <input type="text" [(ngModel)]="formData.nom" class="form-input-styled" placeholder="Ex: Project Phoenix">
+                 <label class="form-label">Nom du Projet</label>
+                 <input type="text" formControlName="nom" class="form-input" placeholder="Ex: Project Phoenix">
+                 <app-validation-error [control]="projetForm.get('nom')"></app-validation-error>
                </div>
                <div class="form-group">
-                 <label>Description</label>
-                 <textarea [(ngModel)]="formData.description" class="form-input-styled" rows="3"></textarea>
+                 <label class="form-label">Description</label>
+                 <textarea formControlName="description" class="form-textarea" rows="3"></textarea>
+                 <app-validation-error [control]="projetForm.get('description')"></app-validation-error>
                </div>
                <div class="form-row">
                  <div class="form-group">
-                   <label>Progression (%)</label>
-                   <input type="number" [(ngModel)]="formData.progression" class="form-input-styled">
+                   <label class="form-label">Progression (%)</label>
+                   <input type="number" formControlName="progression" class="form-input">
+                   <app-validation-error [control]="projetForm.get('progression')"></app-validation-error>
                  </div>
-                 <div class="form-group">
-                   <label>Échéance</label>
-                   <input type="text" [(ngModel)]="formData.echeance" class="form-input-styled" placeholder="JJ/MM/AAAA">
-                 </div>
+                  <div class="form-group">
+                    <label class="form-label">Échéance (Date fin)</label>
+                    <input type="date" [min]="today" formControlName="echeance" class="form-input">
+                    <app-validation-error [control]="projetForm.get('echeance')"></app-validation-error>
+                  </div>
                </div>
-            </div>
-            <div class="modal-footer">
-               <button class="btn btn-secondary" (click)="closeDialog()">Annuler</button>
-               <button class="btn btn-primary" (click)="saveProjet()">Confirmer</button>
-            </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-ghost" (click)="closeDialog()">Annuler</button>
+                  <button type="submit" class="btn btn-primary" [disabled]="projetForm.invalid">Confirmer</button>
+               </div>
+            </form>
           </div>
         </div>
       }
@@ -198,142 +182,172 @@ import { ApiService } from '@core/services/api.service';
   `,
   styles: [`
     .projets-container {
-      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xl);
       padding-bottom: var(--space-2xl);
     }
 
     .page-header {
-      background: linear-gradient(135deg, #0f172a, #1e293b);
-      border-radius: var(--radius-3xl);
-      padding: var(--space-3xl);
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-radius: var(--radius-xl);
+      padding: var(--space-2xl);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-lg);
       position: relative;
       overflow: hidden;
       box-shadow: var(--shadow-xl);
-      margin-bottom: var(--space-xl);
     }
 
-    .header-decoration {
+    .page-header::before {
+      content: '';
       position: absolute;
       top: -50%;
       right: -20%;
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
       border-radius: 50%;
-    }
-
-    .header-content-wrapper {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--space-xl);
-    }
-
-    .header-left {
-      flex: 1;
-    }
-
-    .header-badge-group {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      margin-bottom: var(--space-md);
     }
 
     .header-icon {
       width: 56px;
       height: 56px;
-      background: rgba(59, 130, 246, 0.15);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(59, 130, 246, 0.3);
+      background: rgba(59, 130, 246, 0.1);
+      backdrop-filter: blur(10px);
       border-radius: var(--radius-lg);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #60a5fa;
+      color: #3b82f6;
+      border: 1px solid rgba(59, 130, 246, 0.2);
     }
 
-    .header-badge {
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      text-transform: uppercase;
-      letter-spacing: 6px;
-      color: rgba(96, 165, 250, 0.8);
-      font-style: italic;
+    .header-info {
+      flex: 1;
     }
 
     .header-title {
-      font-size: 3.5rem;
-      font-weight: var(--font-weight-black);
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
       color: white;
-      letter-spacing: -0.05em;
-      line-height: 1;
-      margin: 0 0 var(--space-sm);
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, #60a5fa, #818cf8, #22d3ee);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+      margin: 0;
+      letter-spacing: -0.02em;
     }
 
     .header-subtitle {
       color: #94a3b8;
-      font-weight: var(--font-weight-bold);
-      font-size: var(--font-size-lg);
-      max-width: 600px;
-      margin: 0;
+      font-size: var(--font-size-base);
+      margin: var(--space-xs) 0 0;
     }
 
-    .header-right {
+    .header-stats {
       display: flex;
       gap: var(--space-md);
     }
 
-    .tab-switcher {
-      display: flex;
+    .header-stat {
       background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      padding: var(--space-xs);
-      border-radius: var(--radius-3xl);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .tab-btn {
-      padding: var(--space-sm) var(--space-lg);
-      border-radius: var(--radius-2xl);
-      font-weight: var(--font-weight-black);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      border: none;
-      background: transparent;
+    .stat-value {
+      font-size: 24px;
+      font-weight: var(--font-weight-bold);
       color: white;
-      cursor: pointer;
-      transition: all var(--transition-base);
+      line-height: 1;
     }
 
-    .tab-btn.active {
+    .stat-label {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-dot {
+      width: 12px;
+      height: 12px;
+      background: #3b82f6;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .control-bar {
       background: white;
-      color: #0f172a;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      gap: var(--space-md);
+      align-items: center;
     }
 
-    .content-area {
-      animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    .search-group {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .search-group svg {
+      position: absolute;
+      left: var(--space-md);
+      color: var(--color-text-muted);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: var(--space-sm) var(--space-md);
+      padding-left: calc(var(--space-md) * 3);
+      border-radius: var(--radius-lg);
+      border: 2px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      outline: none;
+      transition: border-color var(--transition-base);
+    }
+
+    .search-input:focus {
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .select-input {
+      padding: var(--space-sm) var(--space-lg);
+      border-radius: var(--radius-lg);
+      border: 2px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      outline: none;
+      cursor: pointer;
+      min-width: 200px;
     }
 
     .table-container {
       background: white;
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-3xl);
+      border-radius: var(--radius-xl);
       overflow-x: auto;
       box-shadow: var(--shadow-sm);
     }
@@ -347,11 +361,11 @@ import { ApiService } from '@core/services/api.service';
     .data-table th {
       padding: var(--space-md) var(--space-lg);
       background: var(--color-bg);
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
       color: var(--color-text-muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.05em;
       border-bottom: 1px solid var(--color-border);
     }
 
@@ -362,7 +376,7 @@ import { ApiService } from '@core/services/api.service';
     }
 
     .data-table tr:hover {
-      background: rgba(59, 130, 246, 0.02);
+      background: var(--color-bg);
     }
 
     .project-info {
@@ -376,155 +390,55 @@ import { ApiService } from '@core/services/api.service';
       font-weight: var(--font-weight-bold);
       color: var(--color-text);
       margin: 0;
+    }
+
+    .project-client {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-muted);
       text-transform: uppercase;
-      font-style: italic;
     }
 
     .text-right {
       text-align: right;
     }
 
-
     .status-badge {
-      padding: var(--space-xs) var(--space-md);
+      padding: var(--space-xs) var(--space-sm);
       border-radius: var(--radius-full);
-      font-size: 9px;
-      font-weight: var(--font-weight-black);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      border: 1px solid;
+      letter-spacing: 0.05em;
     }
 
     .status-active {
       background: rgba(59, 130, 246, 0.1);
       color: #3b82f6;
-      border-color: rgba(59, 130, 246, 0.2);
     }
 
     .status-completed {
       background: rgba(16, 185, 129, 0.1);
       color: #10b981;
-      border-color: rgba(16, 185, 129, 0.2);
     }
 
-
-
-    .btn-create {
-      background: white;
-      color: #0f172a;
-      padding: 12px 24px;
-      border-radius: 16px;
-      font-weight: 800;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      border: none;
-      cursor: pointer;
+    .chef-info-display {
       display: flex;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      transition: all 0.2s;
-    }
-
-    .btn-create:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-    }
-
-    .progress-section {
-      margin-bottom: var(--space-xl);
-    }
-
-    .progress-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: var(--space-sm);
-    }
-
-    .progress-label {
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--color-text-muted);
-    }
-
-    .progress-value {
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #3b82f6;
-      font-style: italic;
-    }
-
-    .progress-bar {
-      height: 8px;
-      background: var(--color-bg);
-      border-radius: var(--radius-full);
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #3b82f6, #6366f1);
-      border-radius: var(--radius-full);
-      box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
-      transition: width 1s ease-out;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-md);
-      padding-top: var(--space-lg);
-      border-top: 1px solid var(--color-border);
-      margin-bottom: var(--space-lg);
-    }
-
-    .stat-item {
-      text-align: center;
-    }
-
-    .stat-item-border {
-      border-left: 1px solid var(--color-border);
-      border-right: 1px solid var(--color-border);
-    }
-
-    .stat-label {
-      font-size: 9px;
-      font-weight: var(--font-weight-black);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--color-text-muted);
-      margin-bottom: var(--space-xs);
-    }
-
-    .stat-value {
+      gap: var(--space-xs);
       font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-black);
+      font-weight: var(--font-weight-semibold);
       color: var(--color-text);
-      font-style: italic;
-    }
-
-    .card-actions {
-      display: flex;
-      gap: var(--space-md);
-      padding-top: var(--space-md);
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: var(--space-xs);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: var(--radius-lg);
-      font-weight: var(--font-weight-black);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-lg);
+      border-radius: var(--radius-md);
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-sm);
       border: none;
       cursor: pointer;
       transition: all var(--transition-base);
@@ -539,359 +453,384 @@ import { ApiService } from '@core/services/api.service';
       background: #3b82f6;
     }
 
-    .btn-full {
-      flex: 1;
-      height: 48px;
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-muted);
+    }
+
+    .btn-ghost:hover {
+      color: var(--color-text);
+    }
+
+    .progress-section {
+      margin-bottom: var(--space-md);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--space-sm);
+    }
+
+    .progress-value {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: #3b82f6;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--color-bg);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      border: 1px solid var(--color-border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #6366f1);
+      border-radius: var(--radius-full);
+      transition: width 1s ease-out;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: var(--space-md);
     }
 
     .btn-icon {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
       background: var(--color-bg);
       color: var(--color-text-muted);
-      border-radius: var(--radius-lg);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-base);
     }
 
     .btn-icon:hover {
+      background: var(--color-surface);
       color: #3b82f6;
+      border-color: #3b82f6;
     }
 
-    .timeline-view {
-      background: white;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-3xl);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-    }
-
-    .timeline-header {
-      display: flex;
-      background: var(--color-bg);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .timeline-header-left {
-      width: 288px;
-      padding: var(--space-xl);
-      border-right: 1px solid var(--color-border);
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--color-text-muted);
-      font-style: italic;
-    }
-
-    .timeline-header-right {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      padding: var(--space-xl);
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--color-text-muted);
+    .empty-state {
+      padding: var(--space-2xl);
       text-align: center;
-      font-style: italic;
+      color: var(--color-text-muted);
     }
 
-    .timeline-body {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .timeline-row {
-      display: flex;
-      border-bottom: 1px solid var(--color-border);
-      transition: background var(--transition-base);
-    }
-
-    .timeline-row:hover {
-      background: rgba(59, 130, 246, 0.05);
-    }
-
-    .timeline-row-left {
-      width: 288px;
-      padding: var(--space-xl);
-      border-right: 1px solid var(--color-border);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .project-name {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-black);
-      color: var(--color-text);
-      text-transform: uppercase;
-      font-style: italic;
-      letter-spacing: -0.02em;
+    .empty-state p {
       margin: 0;
-    }
-
-    .project-meta {
-      font-size: 9px;
-      font-weight: var(--font-weight-black);
-      color: #3b82f6;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: var(--space-xs);
-    }
-
-    .timeline-row-right {
-      flex: 1;
-      position: relative;
-      padding: var(--space-xl);
-      display: flex;
-      align-items: center;
-    }
-
-    .timeline-grid {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      pointer-events: none;
-      opacity: 0.2;
-    }
-
-    .grid-line {
-      border-right: 1px solid var(--color-border);
-    }
-
-    .timeline-bar-wrapper {
-      position: relative;
-      height: 56px;
-      background: var(--color-bg);
-      border-radius: var(--radius-2xl);
-      overflow: hidden;
-      cursor: pointer;
-      transition: all var(--transition-base);
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .timeline-bar-wrapper:hover {
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
-
-    .timeline-bar {
-      position: relative;
-      height: 100%;
-      background: linear-gradient(90deg, #2563eb, #4f46e5);
-      box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
-      display: flex;
-      align-items: center;
-      padding: 0 var(--space-lg);
-      transition: width 1s ease-out;
-    }
-
-    .timeline-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #2563eb, #4f46e5);
-      display: flex;
-      align-items: center;
-      padding: 0 var(--space-md);
-      transition: width 1s ease-out;
-    }
-
-    .timeline-bar-text {
-      font-size: 10px;
-      font-weight: var(--font-weight-black);
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-style: italic;
     }
 
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
+      padding: var(--space-xl);
     }
 
     .modal-card {
       background: white;
-      border-radius: 24px;
-      width: 100%;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
       max-width: 500px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
-    .modal-header-form {
-      padding: 24px;
+    .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #f1f5f9;
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg);
     }
 
-    .modal-header-form h2 {
+    .modal-title {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
       margin: 0;
-      font-size: 18px;
-      font-weight: 900;
-      color: #0f172a;
-      letter-spacing: 1px;
     }
 
     .btn-close {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
       border: none;
       background: transparent;
-      font-size: 20px;
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      color: #94a3b8;
+      transition: all var(--transition-base);
+    }
+
+    .btn-close:hover {
+      background: var(--color-surface);
+      color: var(--color-text);
     }
 
     .modal-body {
-      padding: 24px;
+      padding: var(--space-lg);
+      overflow-y: auto;
+      flex: 1;
     }
 
     .form-group {
-      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-md);
     }
 
-    .form-group label {
-      display: block;
-      font-size: 10px;
-      font-weight: 800;
-      color: #64748b;
-      text-transform: uppercase;
-      margin-bottom: 8px;
+    .form-label {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
     }
 
-    .form-input-styled {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e2e8f0;
-      border-radius: 12px;
+    .form-input,
+    .form-textarea {
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-size: var(--font-size-sm);
       outline: none;
-      font-weight: 600;
-      transition: all 0.2s;
+      transition: border-color var(--transition-base);
     }
 
-    .form-input-styled:focus {
+    .form-input:focus,
+    .form-textarea:focus {
       border-color: #3b82f6;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
     }
 
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: var(--space-md);
     }
 
     .modal-footer {
-      padding: 16px 24px;
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
-      background: #f8fafc;
-      border-radius: 0 0 24px 24px;
+      gap: var(--space-sm);
+      padding: var(--space-lg);
+      border-top: 1px solid var(--color-border);
+      background: var(--color-bg);
     }
 
     /* Dark mode */
-    :host-context(.dark) .project-card,
-    :host-context(.dark) .timeline-view {
+    :host-context(.dark) .control-bar,
+    :host-context(.dark) .table-container,
+    :host-context(.dark) .modal-card {
       background: var(--color-surface);
       border-color: var(--color-border);
     }
 
-    :host-context(.dark) .card-title,
     :host-context(.dark) .project-name,
-    :host-context(.dark) .stat-value {
+    :host-context(.dark) .project-client,
+    :host-context(.dark) .chef-info-display,
+    :host-context(.dark) .modal-title,
+    :host-context(.dark) .form-label {
       color: var(--color-text);
     }
 
-    :host-context(.dark) .card-icon,
-    :host-context(.dark) .btn-icon {
+    :host-context(.dark) .search-input,
+    :host-context(.dark) .select-input,
+    :host-context(.dark) .form-input,
+    :host-context(.dark) .form-textarea {
       background: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-border);
+      color: var(--color-text);
     }
 
-    :host-context(.dark) .progress-bar,
-    :host-context(.dark) .timeline-bar-wrapper {
+    :host-context(.dark) .progress-bar {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    :host-context(.dark) .btn-icon {
       background: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .modal-header,
+    :host-context(.dark) .modal-footer {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--color-border);
     }
 
     @media (max-width: 1024px) {
-      .header-content-wrapper {
-        flex-direction: column;
-        align-items: flex-start;
+      .control-bar {
+        flex-wrap: wrap;
       }
 
-      .projects-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      .select-input {
+        width: 100%;
       }
     }
 
     @media (max-width: 768px) {
-      .projets-container {
-        padding: var(--space-md);
-      }
-
       .page-header {
-        padding: var(--space-xl);
+        flex-direction: column;
+        align-items: flex-start;
       }
 
-      .header-title {
-        font-size: 2.5rem;
+      .header-stats {
+        width: 100%;
+        justify-content: space-between;
       }
 
-      .projects-grid {
+      .control-bar {
+        flex-direction: column;
+      }
+
+      .search-group,
+      .select-input,
+      .btn {
+        width: 100%;
+      }
+
+      .form-row {
         grid-template-columns: 1fr;
       }
+    }
+     .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-lg);
+      background: white;
+      border: 1px solid var(--color-border);
+      border-top: none;
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    }
 
-      .timeline-header {
-        flex-direction: column;
-      }
+    .pagination-info {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+      font-weight: var(--font-weight-medium);
+    }
 
-      .timeline-header-left {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid var(--color-border);
-      }
+    .pagination-controls {
+      display: flex;
+      gap: var(--space-xs);
+    }
 
-      .timeline-header-right {
-        grid-template-columns: repeat(3, 1fr);
-      }
+    .btn-pagination {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: white;
+      color: var(--color-text);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
 
-      .timeline-row {
-        flex-direction: column;
-      }
+    .btn-pagination:hover:not(:disabled) {
+      background: var(--color-bg);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
 
-      .timeline-row-left {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid var(--color-border);
-      }
+    .btn-pagination.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+    }
 
-      .timeline-row-right {
-        padding: var(--space-lg);
-      }
+    .btn-pagination:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   `]
 })
 export class ChefProjetsComponent implements OnInit {
+  private fb = inject(FormBuilder);
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
   
+  projetForm!: FormGroup;
+  
   societeId = '';
   societeNom = 'Votre société';
-  currentTab: 'grid' | 'timeline' = 'grid';
+  searchQuery = '';
+  filterStatut = '';
+  today = new Date().toISOString().split('T')[0];
 
-  projetsSignal = signal<any[]>([]);
+   projetsSignal = signal<any[]>([]);
   showDialog = false;
   editingProjet: any = null;
-  formData: any = { nom: '', description: '', progression: 0, echeance: '' };
+
+  // Pagination
+  page = 1;
+  pageSize = 5;
+  protected readonly Math = Math;
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredProjets.length / this.pageSize);
+  }
+
+  get visiblePages(): (number | string)[] {
+    const pages: (number | string)[] = [];
+    for (let i = 1; i <= this.totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  get paginatedProjets() {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredProjets.slice(start, start + this.pageSize);
+  }
+
+  setPage(p: any) {
+    if (typeof p === 'number') this.page = p;
+  }
 
   ngOnInit() {
+    this.initForm();
     const user = this.api.getCurrentUser();
     this.societeId = user?.societeId || user?.SocieteId || '';
     this.societeNom = user?.societe?.nom || user?.Societe?.Nom || 'Votre société';
     this.loadData();
+  }
+
+  initForm() {
+    this.projetForm = this.fb.group({
+      nom: ['', [Validators.required, Validators.minLength(3)]],
+      description: ['', [Validators.required]],
+      progression: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+      echeance: ['', [Validators.required]]
+    });
   }
   
   loadData() {
@@ -923,13 +862,18 @@ export class ChefProjetsComponent implements OnInit {
                 chefName: chef ? `${chef.prenom || chef.Prenom || ''} ${chef.nom || chef.Nom || ''}` : 'Non assigné'
               };
             });
-            const myProjets = projects.filter((p: any) => (p.utilisateurId || p.UtilisateurId) === (user?.id || user?.Id));
+            const currentUserName = `${user?.prenom || user?.Prenom || ''} ${user?.nom || user?.Nom || ''}`.trim();
+            const myProjets = projects.filter((p: any) => {
+              const pChefId = p.utilisateurId || p.UtilisateurId;
+              const currentUserId = user?.id || user?.Id;
+              return pChefId === currentUserId || pChefId === currentUserName;
+            });
             
             // Validate and restore project sorting (ID DESC)
             myProjets.sort((a: any, b: any) => {
-              if (a.id < b.id) return 1;
-              if (a.id > b.id) return -1;
-              return 0;
+              const idA = typeof a.id === 'string' ? parseInt(a.id.replace(/\D/g, '')) : a.id;
+              const idB = typeof b.id === 'string' ? parseInt(b.id.replace(/\D/g, '')) : b.id;
+              return (idB || 0) - (idA || 0);
             });
             
             this.projetsSignal.set(myProjets);
@@ -941,7 +885,9 @@ export class ChefProjetsComponent implements OnInit {
 
   openCreateDialog() {
     this.editingProjet = null;
-    this.formData = { nom: '', description: '', progression: 0, echeance: '' };
+    this.projetForm.reset({
+      progression: 0
+    });
     this.showDialog = true;
   }
 
@@ -950,39 +896,53 @@ export class ChefProjetsComponent implements OnInit {
     this.editingProjet = null;
   }
 
-  auditProject(project: any) {
-    this.snackBar.open(`Audit du projet: ${project.nom}`, 'OK', { duration: 2000 });
+  get filteredProjets() {
+    return this.projetsSignal().filter(p => {
+      const matchSearch = !this.searchQuery || p.nom.toLowerCase().includes(this.searchQuery.toLowerCase());
+      const matchStatut = !this.filterStatut || p.statut === this.filterStatut;
+      return matchSearch && matchStatut;
+    });
   }
 
   editProject(project: any) {
     this.editingProjet = project;
-    this.formData = { ...project };
+    this.projetForm.patchValue({
+      nom: project.nom,
+      description: project.description,
+      progression: project.progression,
+      echeance: project.echeance ? project.echeance.split('T')[0] : ''
+    });
     this.showDialog = true;
   }
 
   saveProjet() {
+    if (this.projetForm.invalid) {
+      this.projetForm.markAllAsTouched();
+      return;
+    }
+
     const user = this.api.getCurrentUser();
+    const formVal = this.projetForm.value;
     const data = { 
-      ...this.formData, 
+      ...formVal, 
       societeId: this.societeId, 
       utilisateurId: user?.id || user?.Id,
-      statut: this.formData.progression === 100 ? 'Terminé' : 'En_cours'
+      statut: (formVal.progression >= 100) ? 'Terminé' : (this.editingProjet?.statut || 'En_cours'),
     };
 
     if (this.editingProjet) {
       this.api.updateProjet({ ...data, id: this.editingProjet.id }).subscribe({
         next: () => {
-          this.projetsSignal.update(list => list.map(p => p.id === this.editingProjet.id ? { ...p, ...data } : p));
-          this.snackBar.open('Projet mis à jour', 'Fermer', { duration: 2000 });
+          this.loadData(); // Recharger pour avoir les données normalisées
+          this.snackBar.open('Projet mis à jour avec succès', 'Fermer', { duration: 2000 });
           this.closeDialog();
         }
       });
     } else {
       this.api.createProjet(data).subscribe({
         next: (res: any) => {
-          const newProject = res || { ...data, id: Date.now() };
-          this.projetsSignal.update(list => [newProject, ...list]);
-          this.snackBar.open('Nouveau projet initié', 'Fermer', { duration: 2000 });
+          this.loadData();
+          this.snackBar.open('Nouveau projet créé et enregistré', 'Fermer', { duration: 2000 });
           this.closeDialog();
         }
       });

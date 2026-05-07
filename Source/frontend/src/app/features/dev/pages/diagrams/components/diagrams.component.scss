@@ -1,0 +1,305 @@
+.diagrams-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-lg);
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-2xl);
+}
+
+.header-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.header-info {
+  flex: 1;
+}
+
+.header-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.header-subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin: var(--space-xs) 0 0;
+}
+
+.section {
+  margin-bottom: var(--space-2xl);
+}
+
+.section-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0 0 var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.section-title svg {
+  color: #3b82f6;
+}
+
+.card {
+  background: white;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  padding: var(--space-2xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.architecture-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.diagram-layer {
+  max-width: 800px;
+  width: 100%;
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 2px dashed;
+  position: relative;
+  background: white;
+}
+
+.diagram-layer-blue {
+  border-color: #93c5fd;
+}
+
+.diagram-layer-green {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.diagram-layer-red {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.layer-label {
+  position: absolute;
+  top: -12px;
+  left: var(--space-lg);
+  background: white;
+  padding: 0 var(--space-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  border: 2px solid;
+  border-radius: var(--radius-full);
+}
+
+.diagram-layer-blue .layer-label {
+  color: #2563eb;
+  border-color: #93c5fd;
+}
+
+.diagram-layer-green .layer-label {
+  color: #16a34a;
+  border-color: #86efac;
+}
+
+.diagram-layer-red .layer-label {
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.layer-content {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.layer-content-center {
+  justify-content: center;
+}
+
+.layer-item {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
+  background: white;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-align: center;
+  min-width: 150px;
+  cursor: pointer;
+  transition: transform var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.layer-item:hover {
+  transform: translateY(-2px);
+}
+
+.service-item {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
+  background: white;
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.database-item {
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: white;
+  min-width: 300px;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.diagram-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-family: monospace;
+}
+
+.workflow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.workflow-step {
+  flex: 1;
+  min-width: 120px;
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: white;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  transition: transform var(--transition-base), border-color var(--transition-base);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.workflow-step:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+}
+
+.workflow-step-highlight {
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.step-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-icon-highlight {
+  background: #3b82f6;
+  color: white;
+}
+
+.step-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.workflow-arrow {
+  color: var(--color-border);
+  flex-shrink: 0;
+}
+
+/* Dark mode */
+:host-context(.dark) .card,
+:host-context(.dark) .diagram-layer,
+:host-context(.dark) .layer-item,
+:host-context(.dark) .service-item,
+:host-context(.dark) .database-item,
+:host-context(.dark) .workflow-step {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+:host-context(.dark) .diagram-layer-green {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+:host-context(.dark) .diagram-layer-red {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+:host-context(.dark) .header-title,
+:host-context(.dark) .section-title,
+:host-context(.dark) .layer-item,
+:host-context(.dark) .service-item,
+:host-context(.dark) .database-item,
+:host-context(.dark) .step-label {
+  color: var(--color-text);
+}
+
+:host-context(.dark) .header-subtitle,
+:host-context(.dark) .diagram-connector,
+:host-context(.dark) .workflow-arrow {
+  color: var(--color-text-muted);
+}
+
+:host-context(.dark) .step-icon {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+  .workflow-diagram {
+    flex-direction: column;
+  }
+
+  .workflow-arrow {
+    transform: rotate(90deg);
+  }
+}

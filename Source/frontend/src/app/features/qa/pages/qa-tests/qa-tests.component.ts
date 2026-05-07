@@ -11,10 +11,15 @@ import { ApiService } from '@core/services/api.service';
   template: `
 
     <div class="tests-container">
-      <!-- Header -->
-      <div class="page-header">
-        <h1 class="header-title">Tests à exécuter</h1>
-        <p class="header-subtitle">Gérez et exécutez vos tests - {{societeNom}}</p>
+      <!-- Premium Header -->
+      <div class="premium-header">
+        <div class="header-banner-overlay"></div>
+        <div class="header-main">
+          <div class="header-content">
+            <h1 class="header-title">Tests à exécuter</h1>
+            <p class="header-subtitle">Gérez et exécutez vos tests d'assurance qualité - {{societeNom}}</p>
+          </div>
+        </div>
       </div>
 
       <!-- Filters -->
@@ -168,7 +173,7 @@ import { ApiService } from '@core/services/api.service';
                 <div class="form-group">
                   <label class="form-label">Ajouter un commentaire</label>
                   <div class="input-with-btn">
-                    <input type="text" class="form-input" [(ngModel)]="newComment" placeholder="Votre commentaire...">
+                    <input type="text" class="form-input" [(ngModel)]="newComment" placeholder="Votre commentaire..." required minlength="1">
                     <button class="btn btn-icon" (click)="addComment()">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"/>
@@ -207,21 +212,52 @@ import { ApiService } from '@core/services/api.service';
       padding: var(--space-lg);
     }
 
-    .page-header {
-      margin-bottom: var(--space-xl);
+    .premium-header {
+      position: relative;
+      padding: 3rem 2rem;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 20px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+      color: white;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .header-banner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('/assets/qa_banner.png') center/cover;
+      opacity: 0.1;
+      z-index: 1;
+    }
+
+    .header-main {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
     }
 
     .header-title {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
+      font-size: 2.5rem;
+      font-weight: 800;
       margin: 0;
+      letter-spacing: -0.025em;
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .header-subtitle {
-      color: var(--color-text-muted);
-      font-size: var(--font-size-base);
-      margin: var(--space-xs) 0 0;
+      font-size: 1.1rem;
+      color: #94a3b8;
+      margin-top: 0.5rem;
     }
 
     .filters {
@@ -679,30 +715,36 @@ export class QaTestsComponent implements OnInit {
   }
 
   loadTests() {
-    const currentUser = this.api.getCurrentUser();
-    const userId = currentUser?.id || currentUser?.Id || '';
-    if (!userId) return;
+    if (!this.societeId) return;
 
-    this.api.getTachesParUtilisateur(userId).subscribe({
-      next: (tasks: any[]) => {
-        this.tests = (tasks || []).map((t: any) => {
-          const rawStatus = (t.statut || t.Statut || t.status || '').toLowerCase().trim().replace(/ /g, '');
-          let normalizedStatus = 'Pending';
-          if (['done', 'terminé', 'terminée', 'valide', 'validé', 'pass'].includes(rawStatus)) normalizedStatus = 'Pass';
-          else if (['fail', 'echoué', 'échec'].includes(rawStatus)) normalizedStatus = 'Fail';
+    this.api.getProjetsBySociete(this.societeId).subscribe(projets => {
+      const pList = projets || [];
+      const projectIds = new Set(pList.map(p => p.id || p.Id));
 
-          return {
-            id: t.id || t.Id,
-            nom: t.titre || t.Titre || 'Sans titre',
-            type: 'Tâche',
-            projet: t.projetNom || t.ProjetNom || 'Projet',
-            priorite: t.priorite || t.Priorite || 'Medium',
-            statut: normalizedStatus,
-            description: t.description || t.Description || '',
-            commentaires: []
-          };
-        });
-      }
+      this.api.getTaches().subscribe({
+        next: (allTasks: any[]) => {
+          this.tests = (allTasks || [])
+            .filter((t: any) => projectIds.has(t.projetId || t.ProjetId))
+            .map((t: any) => {
+              const rawStatus = (t.statut || t.Statut || t.status || '').toLowerCase().trim().replace(/ /g, '');
+              let normalizedStatus = 'Pending';
+              if (['done', 'terminé', 'terminée', 'valide', 'validé', 'pass'].includes(rawStatus)) normalizedStatus = 'Pass';
+              else if (['fail', 'echoué', 'échec'].includes(rawStatus)) normalizedStatus = 'Fail';
+
+              return {
+                id: t.id || t.Id,
+                nom: t.titre || t.Titre || 'Sans titre',
+                type: 'Test Case',
+                projet: pList.find(p => (p.id || p.Id) === (t.projetId || t.ProjetId))?.nom || 'Projet',
+                priorite: t.priorite || t.Priorite || 'Medium',
+                statut: normalizedStatus,
+                description: t.description || t.Description || '',
+                commentaires: [],
+                originalTask: t
+              };
+            });
+        }
+      });
     });
   }
 
@@ -712,13 +754,31 @@ export class QaTestsComponent implements OnInit {
   }
 
   passTest(test: any) {
-    test.statut = 'Pass';
-    this.snackBar.open('Test marqué comme PASS', 'Fermer', { duration: 2000 });
+    const payload = { ...test.originalTask, Statut: 'Pass' };
+    this.api.saveTache(payload).subscribe({
+      next: () => {
+        test.statut = 'Pass';
+        this.snackBar.open('Test marqué comme PASS et sauvegardé', 'Fermer', { duration: 2000 });
+      },
+      error: (err) => {
+        console.error('Erreur save test:', err);
+        this.snackBar.open('Erreur lors de la sauvegarde du test', 'Fermer', { duration: 3000 });
+      }
+    });
   }
 
   failTest(test: any) {
-    test.statut = 'Fail';
-    this.snackBar.open('Test marqué comme FAIL', 'Fermer', { duration: 2000 });
+    const payload = { ...test.originalTask, Statut: 'Fail' };
+    this.api.saveTache(payload).subscribe({
+      next: () => {
+        test.statut = 'Fail';
+        this.snackBar.open('Test marqué comme FAIL et sauvegardé', 'Fermer', { duration: 2000 });
+      },
+      error: (err) => {
+        console.error('Erreur save test:', err);
+        this.snackBar.open('Erreur lors de la sauvegarde du test', 'Fermer', { duration: 3000 });
+      }
+    });
   }
 
   addComment() {

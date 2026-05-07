@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { FormStateService } from '@core/services/form-state.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
@@ -9,185 +10,232 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   standalone: true,
   imports: [CommonModule, FormsModule, MatSnackBarModule],
   template: `
-
-    <div class="dashboard-container">
-      <!-- Header -->
-      <header class="dashboard-header">
-        <div class="header-content">
-          <div class="header-badges">
-            <span class="badge badge-primary">Ressources Humaines</span>
+    <div class="module-bg bg-module-rh">
+      <div class="content-wrapper dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header glass-card">
+          <div class="header-content">
+            <div class="header-badges">
+              <span class="badge badge-primary">Ressources Humaines</span>
+            </div>
+            <h1 class="header-title">
+              Contrôle <span class="gradient-text">Ressources.</span>
+            </h1>
+            <p class="header-subtitle">
+              Maintenance des talents et continuité opérationnelle pour {{societeNom}}.
+            </p>
           </div>
-          <h1 class="header-title">
-            Contrôle <span class="gradient-text">Ressources.</span>
-          </h1>
-          <p class="header-subtitle">
-            Maintenance des talents et continuité opérationnelle pour {{societeNom}}.
-          </p>
-        </div>
-        <div class="header-tabs">
-          <button (click)="currentView = 'pointage'" 
-            [class.active]="currentView === 'pointage'">
-            Présence
-          </button>
-          <button (click)="currentView = 'conges'" 
-            [class.active]="currentView === 'conges'">
-            Congés
-          </button>
-          <button (click)="currentView = 'salaires'" 
-            [class.active]="currentView === 'salaires'">
-            Paie
-          </button>
-        </div>
-      </header>
-
-      <!-- View Container -->
-      <div class="view-container">
-        <!-- Attendance Module -->
-        @if (currentView === 'pointage') {
-          <div class="section-container">
-             <div class="section-header">
-                <h3>Registre de Présence</h3>
-                <div class="date-filter">
-                   <input type="date" [(ngModel)]="pointageDate" (change)="loadPointages()"
-                     class="date-input">
-                </div>
-             </div>
-
-             <div class="card table-card">
-                <table class="data-table">
-                   <thead>
-                      <tr>
-                         <th>Personnel</th>
-                         <th>Arrivée</th>
-                         <th>Départ</th>
-                         <th>Durée</th>
-                         <th class="text-right">Statut</th>
-                      </tr>
-                   </thead>
-                   <tbody>
-                      @for (p of pointages; track p.id) {
-                        <tr>
-                           <td>
-                              <div class="user-cell">
-                                 <div class="user-avatar">{{p.utilisateurNom?.charAt(0)}}</div>
-                                 <div>
-                                    <p>{{p.utilisateurNom}}</p>
-                                    <span>{{p.role}}</span>
-                                 </div>
-                              </div>
-                           </td>
-                           <td>{{p.heureEntree || '--:--'}}</td>
-                           <td>{{p.heureSortie || '--:--'}}</td>
-                           <td class="duration-cell">{{p.totalHeures || '0'}}h</td>
-                           <td class="text-right">
-                              <span [class]="p.statut === 'Present' ? 'badge badge-success' : 'badge badge-danger'">
-                                 {{p.statut}}
-                              </span>
-                           </td>
-                        </tr>
-                      }
-                   </tbody>
-                </table>
-             </div>
+          <div class="header-tabs">
+            <button (click)="setView('pointage')" 
+              [class.active]="currentView === 'pointage'">
+              Présence
+            </button>
+            <button (click)="setView('conges')" 
+              [class.active]="currentView === 'conges'">
+              Congés
+            </button>
+            <button (click)="setView('salaires')" 
+              [class.active]="currentView === 'salaires'">
+              Paie
+            </button>
           </div>
-        }
+        </header>
 
-        <!-- Leave Module -->
-        @if (currentView === 'conges') {
-          <div class="section-container">
-             <div class="section-header">
-                <h3>File d'Attente des Congés</h3>
-             </div>
-
-             <div class="leaves-grid">
-                @for (c of conges; track c.id) {
-                  <div class="card leave-card">
-                     <div class="leave-header">
-                        <div class="leave-avatar">{{c.utilisateurNom?.charAt(0)}}</div>
-                        <div>
-                           <h4>{{c.utilisateurNom}}</h4>
-                           <span class="leave-type">{{c.type}}</span>
-                        </div>
-                     </div>
-
-                     <div class="leave-body">
-                        <div class="leave-period">
-                           <span>Période</span>
-                           <span>{{c.dateDebut | date:'dd MMM'}} - {{c.dateFin | date:'dd MMM, yyyy'}}</span>
-                        </div>
-                        <div class="leave-motif">
-                           "{{c.motif || 'Aucune justification fournie'}}"
-                        </div>
-                     </div>
-
-                     <div class="leave-actions">
-                        @if (c.statut === 'En attente') {
-                          <button (click)="validerConge(c, true)" class="btn btn-success">Autoriser</button>
-                          <button (click)="validerConge(c, false)" class="btn btn-danger">Refuser</button>
-                        } @else {
-                          <div class="leave-status"
-                             [class.status-success]="c.statut === 'Validé'" [class.status-danger]="c.statut === 'Refusé'">
-                             {{c.statut}}
-                          </div>
-                        }
-                     </div>
+        <!-- View Container -->
+        <div class="view-container">
+          <!-- Attendance Module -->
+          @if (currentView === 'pointage') {
+            <div class="section-container">
+               <div class="section-header">
+                  <h3>Registre de Présence</h3>
+                  <div class="date-filter">
+                     <input type="date" [(ngModel)]="pointageDate" (change)="onDateChange()"
+                       class="date-input" [max]="today">
                   </div>
-                }
-             </div>
-          </div>
-        }
+               </div>
 
-        <!-- Payroll Module -->
-        @if (currentView === 'salaires') {
-          <div class="section-container">
-             <div class="section-header">
-                <h3>Compensation de Rendement</h3>
-                <button (click)="genererSalaires()" class="btn btn-primary">Générer Batch</button>
-             </div>
-
-             <div class="card table-card">
-                <table class="data-table">
-                   <thead>
-                      <tr>
-                         <th>Personnel</th>
-                         <th>Salaire Base</th>
-                         <th>Primes</th>
-                         <th>Retenues</th>
-                         <th>Net à Transférer</th>
-                         <th class="text-right">Fiche</th>
-                      </tr>
-                   </thead>
-                   <tbody>
-                      @for (s of salaires; track s.id) {
+               <div class="card table-card glass-card">
+                  <table class="data-table">
+                     <thead>
                         <tr>
-                           <td>
-                              <div class="user-cell">
-                                 <div class="user-avatar">{{s.utilisateurNom?.charAt(0)}}</div>
-                                 <p>{{s.utilisateurNom}}</p>
+                           <th>Id</th>
+                           <th>UtilisateurId</th>
+                           <th>HeureEntree</th>
+                           <th>HeureSortie</th>
+                           <th>Duree</th>
+                           <th class="text-right">Statut</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        @for (p of paginatedPointages; track p.id) {
+                          <tr>
+                             <td><small>{{p.id}}</small></td>
+                             <td>
+                                <div class="user-cell">
+                                   <div class="user-avatar">{{p.utilisateurNom?.charAt(0)}}</div>
+                                   <div>
+                                      <p>{{p.utilisateurNom || p.utilisateurId}}</p>
+                                      <span>{{p.utilisateurId}}</span>
+                                   </div>
+                                </div>
+                             </td>
+                             <td>{{p.heureEntree || '--:--'}}</td>
+                             <td>{{p.heureSortie || '--:--'}}</td>
+                             <td class="duration-cell">{{p.totalHeures || p.duree || '0'}}h</td>
+                             <td class="text-right">
+                                <span [class]="p.statut === 'Present' ? 'badge badge-success' : 'badge badge-danger'">
+                                   {{p.statut}}
+                                </span>
+                             </td>
+                          </tr>
+                        }
+                     </tbody>
+                  </table>
+               </div>
+               @if (pointages.length > pageSize) {
+                 <div class="pagination-mini">
+                   <button class="btn-p" [disabled]="page === 1" (click)="page = page - 1">&lt;</button>
+                   <span>Page {{page}} / {{totalPagesPointages}}</span>
+                   <button class="btn-p" [disabled]="page === totalPagesPointages" (click)="page = page + 1">&gt;</button>
+                 </div>
+               }
+            </div>
+          }
+
+          <!-- Leave Module -->
+          @if (currentView === 'conges') {
+            <div class="section-container">
+               <div class="section-header">
+                  <h3>File d'Attente des Congés</h3>
+               </div>
+
+               <div class="card table-card glass-card">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Id</th>
+                        <th>UtilisateurId</th>
+                        <th>TypePointageId</th>
+                        <th>DateDebut</th>
+                        <th>DateFin</th>
+                        <th>Status</th>
+                        <th>Motif</th>
+                        <th class="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (c of paginatedConges; track c.id) {
+                        <tr>
+                          <td><small>{{c.id}}</small></td>
+                          <td>
+                            <div class="user-cell">
+                              <div class="user-avatar">{{c.utilisateurNom?.charAt(0)}}</div>
+                              <div>
+                                 <p>{{c.utilisateurNom || c.utilisateurId}}</p>
+                                 <span>{{c.utilisateurId}}</span>
                               </div>
-                           </td>
-                           <td>{{s.salaireBase}} DT</td>
-                           <td class="text-success">+{{s.primes}} DT</td>
-                           <td class="text-danger">-{{s.retenues}} DT</td>
-                           <td>
-                              <span class="net-amount">{{s.netAPayer}} DT</span>
-                           </td>
-                           <td class="text-right">
-                              <button (click)="imprimerFiche(s)" class="btn-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                  <polyline points="6 9 6 2 18 2 18 9"/>
-                                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-                                  <rect x="6" y="14" width="12" height="8"/>
-                                </svg>
-                              </button>
-                           </td>
+                            </div>
+                          </td>
+                          <td><span class="leave-type">{{c.typePointageId || c.type}}</span></td>
+                          <td>{{c.dateDebut | date:'dd/MM/yyyy'}}</td>
+                          <td>{{c.dateFin | date:'dd/MM/yyyy'}}</td>
+                          <td>
+                             <span [class]="'status-text ' + (c.statut === 'Validé' || c.status === 'Validé' ? 'text-success' : (c.statut === 'Refusé' || c.status === 'Refusé' ? 'text-danger' : ''))">
+                               {{c.status || c.statut}}
+                             </span>
+                          </td>
+                          <td><div class="leave-motif-mini" [title]="c.motif">{{c.motif || '...'}}</div></td>
+                          <td class="text-right">
+                            <div class="leave-actions-mini">
+                              @if (c.statut === 'En attente') {
+                                <button (click)="validerConge(c, true)" class="btn-icon btn-s" title="Autoriser">✓</button>
+                                <button (click)="validerConge(c, false)" class="btn-icon btn-d" title="Refuser">✕</button>
+                              } @else {
+                                <span [class]="'status-text ' + (c.statut === 'Validé' ? 'text-success' : 'text-danger')">
+                                  {{c.statut}}
+                                </span>
+                              }
+                            </div>
+                          </td>
                         </tr>
                       }
-                   </tbody>
-                </table>
-             </div>
-          </div>
-        }
+                    </tbody>
+                  </table>
+               </div>
+               @if (conges.length > pageSize) {
+                 <div class="pagination-mini">
+                   <button class="btn-p" [disabled]="page === 1" (click)="page = page - 1">&lt;</button>
+                   <span>Page {{page}} / {{totalPagesConges}}</span>
+                   <button class="btn-p" [disabled]="page === totalPagesConges" (click)="page = page + 1">&gt;</button>
+                 </div>
+               }
+            </div>
+          }
+
+          <!-- Payroll Module -->
+          @if (currentView === 'salaires') {
+            <div class="section-container">
+               <div class="section-header">
+                  <h3>Compensation de Rendement</h3>
+                  <button (click)="genererSalaires()" class="btn btn-primary">Générer Batch</button>
+               </div>
+
+               <div class="card table-card glass-card">
+                  <table class="data-table">
+                     <thead>
+                        <tr>
+                           <th>Id</th>
+                           <th>UtilisateurId</th>
+                           <th>SalaireBase</th>
+                           <th>Primes</th>
+                           <th>Retenues</th>
+                           <th>NetAPayer</th>
+                           <th class="text-right">Fiche</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        @for (s of paginatedSalaires; track s.id) {
+                          <tr>
+                             <td><small>{{s.id}}</small></td>
+                             <td>
+                                <div class="user-cell">
+                                   <div class="user-avatar">{{s.utilisateurNom?.charAt(0)}}</div>
+                                   <div>
+                                      <p>{{s.utilisateurNom || s.utilisateurId}}</p>
+                                      <span>{{s.utilisateurId}}</span>
+                                   </div>
+                                </div>
+                             </td>
+                             <td>{{s.salaireBase}} DT</td>
+                             <td class="text-success">+{{s.primes}} DT</td>
+                             <td class="text-danger">-{{s.retenues}} DT</td>
+                             <td>
+                                <span class="net-amount">{{s.netAPayer}} DT</span>
+                             </td>
+                             <td class="text-right">
+                                <button (click)="imprimerFiche(s)" class="btn-icon">
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 6 2 18 2 18 9"/>
+                                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                                    <rect x="6" y="14" width="12" height="8"/>
+                                  </svg>
+                                </button>
+                             </td>
+                          </tr>
+                        }
+                     </tbody>
+                  </table>
+               </div>
+               @if (salaires.length > pageSize) {
+                 <div class="pagination-mini">
+                   <button class="btn-p" [disabled]="page === 1" (click)="page = page - 1">&lt;</button>
+                   <span>Page {{page}} / {{totalPagesSalaires}}</span>
+                   <button class="btn-p" [disabled]="page === totalPagesSalaires" (click)="page = page + 1">&gt;</button>
+                 </div>
+               }
+            </div>
+          }
+        </div>
       </div>
     </div>
   `,
@@ -196,7 +244,9 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       display: flex;
       flex-direction: column;
       gap: var(--space-xl);
+      padding: var(--space-2xl);
       padding-bottom: var(--space-2xl);
+      background: transparent;
     }
 
     .dashboard-header {
@@ -643,10 +693,21 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       color: #10b981;
     }
 
-    .status-danger {
+     .status-danger {
       border-color: #ef4444;
       color: #ef4444;
     }
+
+    .leave-motif-mini { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; opacity: 0.7; }
+    .leave-actions-mini { display: flex; gap: 4px; justify-content: flex-end; }
+    .btn-s { background: #10b981; color: white; border: none; }
+    .btn-d { background: #ef4444; color: white; border: none; }
+    .status-text { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+
+    .pagination-mini { display: flex; justify-content: center; align-items: center; gap: 1rem; padding: 1rem; font-size: 12px; font-weight: 700; color: #64748b; }
+    .btn-p { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #e2e8f0; background: white; cursor: pointer; transition: all 0.2s; }
+    .btn-p:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+    .btn-p:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Dark mode */
     :host-context(.dark) .card {
@@ -706,41 +767,123 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 export class AdminRhComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
+  private formState = inject(FormStateService);
   
   currentView: 'pointage' | 'conges' | 'salaires' = 'pointage';
   societeId = '';
   societeNom = '';
   pointageDate = new Date().toISOString().split('T')[0];
+  today = new Date().toISOString().split('T')[0];
+
+  private readonly STATE_KEY = 'admin_rh_state';
   
   pointages: any[] = [];
   conges: any[] = [];
   salaires: any[] = [];
 
+  // Pagination
+  page = 1;
+  pageSize = 5;
+
+  get totalPagesPointages(): number { return Math.ceil(this.pointages.length / this.pageSize) || 1; }
+  get paginatedPointages() { return this.pointages.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
+
+  get totalPagesConges(): number { return Math.ceil(this.conges.length / this.pageSize) || 1; }
+  get paginatedConges() { return this.conges.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
+
+  get totalPagesSalaires(): number { return Math.ceil(this.salaires.length / this.pageSize) || 1; }
+  get paginatedSalaires() { return this.salaires.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
+
   ngOnInit() {
     const user = this.api.getCurrentUser();
-    this.societeId = user?.societeId || '';
-    this.societeNom = user?.societe?.nom || 'Votre société';
+    this.societeId = user?.societeId || user?.SocieteId || '';
+    
+    // Robust societeNom initialization
+    const rawNom = user?.societe?.nom || user?.SocieteNom || 'Votre société';
+    this.societeNom = (typeof rawNom === 'string') ? rawNom.replace(/undefined/g, '').trim() : 'Votre société';
+    if (!this.societeNom) this.societeNom = 'Votre société';
+
+    this.restoreState();
     this.loadPointages();
     this.loadConges();
     this.loadSalaires();
   }
 
+  private restoreState() {
+    const state = this.formState.getDraft(this.STATE_KEY);
+    if (state) {
+      if (state.currentView) this.currentView = state.currentView;
+      if (state.pointageDate) this.pointageDate = state.pointageDate;
+    }
+  }
+
+  setView(view: 'pointage' | 'conges' | 'salaires') {
+    this.currentView = view;
+    this.saveState();
+  }
+
+  onDateChange() {
+    this.saveState();
+    this.loadPointages();
+  }
+
+  private saveState() {
+    this.formState.saveDraft(this.STATE_KEY, {
+      currentView: this.currentView,
+      pointageDate: this.pointageDate
+    });
+  }
+
   loadPointages() {
-    this.api.getAttendanceTrends(this.societeId).subscribe(data => {
-      this.pointages = [
-        { id: 1, utilisateurNom: 'Karim Ben Salem', role: 'Développeur Senior', heureEntree: '08:30', heureSortie: '17:45', totalHeures: 8.5, statut: 'Present' },
-        { id: 2, utilisateurNom: 'Sonia Mabrouk', role: 'Chef de Projet', heureEntree: '09:00', heureSortie: '18:15', totalHeures: 8.25, statut: 'Present' },
-        { id: 3, utilisateurNom: 'Yassine Ayari', role: 'Designer UI/UX', heureEntree: '08:45', heureSortie: '17:30', totalHeures: 7.75, statut: 'Present' }
-      ];
+    // Charger les pointages réels des employés de la société
+    this.api.getEmployesBySociete(this.societeId).subscribe(employes => {
+      const staffOnly = employes.filter((e: any) => (e.typeUtilisateurId || '').toUpperCase() !== 'T008');
+      const employeMap = new Map(staffOnly.map((e: any) => [e.id || e.Id, e.nom || e.Nom || 'Employé']));
+      this.api.getPointages().subscribe({
+        next: (pts: any[]) => {
+          const list = Array.isArray(pts) ? pts : (pts as any)?.value || [];
+          // Filtrer les pointages pour la date sélectionnée et les employés de la société
+          this.pointages = list
+            .filter((p: any) => {
+              const uid = p.utilisateurId || p.UtilisateurId;
+              const pDate = (p.date || p.Date || '').toString().split('T')[0];
+              return employeMap.has(uid) && (!this.pointageDate || pDate === this.pointageDate);
+            })
+            .map((p: any) => {
+              const uid = p.utilisateurId || p.UtilisateurId;
+              return {
+                id: p.id || p.Id,
+                utilisateurId: uid,
+                utilisateurNom: employeMap.get(uid) || uid,
+                heureEntree: p.heureEntree || p.HeureEntree || '--:--',
+                heureSortie: p.heureSortie || p.HeureSortie || '--:--',
+                duree: p.duree || p.Duree || p.totalHeures || '0',
+                statut: p.heureSortie || p.HeureSortie ? 'Present' : 'En cours'
+              };
+            });
+        },
+        error: () => { this.pointages = []; }
+      });
     });
   }
 
   loadConges() {
-    this.api.getUtilisateurs().subscribe(users => {
-      this.conges = [
-        { id: 1, utilisateurNom: 'Ahmed Slim', type: 'Annuel', dateDebut: '2024-05-10', dateFin: '2024-05-20', motif: 'Période de récupération stratégique', statut: 'En attente' },
-        { id: 2, utilisateurNom: 'Meryem Tounsi', type: 'Maladie', dateDebut: '2024-04-15', dateFin: '2024-04-16', motif: 'Maintenance médicale système critique', statut: 'Validé' }
-      ];
+    // Charger les demandes de congé réelles des employés de la société
+    this.api.getDemandesEnAttenteReal(this.societeId).subscribe({
+      next: (conges: any[]) => {
+        this.conges = conges.map((c: any) => ({
+          id: c.id || c.Id,
+          utilisateurId: c.utilisateurId || c.UtilisateurId,
+          utilisateurNom: c.utilisateurNom || c.utilisateurId || 'Employé',
+          typePointageId: c.typePointageId || c.TypePointageId || 'Annuel',
+          dateDebut: c.dateDebut || c.DateDebut,
+          dateFin: c.dateFin || c.DateFin,
+          motif: c.motif || c.Motif || '',
+          statut: c.statut || c.Status || 'En attente',
+          status: c.status || c.Status || c.statut || 'En attente'
+        }));
+      },
+      error: () => { this.conges = []; }
     });
   }
 

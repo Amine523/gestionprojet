@@ -4,16 +4,17 @@ using Gestprojet.Metier.ApiParamSociete.Domain.Interfaces.Societe.Business;
 using Gestprojet.Metier.ApiParamSociete.Domain.Models.Societe;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 {
-    [ApiController]
-    [Route("api/application")]
-    [AllowAnonymous]
-    [Microsoft.AspNetCore.Cors.EnableCors("AllowAllWithCredentials")]
-    public class ApplicationController : ControllerBase
+[ApiController]
+[Route("api/application")]
+[AllowAnonymous]
+public class ApplicationController : ControllerBase
     {
         private readonly IApplicationBusiness _applicationBusiness;
 
@@ -31,18 +32,32 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         [HttpPost("ajouter")]
         public async Task<IActionResult> Ajouter([FromBody] ApplicationCore entity)
         {
-            if (entity == null) return BadRequest("Données Application invalides");
-            entity.Id = string.Empty;
-            var result = await _applicationBusiness.AjouterOuModifierAsync(entity);
-            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+            try
+            {
+                if (entity == null) return BadRequest("Données Application invalides");
+                entity.Id = string.Empty;
+                var result = await _applicationBusiness.AjouterOuModifierAsync(entity);
+                return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Erreur lors de l'enregistrement de la candidature", detail = ex.Message });
+            }
         }
 
         [HttpPut("modifier")]
         public async Task<IActionResult> Modifier([FromBody] ApplicationCore entity)
         {
-            if (entity == null) return BadRequest("Données Application invalides");
-            var result = await _applicationBusiness.AjouterOuModifierAsync(entity);
-            return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+            try
+            {
+                if (entity == null) return BadRequest("Données Application invalides");
+                var result = await _applicationBusiness.AjouterOuModifierAsync(entity);
+                return result.Success ? Ok(result.Message) : BadRequest(result.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Erreur lors de la mise à jour de la candidature", detail = ex.Message });
+            }
         }
 
         [HttpGet]
@@ -69,10 +84,17 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         }
 
         [HttpPost("liste-par-condition")]
-        public async Task<IActionResult> ListeParCondition([FromBody] ConditionRecherche critere)
+        public async Task<IActionResult> ListeParConditionAction([FromBody] ConditionRecherche request)
         {
-            if (critere == null) return BadRequest("Critère manquant");
-            return Ok(await _applicationBusiness.ListeParCritereAsync(critere));
+            if (request == null) return BadRequest("Critère manquant");
+            try
+            {
+                return Ok(await _applicationBusiness.ListeParCritereAsync(request));
+            }
+            catch (Exception)
+            {
+                return Ok(new List<ApplicationCore>());
+            }
         }
 
         [HttpPost("ListeDetailleParCondition")]

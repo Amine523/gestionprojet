@@ -213,6 +213,15 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
                </button>
             </div>
             <div class="modal-body">
+               @if (errorMessage) {
+                 <div class="error-banner">
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                   </svg>
+                   <span>{{errorMessage}}</span>
+                   <button (click)="errorMessage = null" class="btn-close-error">×</button>
+                 </div>
+               }
                <div class="form-grid">
                   <div class="form-field">
                      <label>Nom Complet</label>
@@ -752,6 +761,36 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       overflow-y: auto;
     }
 
+    .error-banner {
+      background: #fef2f2;
+      border: 1px solid #fee2e2;
+      color: #b91c1c;
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .btn-close-error {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #b91c1c;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -944,6 +983,7 @@ export class SuperAdminUtilisateursComponent implements OnInit {
   totalItems = 0;
   Math = Math;
   isLoading = false;
+  errorMessage: string | null = null;
 
   ngOnInit() {
     this.loadSocietes();
@@ -1030,6 +1070,7 @@ export class SuperAdminUtilisateursComponent implements OnInit {
   }
 
   openDialog(user?: any) {
+    this.errorMessage = null;
     this.editingUser = user;
     const autoNv = 'V' + new Date().getFullYear() + '.' + String(Date.now()).slice(-4);
     this.formData = user ? { 
@@ -1073,15 +1114,15 @@ export class SuperAdminUtilisateursComponent implements OnInit {
 
     const payload = {
       ...this.formData,
-      motDePasse: this.formData.password || this.formData.motDePasse || '123456'
+      motDePasse: this.formData.password || this.formData.motDePasse || (this.editingUser ? '' : 'admin123')
     };
 
     if (this.editingUser) {
       this.api.updateUtilisateur(this.editingUser.id, payload).subscribe({
         next: () => {
-          this.usersSignal.update(list => list.map(u => u.id === this.editingUser.id ? { ...u, ...payload } : u));
           this.snackBar.open('Utilisateur mis à jour', 'Fermer', { duration: 3000 });
           this.showDialog = false;
+          this.loadUsers();
         },
         error: (err) => this.snackBar.open('Erreur: ' + (err.error || 'Échec'), 'Fermer', { duration: 3000 })
       });
@@ -1094,11 +1135,10 @@ export class SuperAdminUtilisateursComponent implements OnInit {
         },
         error: (err) => {
           const errorText = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
-          if (errorText.includes('UNIQUE KEY') && errorText.includes('email')) {
-            this.snackBar.open("Cet email existe déjà dans la base de données", 'Fermer', { duration: 5000 });
-          } else {
-            this.snackBar.open('Erreur: ' + (err.error?.message || errorText || 'Échec'), 'Fermer', { duration: 5000 });
-          }
+          this.errorMessage = errorText.includes('UNIQUE KEY') && errorText.includes('email') 
+            ? "Cet email existe déjà dans la base de données"
+            : 'Erreur: ' + (err.error?.message || errorText || 'Échec de la création');
+          this.snackBar.open(this.errorMessage, 'Fermer', { duration: 5000 });
         }
       });
     }
@@ -1122,7 +1162,7 @@ export class SuperAdminUtilisateursComponent implements OnInit {
     const updated = { ...user, actif: !user.actif };
     this.api.updateUtilisateur(user.id, updated).subscribe({
       next: () => {
-        this.usersSignal.update(list => list.map(u => u.id === user.id ? { ...u, actif: !user.actif } : u));
+        this.loadUsers();
       }
     });
   }

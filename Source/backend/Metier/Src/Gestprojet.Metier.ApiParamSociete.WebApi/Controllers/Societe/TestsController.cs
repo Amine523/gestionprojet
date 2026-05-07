@@ -9,7 +9,8 @@ using System.Threading.Tasks;
 namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/Tests")]
+    [Route("api/tests")]
     public class TestsController : ControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
@@ -22,6 +23,44 @@ namespace Gestprojet.Metier.ApiParamSociete.WebApi.Controllers.Societe
         }
 
         private HttpClient GetClient() => _httpClientFactory.CreateClient("ApiParamSociete");
+
+    [HttpGet("societe/{idSociete}")]
+    public async Task<IActionResult> GetAllBySociete(string idSociete)
+    {
+        try
+        {
+            var response = await GetClient().GetAsync($"{_coreApiUrl}/api/Tests/societe/{Uri.EscapeDataString(idSociete)}");
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"[METIER] Tests.GetAllBySociete: Core API returned {response.StatusCode} for {idSociete}");
+                return Ok(new List<object>());
+            }
+            
+            var body = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(body)) return Ok(new List<object>());
+            
+            try 
+            {
+                var result = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(body);
+                return Ok(result ?? new List<object>());
+            }
+            catch (Newtonsoft.Json.JsonException)
+            {
+                // If it's not a list, maybe it's a single object or an error message wrapped in JSON
+                try {
+                   var single = Newtonsoft.Json.JsonConvert.DeserializeObject<object>(body);
+                   return Ok(new List<object> { single });
+                } catch {
+                   return Ok(new List<object>());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[METIER] Tests.GetAllBySociete ERROR: {ex.Message}");
+            return Ok(new List<object>());
+        }
+    }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
