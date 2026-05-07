@@ -1,0 +1,78 @@
+
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Flux Financiers</h1>
+          <p class="text-slate-500">Historique des transactions et règlements</p>
+        </div>
+        <div class="flex items-center space-x-3 bg-white dark:bg-slate-800 p-2 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+          <div class="px-4">
+            <p class="text-[10px] uppercase font-bold text-slate-400">CA Mensuel</p>
+            <p class="text-lg font-black text-emerald-600">45,280 €</p>
+          </div>
+          <div class="w-px h-8 bg-slate-100 dark:bg-slate-700"></div>
+          <div class="px-4">
+            <p class="text-[10px] uppercase font-bold text-slate-400">Transactions</p>
+            <p class="text-lg font-black text-indigo-600">124</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <table mat-table [dataSource]="paiements()" class="w-full">
+          
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> ID Transaction </th>
+            <td mat-cell *matCellDef="let p" class="p-6 font-mono text-xs text-slate-500 uppercase">
+              #{{ p.id.substring(0, 8) }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="societe">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> Société </th>
+            <td mat-cell *matCellDef="let p" class="p-6">
+              <div class="font-bold text-slate-900 dark:text-white">{{ p.societeNom }}</div>
+              <div class="text-[10px] text-slate-500 uppercase">{{ p.emailClient }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="montant">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> Montant </th>
+            <td mat-cell *matCellDef="let p" class="p-6">
+              <span class="text-lg font-black text-slate-900 dark:text-white">{{ p.montant }} €</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="methode">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> Méthode </th>
+            <td mat-cell *matCellDef="let p" class="p-6">
+              <div class="flex items-center space-x-2">
+                <mat-icon class="text-slate-400 scale-75">{{ p.methode === 'Stripe' ? 'credit_card' : 'account_balance_wallet' }}</mat-icon>
+                <span class="text-xs text-slate-600 dark:text-slate-400 font-medium">{{ p.methode }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> Date </th>
+            <td mat-cell *matCellDef="let p" class="p-6 text-sm text-slate-600 dark:text-slate-400">
+              {{ p.datePaiement | date:'dd/MM/yyyy HH:mm' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="statut">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200"> Statut </th>
+            <td mat-cell *matCellDef="let p" class="p-6">
+              <span [class]="p.statut === 'Réussi' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'" 
+                    class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                {{ p.statut }}
+              </span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"></tr>
+        </table>
+      </div>
+    </div>
+  

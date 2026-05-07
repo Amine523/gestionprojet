@@ -1,0 +1,154 @@
+
+    <div class="client-rapports">
+      <!-- Header -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">📊 Rapports & KPIs</h1>
+          <p class="page-subtitle">Suivi de l'avancement de vos projets</p>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      @if (isLoading) {
+        <div class="loading-center">
+          <div class="spinner"></div>
+          <p>Chargement des rapports...</p>
+        </div>
+      } @else {
+        <!-- Global KPIs -->
+        <div class="global-kpis">
+          <div class="gkpi-card">
+            <div class="gkpi-icon gkpi-blue">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div>
+              <div class="gkpi-val">{{ rapports.length }}</div>
+              <div class="gkpi-lbl">Projets suivis</div>
+            </div>
+          </div>
+          <div class="gkpi-card">
+            <div class="gkpi-icon gkpi-green">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div>
+              <div class="gkpi-val">{{ globalAvancement | number:'1.0-0' }}%</div>
+              <div class="gkpi-lbl">Avancement global</div>
+            </div>
+          </div>
+          <div class="gkpi-card">
+            <div class="gkpi-icon gkpi-orange">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+            </div>
+            <div>
+              <div class="gkpi-val">{{ totalTachesTerminees }}</div>
+              <div class="gkpi-lbl">Tâches terminées</div>
+            </div>
+          </div>
+          <div class="gkpi-card">
+            <div class="gkpi-icon gkpi-purple">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="gkpi-val">{{ totalTachesEnCours }}</div>
+              <div class="gkpi-lbl">Tâches en cours</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rapport par projet -->
+        <div class="rapports-list">
+          @for (rapport of rapports; track rapport.ProjetId) {
+            <div class="rapport-card">
+              <!-- Card Header -->
+              <div class="rapport-header">
+                <div class="rapport-avatar">{{ rapport.ProjetNom.charAt(0).toUpperCase() || 'P' }}</div>
+                <div class="rapport-meta">
+                  <h3 class="rapport-nom">{{ rapport.ProjetNom }}</h3>
+                  <span class="rapport-statut" [class]="getStatutClass(rapport.Statut)">{{ rapport.Statut || 'N/A' }}</span>
+                </div>
+                <div class="rapport-avancement-label">
+                  <span class="av-pct">{{ rapport.Avancement | number:'1.0-0' }}%</span>
+                  <span class="av-lbl">avancement</span>
+                </div>
+              </div>
+
+              <!-- Barre de progression grande -->
+              <div class="big-progress">
+                <div class="big-progress-fill" [style.width.%]="rapport.Avancement"
+                     [class]="getProgressClass(rapport.Avancement)"></div>
+              </div>
+
+              <!-- Stats tâches -->
+              <div class="tasks-stats">
+                <div class="task-stat">
+                  <div class="ts-dot dot-done"></div>
+                  <span class="ts-val">{{ rapport.TachesTerminees }}</span>
+                  <span class="ts-lbl">Terminées</span>
+                </div>
+                <div class="task-stat">
+                  <div class="ts-dot dot-active"></div>
+                  <span class="ts-val">{{ rapport.TachesEnCours }}</span>
+                  <span class="ts-lbl">En cours</span>
+                </div>
+                <div class="task-stat">
+                  <div class="ts-dot dot-todo"></div>
+                  <span class="ts-val">{{ rapport.TachesAFaire }}</span>
+                  <span class="ts-lbl">À faire</span>
+                </div>
+                <div class="task-stat ts-total">
+                  <span class="ts-val">{{ rapport.TotalTaches }}</span>
+                  <span class="ts-lbl">Total</span>
+                </div>
+              </div>
+
+              <!-- Mini donut simulé via segments -->
+              <div class="rapport-footer">
+                <div class="dates-info">
+                  @if (rapport.DateDebut) {
+                    <span class="date-chip">📅 Début : {{ formatDate(rapport.DateDebut) }}</span>
+                  }
+                  @if (rapport.DateFin) {
+                    <span class="date-chip">🏁 Fin : {{ formatDate(rapport.DateFin) }}</span>
+                  }
+                </div>
+                <button class="burndown-btn" (click)="loadBurndown(rapport.ProjetId)">
+                  Burndown chart
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </button>
+              </div>
+
+              <!-- Burndown (affiché si sélectionné) -->
+              @if (selectedProjetId === rapport.ProjetId && burndownData.length > 0) {
+                <div class="burndown-section">
+                  <h4 class="burndown-title">📉 Burndown Chart</h4>
+                  <div class="burndown-chart">
+                    @for (point of burndownData; track point.day) {
+                      <div class="burndown-col">
+                        <div class="burndown-bars">
+                          <div class="bar bar-ideal" [style.height.%]="point.ideal" title="Idéal: {{ point.ideal }}"></div>
+                          <div class="bar bar-remaining" [style.height.%]="point.remaining" title="Restant: {{ point.remaining }}"></div>
+                        </div>
+                        <span class="bar-label">{{ point.day }}</span>
+                      </div>
+                    }
+                  </div>
+                  <div class="burndown-legend">
+                    <div class="legend-item"><div class="legend-dot dot-ideal"></div> Idéal</div>
+                    <div class="legend-item"><div class="legend-dot dot-remaining"></div> Restant</div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        @if (rapports.length === 0) {
+          <div class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <h3>Aucun rapport disponible</h3>
+            <p>Les rapports apparaîtront une fois que vous aurez des projets affectés.</p>
+          </div>
+        }
+      }
+    </div>
+  

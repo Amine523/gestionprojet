@@ -1,0 +1,89 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Commandement Global v8.0</span>
+            <span class="badge badge-success">
+              <span class="status-dot"></span>
+              SYSTÈME NOMINAL
+            </span>
+          </div>
+          <h1 class="header-title">
+            SURVEILLANCE <span class="gradient-text">ÉCOSYSTÈME</span>
+          </h1>
+          <p class="header-subtitle">
+            Surveillance multi-tenant en temps réel, performance financière et santé de l'infrastructure à travers l'écosystème SaaS Nadhemni.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button (click)="exportToCSV()" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Exporter Analyses
+          </button>
+          <button (click)="loadData()" class="btn-icon btn-ghost btn-white">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+
+
+      <!-- Critical Metrics Grid -->
+      <div class="metrics-grid">
+        @for (stat of stats; track stat.title) {
+          <app-metric-card
+            [title]="stat.title.toUpperCase()"
+            [value]="stat.value.toString()"
+            [icon]="'bi-' + stat.icon"
+            [color]="stat.color === '#3b82f6' ? 'indigo' : stat.color === '#10b981' ? 'emerald' : stat.color === '#f59e0b' ? 'amber' : 'rose'"
+            [trend]="stat.change || 'N/A'"
+            [isPositive]="stat.changeUp ?? true">
+          </app-metric-card>
+        }
+      </div>
+
+      <div class="dashboard-grid">
+
+
+        <!-- Demandes de création de société -->
+        <div class="card card-requests">
+          <div class="card-header">
+            <h3>Demandes de création de société</h3>
+            <span class="badge badge-warning">{{demandes.length}} En attente</span>
+          </div>
+          <div class="requests-list">
+            @for (d of demandes; track d.id) {
+              <div class="request-item">
+                <div class="request-info">
+                  <h4>{{d.titre || d.Titre || 'Sans titre'}}</h4>
+                  <p>{{d.statut || d.Statut}} - {{d.type || d.Type}}</p>
+                </div>
+                <div class="request-actions">
+                  <button (click)="traiterDemande(d.id || d.Id, true)" class="btn-action approve" title="Approuver">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button (click)="traiterDemande(d.id || d.Id, false)" class="btn-action reject" title="Refuser">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="empty-state">
+                <p>Aucune demande en attente</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  

@@ -1,0 +1,22 @@
+
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 h-full">
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Répartition par Profil</h3>
+      <div class="relative h-[250px] flex items-center justify-center">
+        <canvas #chartCanvas></canvas>
+        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span class="text-2xl font-black text-slate-900 dark:text-white">{{ totalUsers() }}</span>
+          <span class="text-[10px] uppercase font-bold text-slate-400">Total</span>
+        </div>
+      </div>
+      
+      <div class="mt-6 grid grid-cols-2 gap-2">
+        @for (item of legendItems(); track item.label) {
+          <div class="flex items-center space-x-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50">
+            <div [class]="'w-2 h-2 rounded-full ' + item.colorClass"></div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase truncate">{{ item.label }}</span>
+            <span class="text-[10px] font-black text-slate-700 dark:text-slate-200 ml-auto">{{ item.value }}%</span>
+          </div>
+        }
+      </div>
+    </div>
+  

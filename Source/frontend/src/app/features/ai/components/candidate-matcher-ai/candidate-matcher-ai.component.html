@@ -1,0 +1,70 @@
+
+    <div class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 rounded-xl bg-indigo-600 text-white">
+            <mat-icon class="text-sm">auto_awesome</mat-icon>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white">Matching IA Candidats</h3>
+        </div>
+        <button mat-stroked-button class="rounded-xl" (click)="match()">
+          <mat-icon class="mr-2 text-sm">refresh</mat-icon> Actualiser
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4">
+        @for (match of matches(); track match.id) {
+          <mat-card class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden hover:border-indigo-200 transition-all">
+            <div class="p-6">
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                  <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-bold text-indigo-600">
+                    {{ match.nom.substring(0, 2).toUpperCase() }}
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-900 dark:text-white">{{ match.nom }}</h4>
+                    <p class="text-xs text-slate-500">{{ match.titre }}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div [class]="'text-2xl font-black ' + getScoreColor(match.score)">{{ match.score }}%</div>
+                  <div class="text-[10px] uppercase font-bold text-slate-400">Match Score</div>
+                </div>
+              </div>
+
+              <div class="space-y-3 mb-6">
+                <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase">
+                  <span>Adéquation Compétences</span>
+                  <span>{{ match.skillMatch }}%</span>
+                </div>
+                <mat-progress-bar mode="determinate" [value]="match.skillMatch" class="h-1.5 rounded-full"></mat-progress-bar>
+              </div>
+
+              <div class="flex flex-wrap gap-2 mb-6">
+                @for (skill of match.matchingSkills; track skill) {
+                  <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase">
+                    {{ skill }}
+                  </span>
+                }
+              </div>
+
+              <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border-l-4 border-indigo-500">
+                <p class="text-xs text-slate-600 dark:text-slate-400 italic">
+                  "{{ match.aiRecommendation }}"
+                </p>
+              </div>
+
+              <div class="flex items-center space-x-2 mt-6">
+                <button mat-flat-button class="flex-1 rounded-xl bg-slate-900 text-white" (click)="viewProfile(match)">
+                  Profil Complet
+                </button>
+                <button mat-flat-button class="flex-1 rounded-xl bg-indigo-600 text-white" (click)="contact(match)">
+                  Contacter
+                </button>
+              </div>
+            </div>
+          </mat-card>
+        }
+      </div>
+    </div>
+  

@@ -1,0 +1,282 @@
+
+
+    <div class="bugs-container">
+      <div class="page-header gradient-header">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+          </svg>
+        </div>
+        <div class="header-content">
+          <h1 class="page-title">Bugs & Qualité</h1>
+          <p class="page-subtitle">Gérez les bugs et assurez la qualité - {{societeNom}}</p>
+        </div>
+        <button class="btn btn-light" (click)="openAddBug()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Signaler un bug
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card stat-danger">
+          <div class="stat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{bugsOuverts}}</span>
+            <span class="stat-label">Ouverts</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-warning">
+          <div class="stat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{bugsEnCours}}</span>
+            <span class="stat-label">En cours</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-primary">
+          <div class="stat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{bugsCorriges}}</span>
+            <span class="stat-label">Corrigés</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-success">
+          <div class="stat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{tauxQualite}}%</span>
+            <span class="stat-label">Qualité</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="tabs-header">
+          <button class="tab-btn active" (click)="activeTab = 'list'">Liste des bugs</button>
+          <button class="tab-btn" (click)="activeTab = 'priority'">Par priorité</button>
+          <button class="tab-btn" (click)="activeTab = 'project'">Par projet</button>
+        </div>
+        <div class="card-body">
+          @if (activeTab === 'list') {
+            <div class="filters-bar">
+              <div class="search-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" [(ngModel)]="searchBug" placeholder="Titre, description..." class="search-input">
+              </div>
+              <select class="filter-select" [(ngModel)]="filterStatut">
+                <option value="">Tous</option>
+                <option value="Ouvert">Ouvert</option>
+                <option value="En_cours">En cours</option>
+                <option value="Corrigé">Corrigé</option>
+              </select>
+              <select class="filter-select" [(ngModel)]="filterPriorite">
+                <option value="">Toutes</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Titre</th>
+                    <th>Priorité</th>
+                    <th>Statut</th>
+                    <th>Assigné à</th>
+                    <th>Projet</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (b of filteredBugs; track b.id) {
+                    <tr [class.border-left-critical]="b.priorite === 'Critical'" [class.border-left-high]="b.priorite === 'High'">
+                      <td>{{b.titre}}</td>
+                      <td>
+                        <span class="badge" [class.badge-critical]="b.priorite === 'Critical'" [class.badge-high]="b.priorite === 'High'" [class.badge-medium]="b.priorite === 'Medium'" [class.badge-low]="b.priorite === 'Low'">{{b.priorite}}</span>
+                      </td>
+                      <td>
+                        <span class="badge" [class.badge-danger]="b.statut === 'Ouvert'" [class.badge-warning]="b.statut === 'En_cours'" [class.badge-success]="b.statut === 'Corrigé'">{{b.statut}}</span>
+                      </td>
+                      <td>{{b.assignee || '-'}}</td>
+                      <td>{{b.projet}}</td>
+                      <td>{{b.date}}</td>
+                      <td>
+                        <div class="action-buttons">
+                          <button class="btn-icon" (click)="viewBug(b)" title="Voir détails">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                          </button>
+                          <button class="btn-icon" (click)="editBug(b)" title="Modifier">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                          </button>
+                          <button class="btn-icon" (click)="affecterBug(b)" title="Affecter">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                              <circle cx="8.5" cy="7" r="4"></circle>
+                              <line x1="20" y1="8" x2="20" y2="14"></line>
+                              <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                          </button>
+                          @if (b.statut !== 'Corrigé') {
+                            <button class="btn-icon btn-success" (click)="corrigerBug(b)" title="Marquer corrigé">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          @if (activeTab === 'priority') {
+            <div class="priority-grid">
+              <div class="priority-card priority-critical">
+                <span class="priority-label">Critical</span>
+                <span class="priority-value">{{getCountByPriority('Critical')}}</span>
+              </div>
+              <div class="priority-card priority-high">
+                <span class="priority-label">High</span>
+                <span class="priority-value">{{getCountByPriority('High')}}</span>
+              </div>
+              <div class="priority-card priority-medium">
+                <span class="priority-label">Medium</span>
+                <span class="priority-value">{{getCountByPriority('Medium')}}</span>
+              </div>
+              <div class="priority-card priority-low">
+                <span class="priority-label">Low</span>
+                <span class="priority-value">{{getCountByPriority('Low')}}</span>
+              </div>
+            </div>
+          }
+
+          @if (activeTab === 'project') {
+            <div class="projects-list">
+              @for (p of projets; track p.nom) {
+                <div class="project-card">
+                  <div class="project-header">
+                    <span class="project-name">{{p.nom}}</span>
+                    <span class="project-count">{{getCountByProject(p.nom)}} bugs</span>
+                  </div>
+                  <div class="project-progress">
+                    <div class="progress-item">
+                      <span class="progress-label">Ouverts</span>
+                      <div class="progress-bar">
+                        <div class="progress-fill progress-red" [style.width.%]="getPercentByProject(p.nom, 'Ouvert')"></div>
+                      </div>
+                      <span class="progress-value">{{getCountByProjectStatus(p.nom, 'Ouvert')}}</span>
+                    </div>
+                    <div class="progress-item">
+                      <span class="progress-label">En cours</span>
+                      <div class="progress-bar">
+                        <div class="progress-fill progress-orange" [style.width.%]="getPercentByProject(p.nom, 'En_cours')"></div>
+                      </div>
+                      <span class="progress-value">{{getCountByProjectStatus(p.nom, 'En_cours')}}</span>
+                    </div>
+                    <div class="progress-item">
+                      <span class="progress-label">Corrigés</span>
+                      <div class="progress-bar">
+                        <div class="progress-fill progress-green" [style.width.%]="getPercentByProject(p.nom, 'Corrigé')"></div>
+                      </div>
+                      <span class="progress-value">{{getCountByProjectStatus(p.nom, 'Corrigé')}}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (showAddBug || editingBug) {
+        <div class="modal-overlay" (click)="closeForm()">
+          <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header modal-header-danger">
+              <h3 class="modal-title">{{editingBug ? 'Modifier' : 'Signaler'}} un bug</h3>
+              <button class="btn-close" (click)="closeForm()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Titre</label>
+                <input type="text" class="form-input" [(ngModel)]="formData.titre">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-input" [(ngModel)]="formData.description" rows="4"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Priorité</label>
+                <select class="form-select" [(ngModel)]="formData.priorite">
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Projet</label>
+                <select class="form-select" [(ngModel)]="formData.projetId">
+                  @for (p of projets; track p.nom) {
+                    <option [value]="p.nom">{{p.nom}}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Étapes pour reproduire</label>
+                <textarea class="form-input" [(ngModel)]="formData.etapes" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" (click)="closeForm()">Annuler</button>
+              <button class="btn btn-primary" (click)="saveBug()">Enregistrer</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

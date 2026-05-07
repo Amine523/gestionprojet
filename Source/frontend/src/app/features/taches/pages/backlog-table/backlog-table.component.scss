@@ -1,0 +1,10 @@
+
+    :host { display: block; }
+    ::ng-deep .mat-mdc-table { background: transparent !important; }
+    .cdk-drag-preview {
+      display: table;
+      background: white;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+  

@@ -1,0 +1,59 @@
+
+    <div class="p-6 space-y-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-black text-slate-900 dark:text-white">Suivi de vos Projets</h1>
+          <p class="text-slate-500">Consultez l'avancement en temps réel de vos commandes</p>
+        </div>
+        <div class="flex -space-x-3">
+          @for (i of [1,2,3]; track i) {
+            <div class="w-10 h-10 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200"></div>
+          }
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        @for (proj of projects(); track proj.id) {
+          <mat-card class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-xl transition-all">
+            <div class="p-8">
+              <div class="flex items-center justify-between mb-6">
+                <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider">{{ proj.status }}</span>
+                <span class="text-xs text-slate-400 font-medium">Livraison prévue: {{ proj.endDate | date:'MMM yyyy' }}</span>
+              </div>
+
+              <h2 class="text-2xl font-black text-slate-900 dark:text-white mb-2">{{ proj.nom }}</h2>
+              <p class="text-sm text-slate-500 mb-8 line-clamp-2">{{ proj.description }}</p>
+
+              <div class="space-y-4 mb-8">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Progression globale</span>
+                  <span class="text-sm font-black text-indigo-600">{{ proj.progression }}%</span>
+                </div>
+                <mat-progress-bar mode="determinate" [value]="proj.progression" class="h-3 rounded-full"></mat-progress-bar>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4 py-4 border-t border-slate-100 dark:border-slate-700">
+                <div class="text-center">
+                  <div class="text-lg font-black text-slate-900 dark:text-white">{{ proj.tasksCompleted }}</div>
+                  <div class="text-[10px] uppercase font-bold text-slate-400">Terminé</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-lg font-black text-slate-900 dark:text-white">{{ proj.tasksPending }}</div>
+                  <div class="text-[10px] uppercase font-bold text-slate-400">En cours</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-lg font-black text-slate-900 dark:text-white">{{ proj.bugsOpen }}</div>
+                  <div class="text-[10px] uppercase font-bold text-rose-500">Bugs</div>
+                </div>
+              </div>
+              
+              <button class="w-full mt-6 py-4 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors flex items-center justify-center">
+                <mat-icon class="mr-2 text-sm">visibility</mat-icon>
+                Voir les détails techniques
+              </button>
+            </div>
+          </mat-card>
+        }
+      </div>
+    </div>
+  

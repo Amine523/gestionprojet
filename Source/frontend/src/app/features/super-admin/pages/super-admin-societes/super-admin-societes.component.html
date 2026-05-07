@@ -1,1 +1,284 @@
-<p>super-admin-societes works!</p>
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Centre de Commande SaaS</span>
+          </div>
+          <h1 class="header-title">
+            Gestion des <span class="gradient-text">Sociétés.</span>
+          </h1>
+          <p class="header-subtitle">
+            Supervision globale de l'écosystème et déploiement des instances.
+          </p>
+        </div>
+        <div class="header-actions">
+          <div class="stats-card">
+            <div class="stat-item">
+              <p class="stat-label">Total</p>
+              <p class="stat-value">{{societesSignal().length}}</p>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <p class="stat-label">Actives</p>
+              <p class="stat-value text-primary">{{activeCount}}</p>
+            </div>
+          </div>
+          <button (click)="openDialog()" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nouvelle Société
+          </button>
+        </div>
+      </header>
+
+      <!-- Filters -->
+      <div class="card">
+        <div class="card-filters">
+          <div class="search-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" [(ngModel)]="searchFilters.global" (ngModelChange)="applyAdvancedFilter()" placeholder="Rechercher par organisation, DNS, email...">
+          </div>
+          <select [(ngModel)]="searchFilters.planAbonnement" (change)="applyAdvancedFilter()" class="filter-select">
+            <option value="">Tous les plans</option>
+            <option value="GOLD">Gold (Entreprise)</option>
+            <option value="SILVER">Silver (Pro)</option>
+            <option value="FREE">Standard</option>
+          </select>
+          <div class="filter-actions">
+            <button (click)="exportExcel()" class="btn-icon btn-success">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+            </button>
+            <button (click)="exportPdf()" class="btn-icon btn-danger">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="card">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Organisation</th>
+                <th>Contact</th>
+                <th>Localisation</th>
+                <th>Plan</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of filteredSocietes(); track s.id) {
+                <tr>
+                  <td>
+                    <div class="user-info">
+                      <div class="user-avatar">{{s.nom?.charAt(0) || 'S'}}</div>
+                      <div class="user-details">
+                        <span class="user-name">{{s.nom || '-'}}</span>
+                        <span class="user-email">{{s.id || 'N/A'}}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="contact-details">
+                      <span class="text-muted d-block">{{s.email || '-'}}</span>
+                      <span class="text-xs text-primary">{{s.telephoneContact || '-'}}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="location-info">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      <span>{{s.ville || '-'}}{{s.ville && s.pays ? ', ' : ''}}{{s.pays || ''}}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge" [class.badge-primary]="s.planAbonnement === 'GOLD'" [class.badge-secondary]="s.planAbonnement === 'SILVER'" [class.badge-tertiary]="!s.planAbonnement || s.planAbonnement === 'FREE'">
+                      {{s.planAbonnement || 'Standard'}}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="status-indicator">
+                      <span class="status-dot" [class.active]="s.actif"></span>
+                      <span [class.active]="s.actif">{{s.actif ? 'Actif' : 'Suspendu'}}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <button (click)="viewProjets(s)" class="btn-icon btn-ghost">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="2" y="3" width="20" height="14" rx="2"/>
+                          <line x1="8" y1="21" x2="16" y2="21"/>
+                          <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                      </button>
+                      <button (click)="openDialog(s)" class="btn-icon btn-ghost">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button (click)="toggleStatus(s)" class="btn-icon btn-ghost">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          @if (s.actif) {
+                            <rect x="6" y="4" width="4" height="16"/>
+                            <rect x="14" y="4" width="4" height="16"/>
+                          } @else {
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                          }
+                        </svg>
+                      </button>
+                      <button (click)="deleteSociete(s)" class="btn-icon btn-danger">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (filteredSocietes().length > 0) {
+          <footer class="pagination-footer">
+            <p class="pagination-info">
+              Affichage de <span class="text-primary">{{(page - 1) * pageSize + 1}}</span> à <span class="text-primary">{{Math.min(page * pageSize, totalItems)}}</span> sur <span class="text-primary">{{totalItems}}</span> entrées
+            </p>
+            <div class="pagination-controls">
+              <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-select">
+                <option [ngValue]="5">5</option>
+                <option [ngValue]="10">10</option>
+                <option [ngValue]="25">25</option>
+                <option [ngValue]="50">50</option>
+              </select>
+              <div class="pagination-buttons">
+                <button (click)="setPage(page - 1)" [disabled]="page === 1" class="btn-icon btn-ghost">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+                @for (p of getVisiblePages(); track p) {
+                  @if (p === '...') {
+                    <span class="pagination-ellipsis">...</span>
+                  } @else {
+                    <button (click)="setPage(+p)" class="page-btn" [class.active]="p === page">{{p}}</button>
+                  }
+                }
+                <button (click)="setPage(page + 1)" [disabled]="page >= Math.ceil(totalItems / pageSize)" class="btn-icon btn-ghost">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </footer>
+        }
+
+        @if (filteredSocietes().length === 0) {
+          <div class="empty-state">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/>
+            </svg>
+            <p class="empty-state-text">Aucune organisation détectée</p>
+          </div>
+        }
+    </div>
+
+      </div>
+
+    <!-- Modal -->
+    @if (showDialog) {
+      <div class="modal-overlay" (click)="showDialog = false">
+         <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+               <div>
+                  <h2>{{editingSociete ? 'CONFIGURATION' : 'DÉPLOIEMENT INSTANCE'}}</h2>
+                  <p class="modal-subtitle">Paramètres d'Infrastructure SaaS</p>
+               </div>
+               <button (click)="showDialog = false" class="btn-icon btn-ghost">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+               </button>
+            </div>
+            <div class="modal-body">
+               <div class="form-grid">
+                  <div class="form-field full-width">
+                     <label>Nom de l'organisation</label>
+                     <input [(ngModel)]="formData.nom" name="nom" class="form-input" placeholder="Ex: Soft Pro Industries">
+                  </div>
+                  <div class="form-field">
+                     <label>Email Administratif</label>
+                     <input [(ngModel)]="formData.email" name="email" class="form-input" placeholder="admin@domain.com">
+                  </div>
+                  <div class="form-field">
+                     <label>Plan de Souscription</label>
+                     <select [(ngModel)]="formData.planAbonnement" name="planAbonnement" class="form-input">
+                        <option value="GOLD">Gold (Entreprise)</option>
+                        <option value="SILVER">Silver (Pro)</option>
+                        <option value="FREE">Standard</option>
+                     </select>
+                  </div>
+                  <div class="form-field">
+                     <label>Téléphone Contact</label>
+                     <input [(ngModel)]="formData.telephoneContact" name="telephoneContact" class="form-input" placeholder="+216 ...">
+                  </div>
+                  <div class="form-field full-width">
+                     <label>Adresse du Siège</label>
+                     <input [(ngModel)]="formData.adresse" name="adresse" class="form-input" placeholder="Rue, Bâtiment...">
+                  </div>
+                  <div class="form-field">
+                     <label>Ville</label>
+                     <input [(ngModel)]="formData.ville" name="ville" class="form-input" placeholder="Ex: Tunis">
+                  </div>
+                  <div class="form-field">
+                     <label>Pays</label>
+                     <input [(ngModel)]="formData.pays" name="pays" class="form-input" placeholder="Ex: Tunisie">
+                  </div>
+               </div>
+               <div class="toggle-field">
+                  <div>
+                     <p class="toggle-label">État de l'Infrastructure</p>
+                     <p class="toggle-sublabel">Activer les services réseau immédiatement</p>
+                  </div>
+                  <button (click)="formData.actif = !formData.actif" class="toggle-btn" [class.active]="formData.actif">
+                     <span class="toggle-knob"></span>
+                  </button>
+               </div>
+            </div>
+            <div class="modal-footer">
+               <button type="button" (click)="showDialog = false" class="btn btn-ghost">ANNULER</button>
+               <button type="button" (click)="saveSociete()" class="btn btn-primary">{{editingSociete ? 'VALIDER CONFIGURATION' : 'INITIER DÉPLOIEMENT'}}</button>
+            </div>
+         </div>
+      </div>
+    }
+  

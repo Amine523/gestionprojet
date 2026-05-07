@@ -1,0 +1,90 @@
+
+    <div class="p-6 max-w-4xl mx-auto space-y-8">
+      <div class="flex items-center space-x-6">
+        <div class="relative group">
+          <div class="w-32 h-32 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl font-black text-white shadow-xl">
+            {{ userInitials() }}
+          </div>
+          <button class="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-colors border border-slate-100 dark:border-slate-700">
+            <mat-icon class="text-sm">photo_camera</mat-icon>
+          </button>
+        </div>
+        <div>
+          <h1 class="text-3xl font-black text-slate-900 dark:text-white">{{ profileForm.get('nom')?.value }}</h1>
+          <p class="text-slate-500 dark:text-slate-400 font-medium">{{ userRole() }} • {{ userEmail() }}</p>
+          <div class="mt-4 flex space-x-2">
+            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Actif</span>
+            <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider">Vérifié</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Sidebar Profile -->
+        <div class="space-y-6">
+          <mat-card class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+            <div class="p-6">
+              <h3 class="font-bold text-slate-900 dark:text-white mb-4">Actions</h3>
+              <div class="space-y-2">
+                <button mat-button class="w-full justify-start rounded-xl text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20">
+                  <mat-icon class="mr-2">person</mat-icon> Infos Personnelles
+                </button>
+                <button mat-button class="w-full justify-start rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700">
+                  <mat-icon class="mr-2">security</mat-icon> Sécurité
+                </button>
+                <button mat-button class="w-full justify-start rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700">
+                  <mat-icon class="mr-2">notifications</mat-icon> Notifications
+                </button>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+
+        <!-- Main Form -->
+        <div class="md:col-span-2">
+          <mat-card class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+            <div class="p-8">
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Informations Personnelles</h3>
+              
+              <form [formGroup]="profileForm" (ngSubmit)="updateProfile()" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Nom complet</mat-label>
+                    <input matInput formControlName="nom">
+                    <mat-icon matPrefix class="mr-2 text-slate-400">person</mat-icon>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" readonly>
+                    <mat-icon matPrefix class="mr-2 text-slate-400">email</mat-icon>
+                  </mat-form-field>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Téléphone</mat-label>
+                    <input matInput formControlName="telephone">
+                    <mat-icon matPrefix class="mr-2 text-slate-400">phone</mat-icon>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Poste</mat-label>
+                    <input matInput formControlName="poste">
+                    <mat-icon matPrefix class="mr-2 text-slate-400">work</mat-icon>
+                  </mat-form-field>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                  <button mat-flat-button color="primary" class="rounded-xl px-12 py-6 font-bold shadow-lg shadow-indigo-500/30"
+                          [disabled]="profileForm.invalid || isLoading()">
+                    {{ isLoading() ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </mat-card>
+        </div>
+      </div>
+    </div>
+  

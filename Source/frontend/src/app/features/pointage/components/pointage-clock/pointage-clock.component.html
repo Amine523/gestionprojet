@@ -1,0 +1,54 @@
+
+    <mat-card class="bg-gradient-to-br from-slate-900 to-indigo-900 text-white p-6 rounded-3xl shadow-2xl border-none overflow-hidden relative group">
+      <!-- Glow effect -->
+      <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500 rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
+      
+      <div class="relative z-10">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center space-x-2">
+            <div [class]="'w-3 h-3 rounded-full animate-pulse ' + (isClockedIn() ? 'bg-emerald-400' : 'bg-rose-400')"></div>
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-400">
+              {{ isClockedIn() ? 'En poste' : 'Absent' }}
+            </span>
+          </div>
+          <span class="text-xs text-slate-400 font-medium">{{ today | date:'fullDate':'':'fr' }}</span>
+        </div>
+
+        <div class="text-center py-4">
+          <div class="text-5xl font-mono font-black tracking-tighter mb-2">
+            {{ currentTime() }}
+          </div>
+          <div class="text-sm text-indigo-300 font-medium h-6">
+            @if (isClockedIn()) {
+              Durée: {{ sessionDuration() }}
+            }
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 mt-8">
+          @if (!isClockedIn()) {
+            <button mat-flat-button color="primary" 
+                    class="py-8 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-lg shadow-lg shadow-emerald-500/20"
+                    (click)="clockIn()">
+              <mat-icon class="mr-2">play_arrow</mat-icon>
+              Pointer Entrée
+            </button>
+          } @else {
+            <button mat-flat-button color="warn" 
+                    class="py-8 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-lg shadow-lg shadow-rose-500/20"
+                    (click)="clockOut()">
+              <mat-icon class="mr-2">stop</mat-icon>
+              Pointer Sortie
+            </button>
+          }
+        </div>
+        
+        @if (lastPointage()) {
+          <div class="mt-6 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+            <span>Dernier pointage:</span>
+            <span class="text-white font-bold">{{ lastPointage()?.heureEntree }}</span>
+          </div>
+        }
+      </div>
+    </mat-card>
+  

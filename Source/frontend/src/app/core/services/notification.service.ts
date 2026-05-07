@@ -15,12 +15,13 @@ export interface Notification {
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private api = inject(ApiService);
+  private http = inject(HttpClient);
   private snackBar = inject(MatSnackBar);
   private hubConnection: signalR.HubConnection | undefined;
 
-  notificationsSignal = signal<Notification[]>([]);
-  unreadCount = signal(0);
+  // Signal pour le compteur de notifications non lues
+  unreadCount = signal<number>(0);
+  notifications = signal<any[]>([]);
 
   constructor() {
     this.loadFromStorage();
@@ -175,12 +176,21 @@ export class NotificationService {
     }
   }
 
-  private saveToStorage() {
-    localStorage.setItem('app_notifications', JSON.stringify(this.notificationsSignal()));
+  /**
+   * Démarre le polling des notifications (toutes les 30s)
+   */
+  startPolling(userId: string) {
+    timer(0, 30000).pipe(
+      switchMap(() => this.getForUser(userId)),
+      retry()
+    ).subscribe();
   }
 
-  private updateUnreadCount() {
-    this.unreadCount.set(this.notificationsSignal().filter(n => !n.read).length);
+  /**
+   * Envoie une notification à un utilisateur spécifique
+   */
+  sendToUser(payload: { userId: string, title: string, message: string, type: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/send-to-user`, payload);
   }
 
   notifyUser(userId: string, title: string, message: string, type: any = 'info') {
@@ -216,8 +226,8 @@ export class NotificationService {
 
     this.snackBar.open(message, 'Fermer', {
       duration: 5000,
-      panelClass: [`snack-${type}`],
-      horizontalPosition: 'right',
+      panelClass: [`toast-${type}`],
+      horizontalPosition: 'end',
       verticalPosition: 'top'
     });
   }

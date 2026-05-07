@@ -1,0 +1,39 @@
+
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Matrice des Permissions</h1>
+          <p class="text-slate-500">Configurez les accès par rôle utilisateur</p>
+        </div>
+        <button mat-flat-button color="primary" class="rounded-xl px-6 py-2" (click)="savePermissions()">
+          Sauvegarder les Changements
+        </button>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden overflow-x-auto">
+        <table mat-table [dataSource]="roles()" class="w-full">
+          
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef class="p-6 font-bold text-slate-700 dark:text-slate-200 sticky left-0 bg-white dark:bg-slate-800 z-10"> Rôle </th>
+            <td mat-cell *matCellDef="let role" class="p-6 font-bold text-slate-900 dark:text-white sticky left-0 bg-white dark:bg-slate-800 z-10 border-r border-slate-100 dark:border-slate-700">
+              {{ role.nom }}
+            </td>
+          </ng-container>
+
+          @for (perm of permissions(); track perm.id) {
+            <ng-container [matColumnDef]="perm.id">
+              <th mat-header-cell *matHeaderCellDef class="p-4 text-center font-bold text-slate-500 text-[10px] uppercase tracking-wider">
+                {{ perm.nom }}
+              </th>
+              <td mat-cell *matCellDef="let role" class="p-4 text-center">
+                <mat-slide-toggle color="primary" [checked]="hasPermission(role.id, perm.id)" (change)="togglePermission(role.id, perm.id)"></mat-slide-toggle>
+              </td>
+            </ng-container>
+          }
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns();" class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"></tr>
+        </table>
+      </div>
+    </div>
+  

@@ -1,0 +1,103 @@
+
+
+    <div class="api-container">
+      <!-- Header -->
+      <div class="api-header">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 11a9 9 0 0 1 9 9"></path>
+            <path d="M4 4a16 16 0 0 1 16 16"></path>
+            <circle cx="5" cy="19" r="1"></circle>
+          </svg>
+        </div>
+        <div class="header-info">
+          <h1 class="header-title">Documentation API REST</h1>
+          <p class="header-subtitle">Spécifications techniques, Endpoints et Schémas intégrés (v1.0)</p>
+        </div>
+        <button class="btn btn-primary" (click)="exportOpenApi()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Exporter OpenAPI.json
+        </button>
+      </div>
+
+      <!-- API Resources -->
+      <div class="api-resources">
+        @for (resource of apiResources; track resource.name) {
+          <div class="resource-section">
+            <div class="resource-header">
+              <h2 class="resource-title">{{resource.name}}</h2>
+              <span class="resource-description">{{resource.description}}</span>
+            </div>
+            
+            <div class="endpoints-list">
+              @for (endpoint of resource.endpoints; track endpoint.path; let i = $index) {
+                <div class="endpoint-item" [class.method-get]="endpoint.method.toLowerCase() === 'get'" [class.method-post]="endpoint.method.toLowerCase() === 'post'" [class.method-put]="endpoint.method.toLowerCase() === 'put'" [class.method-delete]="endpoint.method.toLowerCase() === 'delete'">
+                  <div class="endpoint-header" (click)="toggleEndpoint(resource.name, i)">
+                    <span class="method-badge" [class.method-get]="endpoint.method.toLowerCase() === 'get'" [class.method-post]="endpoint.method.toLowerCase() === 'post'" [class.method-put]="endpoint.method.toLowerCase() === 'put'" [class.method-delete]="endpoint.method.toLowerCase() === 'delete'">{{endpoint.method}}</span>
+                    <span class="endpoint-path">{{endpoint.path}}</span>
+                    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
+                  
+                  <div class="endpoint-body" [class.expanded]="isExpanded(resource.name, i)">
+                    <p class="endpoint-summary">{{endpoint.summary}}</p>
+                    
+                    @if (endpoint.params && endpoint.params.length) {
+                      <div class="params-section">
+                        <h6 class="section-title">Paramètres Requis</h6>
+                        <table class="params-table">
+                          <thead>
+                            <tr>
+                              <th>Nom</th>
+                              <th>Type</th>
+                              <th>Description</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (param of endpoint.params; track param.name) {
+                              <tr>
+                                <td><strong>{{param.name}}</strong></td>
+                                <td><span class="type-badge">{{param.type}}</span></td>
+                                <td>{{param.description}}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    }
+
+                    @if (endpoint.body) {
+                      <div class="body-section">
+                        <h6 class="section-title">Body d'entrée (JSON)</h6>
+                        <pre class="code-block code-dark"><code>{{endpoint.body}}</code></pre>
+                      </div>
+                    }
+
+                    <div class="responses-section">
+                      <h6 class="section-title">Réponses</h6>
+                      <div class="responses-list">
+                        @for (res of endpoint.responses; track res.status) {
+                          <div class="response-item">
+                            <span class="status-badge" [class.status-success]="res.status.startsWith('2')" [class.status-error]="!res.status.startsWith('2')">{{res.status}}</span>
+                            <span class="response-desc">{{res.desc}}</span>
+                            @if (res?.model) {
+                              <pre class="code-block code-light"><code>{{res?.model}}</code></pre>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  

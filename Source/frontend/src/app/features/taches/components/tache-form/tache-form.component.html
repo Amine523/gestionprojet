@@ -1,0 +1,61 @@
+
+    <div class="p-6 bg-white dark:bg-slate-900 rounded-3xl">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Nouvelle Tâche</h2>
+        <button mat-icon-button (click)="dialogRef.close()" class="text-slate-400"><mat-icon>close</mat-icon></button>
+      </div>
+
+      <form [formGroup]="tacheForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Titre de la tâche</mat-label>
+          <input matInput formControlName="nom" placeholder="Ex: Développer l'authentification JWT">
+          @if (tacheForm.get('nom')?.hasError('required')) {
+            <mat-error>Le titre est requis</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="3" placeholder="Détails de la tâche..."></textarea>
+        </mat-form-field>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Priorité</mat-label>
+            <mat-select formControlName="priorite">
+              <mat-option value="Low">Basse</mat-option>
+              <mat-option value="Medium">Moyenne</mat-option>
+              <mat-option value="High">Haute</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Statut Initial</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="To Do">À faire</mat-option>
+              <mat-option value="In Progress">En cours</mat-option>
+              <mat-option value="Done">Terminé</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Assigner à</mat-label>
+          <mat-select formControlName="utilisateurId">
+            @for (user of users(); track user.id) {
+              <mat-option [value]="user.id">{{ user.nom }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <div class="flex items-center justify-end space-x-3 pt-6">
+          <button mat-button type="button" (click)="dialogRef.close()" class="rounded-xl px-6">Annuler</button>
+          <button mat-flat-button color="primary" type="submit" 
+                  class="rounded-xl px-8 py-2 font-bold shadow-lg shadow-indigo-500/30"
+                  [disabled]="tacheForm.invalid || isLoading()">
+            {{ isLoading() ? 'Création...' : 'Créer la Tâche' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  

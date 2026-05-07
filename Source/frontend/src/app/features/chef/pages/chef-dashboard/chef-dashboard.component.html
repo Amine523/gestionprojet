@@ -1,0 +1,207 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Gestion d'Ingénierie v2.0</span>
+            <span class="badge badge-success">
+              <span class="status-dot"></span>
+              Actif
+            </span>
+          </div>
+          <h1 class="header-title">
+            ORCHESTRATION <span class="gradient-text">D'ÉQUIPE</span>
+          </h1>
+          <p class="header-subtitle">
+            {{societeNom}} • Vélocité des projets en temps réel, distribution de la charge de travail de l'équipe et suivi des jalons.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button (click)="loadData()" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nouveau Projet
+          </button>
+          <button (click)="loadData()" class="btn-icon btn-ghost btn-white">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Critical Metrics Grid -->
+      <div class="metrics-grid">
+        <app-metric-card
+          title="PROJETS ACTIFS"
+          [value]="stats.projets.toString()"
+          icon="bi-folder2-open"
+          color="indigo"
+          [trend]="'+2 Nouveaux'"
+          [isPositive]="true">
+        </app-metric-card>
+
+        <app-metric-card
+          title="MEMBRES D'ÉQUIPE"
+          [value]="stats.membres.toString()"
+          icon="bi-people"
+          color="emerald"
+          [trend]="'100% Actifs'"
+          [isPositive]="true">
+        </app-metric-card>
+
+        <app-metric-card
+          title="TÂCHES OUVERTES"
+          [value]="stats.taches.toString()"
+          icon="bi-clipboard-data"
+          color="amber"
+          [trend]="'Backlog: ' + stats.taches"
+          [isPositive]="false">
+        </app-metric-card>
+
+        <app-metric-card
+          title="LIVRÉES"
+          [value]="stats.tacheTerminees.toString()"
+          icon="bi-check2-all"
+          color="sky"
+          [trend]="'84% Qualité'"
+          [isPositive]="true">
+        </app-metric-card>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Burndown Chart -->
+        <div class="card card-chart">
+          <div class="card-header">
+            <div class="card-title">
+              <h3>Vélocité du Projet</h3>
+              <p class="card-subtitle">Graphique de Burndown: {{currentProjectName}}</p>
+            </div>
+            <div class="icon-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas #burndownChart></canvas>
+          </div>
+        </div>
+
+        <!-- Team Workload -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Charge d'Équipe</h3>
+          </div>
+          <div class="workload-list">
+            @for (m of membres; track m.id) {
+              <div class="workload-item">
+                <div class="workload-info">
+                  <div class="workload-avatar">{{m.initials}}</div>
+                  <div class="workload-details">
+                    <span class="workload-name">{{m.nom}}</span>
+                    <span class="workload-role">{{m.role || 'Ingénieur'}}</span>
+                  </div>
+                </div>
+                <div class="workload-progress">
+                  <span class="workload-percent" [class.workload-high]="m.load > 90">{{m.load}}%</span>
+                  <div class="progress-bar">
+                    <div class="progress-fill" [class.progress-high]="m.load > 90" [style.width.%]="m.load"></div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Strategy Insights -->
+      <div class="card ai-card">
+        <div class="card-header">
+          <div class="card-title">
+            <h3 class="flex items-center gap-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z"/><path d="M2 17L12 22L22 17"/><path d="M2 12L12 17L22 12"/>
+              </svg>
+              STRATÉGIE IA & PRÉDICTION
+            </h3>
+            <p class="card-subtitle">Analyse cognitive des risques et opportunités</p>
+          </div>
+          <button (click)="getAIInsights()" class="btn btn-ghost" [disabled]="aiLoading">
+            <span *ngIf="!aiLoading">Analyser</span>
+            <span *ngIf="aiLoading" class="animate-spin">⌛</span>
+          </button>
+        </div>
+        <div class="ai-content">
+          @if (aiInsight) {
+            <div class="ai-insight-box animate-in fade-in duration-500">
+              <div class="ai-badge">INSIGHT GÉNÉRÉ</div>
+              <p class="ai-text">{{aiInsight}}</p>
+            </div>
+          } @else {
+            <div class="ai-placeholder">
+              <div class="ai-blob"></div>
+              <p>Cliquez sur "Analyser" pour obtenir des recommandations stratégiques basées sur l'état actuel de vos projets.</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Projects Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h3>État du Portfolio</h3>
+            <p class="card-subtitle">Initiatives actives et suivi de la feuille de route</p>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Identité du Projet</th>
+                <th>Statut</th>
+                <th>Maturité</th>
+                <th>Date Limite</th>
+                <th>Vélocité</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of projets; track p.id) {
+                <tr>
+                  <td>
+                    <div class="project-name">
+                      <span class="project-indicator"></span>
+                      {{p.nom}}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="p.status === 'Actif' ? 'badge-success' : 'badge-gray'">{{p.status}}</span>
+                  </td>
+                  <td>
+                    <div class="progress-display">
+                      <div class="progress-bar small">
+                        <div class="progress-fill" [style.width.%]="p.pourcentageAvancement || 0"></div>
+                      </div>
+                      <span class="progress-text">{{p.pourcentageAvancement || 0}}%</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="date-text">{{p.endDate | date:'mediumDate'}}</span>
+                  </td>
+                  <td>
+                    <span class="velocity-text">{{p.velocity || '4.2'}} <span class="velocity-unit">pts/jour</span></span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  

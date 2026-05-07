@@ -1,0 +1,37 @@
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-black uppercase tracking-widest text-slate-400">Abonnements Expirant Bientôt</h3>
+        <span class="px-2 py-0.5 rounded-lg bg-rose-500 text-white text-[10px] font-bold">{{ subs().length }} Alertes</span>
+      </div>
+
+      @for (sub of subs(); track sub.id) {
+        <div class="group relative bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-rose-200 transition-all shadow-sm">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 flex items-center justify-center">
+              <mat-icon>timer</mat-icon>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <p class="font-bold text-slate-900 dark:text-white">{{ sub.societeNom }}</p>
+                <span class="text-[10px] font-black text-rose-500">{{ sub.daysRemaining }} jours restants</span>
+              </div>
+              <p class="text-xs text-slate-500">{{ sub.plan }} • Expire le {{ sub.expiryDate | date:'dd MMM' }}</p>
+            </div>
+          </div>
+          
+          <!-- Hover Action -->
+          <div class="absolute inset-y-0 right-4 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <button mat-mini-fab color="primary" class="scale-75 shadow-lg shadow-indigo-500/20">
+              <mat-icon>mail</mat-icon>
+            </button>
+          </div>
+        </div>
+      } @empty {
+        <div class="py-10 text-center bg-slate-50 dark:bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+          <mat-icon class="text-slate-300 text-3xl mb-2">check_circle</mat-icon>
+          <p class="text-xs text-slate-400 italic">Aucun abonnement critique identifié.</p>
+        </div>
+      }
+    </div>
+  

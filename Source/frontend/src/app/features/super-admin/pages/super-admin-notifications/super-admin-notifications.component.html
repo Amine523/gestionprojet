@@ -1,0 +1,180 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Centre Notifications</span>
+            @if (unreadAlerts > 0) {
+              <span class="badge badge-alert">{{unreadAlerts}} non lue(s)</span>
+            }
+          </div>
+          <h1 class="header-title">
+            Notifications <span class="gradient-text">& Alertes.</span>
+          </h1>
+          <p class="header-subtitle">
+            Centre de notifications et alertes de sécurité.
+          </p>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <div class="tabs-container">
+        <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="activeTab = 'all'">
+          Toutes
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'alerts'" (click)="activeTab = 'alerts'">
+          Alertes
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'info'" (click)="activeTab = 'info'">
+          Informations
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="notifications-list">
+        @if (activeTab === 'all') {
+          @for (notif of allNotifications; track notif.id) {
+            <div class="notif-card" [class.non-lu]="!notif.lu" [class.alert-card]="notif.type === 'alerte'">
+              <div class="notif-icon" [class.critique]="notif.niveau === 'critique'" [class.warning]="notif.niveau === 'warning'" [class.info]="notif.niveau === 'info'">
+                @if (notif.type === 'alerte' && notif.niveau === 'critique') {
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                } @else if (notif.type === 'alerte') {
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                } @else {
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                }
+              </div>
+              <div class="notif-content">
+                <strong>{{notif.titre}}</strong>
+                <p>{{notif.message}}</p>
+                <span class="text-muted">{{notif.date}}</span>
+              </div>
+              @if (notif.type === 'alerte') {
+                <span class="badge" [class.critique]="notif.niveau === 'critique'" [class.warning]="notif.niveau === 'warning'">{{notif.niveau}}</span>
+              }
+              @if (notif.type === 'info' && !notif.lu) {
+                <span class="badge badge-new">Nouveau</span>
+              }
+              @if (!notif.lu) {
+                <button class="btn-icon" (click)="marquerLu(notif)" title="Marquer comme lu">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+          @if (allNotifications.length === 0) {
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                <path d="M12 2v4"/>
+                <path d="M12 18v4"/>
+                <path d="M4.93 4.93l2.83 2.83"/>
+                <path d="M16.24 16.24l2.83 2.83"/>
+                <path d="M2 12h4"/>
+                <path d="M18 12h4"/>
+                <path d="M4.93 19.07l2.83-2.83"/>
+                <path d="M16.24 7.76l2.83-2.83"/>
+              </svg>
+              <p class="empty-state-text">Aucune notification</p>
+            </div>
+          }
+        }
+
+        @if (activeTab === 'alerts') {
+          @for (notif of alertNotifications; track notif.id) {
+            <div class="notif-card non-lu alert-card">
+              <div class="notif-icon" [class.critique]="notif.niveau === 'critique'" [class.warning]="notif.niveau === 'warning'">
+                @if (notif.niveau === 'critique') {
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                } @else {
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                }
+              </div>
+              <div class="notif-content">
+                <strong>{{notif.titre}}</strong>
+                <p>{{notif.message}}</p>
+                <span class="text-muted">{{notif.date}}</span>
+              </div>
+              <span class="badge" [class.critique]="notif.niveau === 'critique'" [class.warning]="notif.niveau === 'warning'">{{notif.niveau}}</span>
+              @if (!notif.lu) {
+                <button class="btn-icon" (click)="marquerLu(notif)" title="Marquer comme lu">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+          @if (alertNotifications.length === 0) {
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <p class="empty-state-text">Aucune alerte</p>
+            </div>
+          }
+        }
+
+        @if (activeTab === 'info') {
+          @for (notif of infoNotifications; track notif.id) {
+            <div class="notif-card" [class.non-lu]="!notif.lu">
+              <div class="notif-icon info">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="16" x2="12" y2="12"/>
+                  <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+              </div>
+              <div class="notif-content">
+                <strong>{{notif.titre}}</strong>
+                <p>{{notif.message}}</p>
+                <span class="text-muted">{{notif.date}}</span>
+              </div>
+              @if (!notif.lu) {
+                <span class="badge badge-new">Nouveau</span>
+              }
+              @if (!notif.lu) {
+                <button class="btn-icon" (click)="marquerLu(notif)" title="Marquer comme lu">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+          @if (infoNotifications.length === 0) {
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <p class="empty-state-text">Aucune information</p>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  

@@ -1,0 +1,60 @@
+
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Backlog Produit</h1>
+          <p class="text-slate-500">Priorisez vos tâches par simple glisser-déposer</p>
+        </div>
+        <div class="flex space-x-3">
+          <button mat-stroked-button class="rounded-xl"><mat-icon>download</mat-icon> Exporter</button>
+          <button mat-flat-button color="primary" class="rounded-xl"><mat-icon>add</mat-icon> Ajouter au Backlog</button>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <table mat-table [dataSource]="taches()" class="w-full" cdkDropList (cdkDropListDropped)="drop($event)">
+          
+          <ng-container matColumnDef="order">
+            <th mat-header-cell *matHeaderCellDef class="w-12 p-4"></th>
+            <td mat-cell *matCellDef="let tache" class="w-12 p-4 cursor-move">
+              <mat-icon class="text-slate-300">drag_indicator</mat-icon>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="nom">
+            <th mat-header-cell *matHeaderCellDef class="p-4 font-bold text-slate-700 dark:text-slate-200"> Tâche </th>
+            <td mat-cell *matCellDef="let tache" class="p-4">
+              <div class="font-bold text-slate-900 dark:text-white">{{ tache.nom }}</div>
+              <div class="text-[10px] text-slate-400 line-clamp-1">{{ tache.description }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="priorite">
+            <th mat-header-cell *matHeaderCellDef class="p-4 font-bold text-slate-700 dark:text-slate-200"> Priorité </th>
+            <td mat-cell *matCellDef="let tache" class="p-4">
+              <span [class]="getPriorityClass(tache.priorite)">{{ tache.priorite }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="projet">
+            <th mat-header-cell *matHeaderCellDef class="p-4 font-bold text-slate-700 dark:text-slate-200"> Projet </th>
+            <td mat-cell *matCellDef="let tache" class="p-4">
+              <span class="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{{ tache.projetNom || 'GestProjet' }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="p-4"></th>
+            <td mat-cell *matCellDef="let tache" class="p-4 text-right">
+              <button mat-icon-button class="text-slate-400"><mat-icon>edit</mat-icon></button>
+              <button mat-icon-button class="text-slate-400 hover:text-indigo-600"><mat-icon>play_circle</mat-icon></button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" cdkDrag [cdkDragData]="row"
+              class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"></tr>
+        </table>
+      </div>
+    </div>
+  

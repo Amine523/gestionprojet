@@ -1,0 +1,101 @@
+
+
+    <div class="parametres-container">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </div>
+        <div class="header-info">
+          <h1 class="header-title">Paramètres</h1>
+          <p class="header-subtitle">Gérez votre profil et préférences - {{societeNom}}</p>
+        </div>
+      </div>
+
+      <!-- Profile Card -->
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Profil</h5>
+          <div class="profile-header">
+            <div class="avatar">{{profil.initials}}</div>
+            <div class="profile-info">
+              <span class="profile-name">{{profil.nom}}</span>
+              <span class="profile-role">{{profil.role}}</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom</label>
+            <input type="text" [(ngModel)]="profil.nom" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" [(ngModel)]="profil.email" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Société</label>
+            <input type="text" [value]="societeNom" class="form-input" disabled>
+          </div>
+          <button class="btn btn-success" (click)="saveProfil()">Enregistrer</button>
+        </div>
+      </div>
+
+      <!-- Notifications Card -->
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Notifications</h5>
+          <div class="setting-item">
+            <span class="setting-label">Nouvelles tâches assignées</span>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="notifications.taches" (change)="saveNotifications()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">Bugs assignés</span>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="notifications.bugs" (change)="saveNotifications()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">Commentaires</span>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="notifications.commentaires" (change)="saveNotifications()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">Mentions</span>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="notifications.mentions" (change)="saveNotifications()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences Card -->
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Préférences</h5>
+          <div class="setting-item">
+            <span class="setting-label">Mode sombre</span>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="preferences.darkMode" (change)="savePreferences()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">Compact Kanban</span>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="preferences.compactKanban" (change)="savePreferences()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  

@@ -1,0 +1,81 @@
+
+    <div class="p-6 h-[calc(100vh-80px)] flex flex-col">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Tableau Kanban</h1>
+          <p class="text-slate-500 dark:text-slate-400">Gérez le flux de travail visuellement</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <button mat-stroked-button class="rounded-xl"><mat-icon>filter_list</mat-icon> Filtres</button>
+          <button mat-flat-button color="primary" class="rounded-xl"><mat-icon>add</mat-icon> Nouvelle Tâche</button>
+        </div>
+      </div>
+
+      <!-- Kanban Container -->
+      <div class="flex-1 flex space-x-6 overflow-x-auto pb-4" cdkDropListGroup>
+        
+        @for (column of columns(); track column.id) {
+          <div class="flex-1 min-w-[300px] flex flex-col bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4">
+            <!-- Column Header -->
+            <div class="flex items-center justify-between mb-4 px-2">
+              <div class="flex items-center space-x-2">
+                <div [class]="'w-2 h-2 rounded-full ' + column.color"></div>
+                <h3 class="font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-xs">{{ column.title }}</h3>
+                <span class="text-[10px] bg-white dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 font-bold">
+                  {{ column.tasks.length }}
+                </span>
+              </div>
+              <button mat-icon-button class="scale-75 text-slate-400"><mat-icon>more_horiz</mat-icon></button>
+            </div>
+
+            <!-- Task List -->
+            <div
+              [id]="column.id"
+              cdkDropList
+              [cdkDropListData]="column.tasks"
+              class="flex-1 space-y-4"
+              (cdkDropListDropped)="drop($event)">
+              
+              @for (task of column.tasks; track task.id) {
+                <div cdkDrag class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all cursor-grab active:cursor-grabbing group">
+                  <div class="flex items-start justify-between mb-2">
+                    <span [class]="getPriorityClass(task.priorite)">{{ task.priorite }}</span>
+                    <button mat-icon-button class="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" [matMenuTriggerFor]="taskMenu">
+                      <mat-icon class="text-xs">more_vert</mat-icon>
+                    </button>
+                    <mat-menu #taskMenu="matMenu">
+                      <button mat-menu-item (click)="editTask(task)"><mat-icon>edit</mat-icon> Modifier</button>
+                      <button mat-menu-item (click)="deleteTask(task)"><mat-icon>delete</mat-icon> Supprimer</button>
+                    </mat-menu>
+                  </div>
+                  
+                  <h4 class="font-bold text-slate-900 dark:text-white text-sm mb-2">{{ task.nom }}</h4>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">{{ task.description }}</p>
+                  
+                  <div class="flex items-center justify-between">
+                    <div class="flex -space-x-2">
+                      <div class="w-6 h-6 rounded-full bg-indigo-500 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[10px] text-white font-bold" matTooltip="Assigné à">
+                        JD
+                      </div>
+                    </div>
+                    <div class="flex items-center text-[10px] text-slate-400 font-medium">
+                      <mat-icon class="text-[14px] w-4 h-4 mr-1">schedule</mat-icon>
+                      {{ task.dateDebut | date:'d MMM' }}
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Placeholder if empty -->
+              @if (column.tasks.length === 0) {
+                <div class="h-24 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-center text-slate-400 text-xs italic">
+                  Déposez ici
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </div>
+    </div>
+  

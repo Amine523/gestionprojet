@@ -1,0 +1,77 @@
+
+    <div class="test-interface" [class.dark]="isDark">
+      <!-- Minimalist Header -->
+      <header class="test-header">
+        <div class="test-logo">
+          <div class="logo-box">N</div>
+          <span class="logo-text">Nadhemni <span class="text-indigo-500">Eval</span></span>
+        </div>
+        <div class="test-timer" [class.urgent]="timeLeft < 60">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>{{formatTime(timeLeft)}}</span>
+        </div>
+        <div class="test-progress">
+          <span class="progress-text">Question {{currentQuestionIndex + 1}} sur {{questions.length}}</span>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="(currentQuestionIndex + 1) * 100 / questions.length"></div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Test Content -->
+      <main class="test-main">
+        @if (!testFinished) {
+          <div class="question-container animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 class="question-title">{{questions[currentQuestionIndex].q}}</h2>
+            
+            <div class="options-list">
+              @for (opt of questions[currentQuestionIndex].options; track opt; let i = $index) {
+                <label class="option-card" [class.selected]="selectedAnswers[currentQuestionIndex] === i">
+                  <input type="radio" 
+                         [name]="'q' + currentQuestionIndex" 
+                         [value]="i" 
+                         [(ngModel)]="selectedAnswers[currentQuestionIndex]"
+                         class="hidden">
+                  <div class="option-index">{{getOptionLabel(i)}}</div>
+                  <div class="option-text">{{opt}}</div>
+                </label>
+              }
+            </div>
+          </div>
+
+          <footer class="test-footer">
+            <button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0" class="btn-nav">
+              Précédent
+            </button>
+            
+            @if (currentQuestionIndex < questions.length - 1) {
+              <button (click)="nextQuestion()" [disabled]="selectedAnswers[currentQuestionIndex] === undefined" class="btn-primary">
+                Suivant
+              </button>
+            } @else {
+              <button (click)="finishTest()" [disabled]="selectedAnswers[currentQuestionIndex] === undefined" class="btn-finish">
+                Terminer le test
+              </button>
+            }
+          </footer>
+        } @else {
+          <div class="finish-container animate-in zoom-in duration-500">
+            <div class="success-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <h1>Félicitations !</h1>
+            <p>Vous avez terminé l'évaluation technique. Vos résultats ont été transmis au département RH.</p>
+            <div class="score-card">
+              <span class="score-label">Votre Score</span>
+              <span class="score-value">{{finalScore}}%</span>
+            </div>
+            <button (click)="exit()" class="btn-primary">Retour à l'accueil</button>
+          </div>
+        }
+      </main>
+    </div>
+  

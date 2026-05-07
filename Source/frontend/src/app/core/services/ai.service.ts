@@ -9,41 +9,52 @@ import { catchError, map } from 'rxjs/operators';
 export class AiService {
   private baseUrl = '/api/AI';
 
-  constructor(private http: HttpClient) { }
+  // État de santé de l'IA
+  isHealthy = signal<boolean>(true);
 
-  private getHeaders(): HttpHeaders {
-
-    const token = localStorage.getItem('app_token');
-    const headers: { [key: string]: string } = { 'Content-Type': 'application/json' };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return new HttpHeaders(headers);
+  constructor() {
+    this.startHealthCheck();
   }
 
-  checkStatus(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/status`, { headers: this.getHeaders() }).pipe(
-      catchError(() => of({ available: false }))
-    );
+  /**
+   * Génération de texte / Chat IA
+   */
+  generate(prompt: string, context?: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/generate`, { prompt, context });
   }
 
-  getProjectInsights(data: any): Observable<any> {
-    const payload = { data: JSON.stringify(data) };
-    return this.http.post(`${this.baseUrl}/project-insights`, payload, { headers: this.getHeaders() });
+  /**
+   * Analyse prédictive des retards de projet
+   */
+  predictProjectDelay(projectId: string, data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/predict-project-delay`, { projectId, ...data });
   }
 
-  getRhInsights(data: any): Observable<any> {
-    const payload = { data: JSON.stringify(data) };
-    return this.http.post(`${this.baseUrl}/rh-insights`, payload, { headers: this.getHeaders() });
+  /**
+   * Analyse IA d'un candidat (Scoring)
+   */
+  analyzeCandidate(candidateData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/analyze-candidate`, candidateData);
   }
 
-  getDashboardInsights(data: any): Observable<any> {
-    const payload = { data: JSON.stringify(data) };
-    return this.http.post(`${this.baseUrl}/dashboard-insights`, payload, { headers: this.getHeaders() });
+  /**
+   * Analyse de performance et bien-être développeur
+   */
+  analyzeDeveloper(userId: string, data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/analyze-developer`, { userId, ...data });
   }
 
-  chat(message: string, context: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/chat`, { message, context }, { headers: this.getHeaders() });
+  /**
+   * Vérification périodique du statut du service IA
+   */
+  private startHealthCheck() {
+    timer(0, 60000).pipe(
+      switchMap(() => this.http.get<{ status: string }>(`${this.baseUrl}/health`).pipe(
+        catchError(() => of({ status: 'unhealthy' }))
+      ))
+    ).subscribe(res => {
+      this.isHealthy.set(res.status === 'healthy' || res.status === 'ok');
+    });
   }
 
   evaluate(request: any): Observable<any> {

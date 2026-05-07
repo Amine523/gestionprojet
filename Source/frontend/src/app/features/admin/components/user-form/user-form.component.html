@@ -1,0 +1,60 @@
+
+    <div class="p-6 bg-white dark:bg-slate-900 rounded-3xl">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">
+          {{ data ? 'Modifier l\'utilisateur' : 'Nouvel Utilisateur' }}
+        </h2>
+        <button mat-icon-button (click)="dialogRef.close()" class="text-slate-400"><mat-icon>close</mat-icon></button>
+      </div>
+
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Nom complet</mat-label>
+            <input matInput formControlName="nom" placeholder="Ex: Jean Dupont">
+            <mat-icon matPrefix class="mr-2 text-slate-400">person</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Email professionnel</mat-label>
+            <input matInput formControlName="email" placeholder="email@societe.com">
+            <mat-icon matPrefix class="mr-2 text-slate-400">email</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Rôle Système</mat-label>
+            <mat-select formControlName="typeUtilisateurId">
+              @for (role of roles(); track role.id) {
+                <mat-option [value]="role.id">{{ role.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Poste / Titre</mat-label>
+            <input matInput formControlName="poste" placeholder="Ex: Développeur Senior">
+            <mat-icon matPrefix class="mr-2 text-slate-400">work</mat-icon>
+          </mat-form-field>
+        </div>
+
+        @if (!data) {
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Mot de passe temporaire</mat-label>
+            <input matInput type="password" formControlName="password">
+            <mat-icon matPrefix class="mr-2 text-slate-400">lock</mat-icon>
+          </mat-form-field>
+        }
+
+        <div class="flex items-center justify-end space-x-3 pt-6">
+          <button mat-button type="button" (click)="dialogRef.close()" class="rounded-xl px-6">Annuler</button>
+          <button mat-flat-button color="primary" type="submit" 
+                  class="rounded-xl px-8 py-2 font-bold shadow-lg shadow-indigo-500/30"
+                  [disabled]="userForm.invalid || isLoading()">
+            {{ isLoading() ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  

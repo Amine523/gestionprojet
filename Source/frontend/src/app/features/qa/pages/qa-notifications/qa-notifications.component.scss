@@ -1,0 +1,124 @@
+
+    .notifications-container {
+      padding: var(--space-lg);
+    }
+
+    .page-header {
+      margin-bottom: var(--space-xl);
+    }
+
+    .header-title {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin: 0;
+    }
+
+    .notif-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      padding: 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .notif-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      cursor: pointer;
+      transition: background var(--transition-base);
+    }
+
+    .notif-item:hover {
+      background: var(--color-bg);
+    }
+
+    .notif-item.unread {
+      background: #e3f2fd;
+    }
+
+    .notif-item.unread:hover {
+      background: #bbdefb;
+    }
+
+    .notif-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .notif-icon.bug {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .notif-icon.test {
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .notif-content {
+      flex: 1;
+    }
+
+    .notif-text {
+      display: block;
+      font-size: var(--font-size-sm);
+      color: var(--color-text);
+      margin-bottom: var(--space-xs);
+    }
+
+    .notif-time {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* Dark mode */
+    :host-context(.dark) .notif-card {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .header-title,
+    :host-context(.dark) .notif-text {
+      color: var(--color-text);
+    }
+
+    :host-context(.dark) .notif-time {
+      color: var(--color-text-muted);
+    }
+
+    :host-context(.dark) .notif-item {
+      border-color: var(--color-border);
+    }
+
+    :host-context(.dark) .notif-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    :host-context(.dark) .notif-item.unread {
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    :host-context(.dark) .notif-item.unread:hover {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    @media (max-width: 768px) {
+      .notifications-container {
+        padding: var(--space-md);
+      }
+
+      .notif-item {
+        padding: var(--space-sm) var(--space-md);
+      }
+    }
+  

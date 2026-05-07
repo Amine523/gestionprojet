@@ -1053,7 +1053,7 @@ export class RhCongesComponent implements OnInit {
           `Demande de congé ${status}`, 
           `Votre demande pour la période du ${new Date(conge.dateDebut).toLocaleDateString()} au ${new Date(conge.dateFin).toLocaleDateString()} a été ${status.toLowerCase()}.`,
           typeNotif
-        );
+        ).subscribe();
 
         // Notifier le Chef de Projet (Liaison Cross-Actor)
         // Pour simplifier, on envoie une notification à la société si c'est une validation importante
@@ -1063,7 +1063,7 @@ export class RhCongesComponent implements OnInit {
              `Absence validée: ${conge.utilisateurNom}`,
              `${conge.utilisateurNom} sera absent du ${new Date(conge.dateDebut).toLocaleDateString()} au ${new Date(conge.dateFin).toLocaleDateString()}.`,
              'info'
-           );
+           ).subscribe();
         }
 
         this.snackBar.open(res.message, 'Fermer', { duration: 3000 });

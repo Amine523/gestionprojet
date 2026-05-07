@@ -1,0 +1,170 @@
+
+
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-badges">
+            <span class="badge badge-primary">Centre de Commande RH v4.0</span>
+            <span class="badge badge-success">
+              <span class="status-dot"></span>
+              Actif
+            </span>
+          </div>
+          <h1 class="header-title">
+            DASHBOARD <span class="gradient-text">INTELLIGENCE RH</span>
+          </h1>
+          <p class="header-subtitle">
+            {{societeNom}} • Suivi en temps réel de la performance du capital humain, des indicateurs de recrutement et de la santé organisationnelle.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button (click)="analyserRH()" [disabled]="aiLoading" class="btn btn-primary" [class.btn-disabled]="aiLoading">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+              <path d="M12 12 2.1 12.05"/>
+              <path d="M12 12 12 21.9"/>
+            </svg>
+            Analyste IA
+          </button>
+          <button (click)="loadData()" class="btn-icon btn-ghost btn-white">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Critical Metrics Grid -->
+      <div class="metrics-grid">
+        <app-metric-card
+          title="EFFECTIF TOTAL"
+          [value]="stats.totalEmployes.toString()"
+          icon="bi-people-fill"
+          color="indigo"
+          [trend]="'+4.2%'"
+          [isPositive]="true">
+        </app-metric-card>
+
+        <app-metric-card
+          title="PRÉSENTS AUJOURD'HUI"
+          [value]="stats.presents.toString()"
+          icon="bi-person-check-fill"
+          color="emerald"
+          [trend]="tauxPresence + '% Taux'"
+          [isPositive]="true">
+        </app-metric-card>
+
+        <app-metric-card
+          title="DEMANDES DE CONGÉS"
+          [value]="stats.congesEnAttente.toString()"
+          icon="bi-calendar-event"
+          color="amber"
+          [trend]="'Attention Urgente'"
+          [isPositive]="false">
+        </app-metric-card>
+
+        <app-metric-card
+          title="TURNOVER DU PERSONNEL"
+          [value]="turnover + '%'"
+          icon="bi-arrow-repeat"
+          color="rose"
+          [trend]="stats.absences + ' Absences'"
+          [isPositive]="false">
+        </app-metric-card>
+      </div>
+
+      <!-- AI Insights Panel -->
+      @if (aiLoading || aiInsights) {
+        <div class="card card-ai">
+          <div class="card-header">
+            <div class="ai-header">
+              <div class="ai-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+                  <path d="M12 12 2.1 12.05"/>
+                  <path d="M12 12 12 21.9"/>
+                </svg>
+              </div>
+              <div class="ai-info">
+                <h3>Analyse Cognitive</h3>
+                <p class="ai-subtitle">Moteur Stratégique Llama 3.2</p>
+              </div>
+            </div>
+          </div>
+
+          @if (aiLoading) {
+            <div class="ai-loading">
+              <div class="spinner"></div>
+              <p>Synthèse des données RH...</p>
+            </div>
+          } @else {
+            <div class="ai-content" [innerHTML]="aiInsights"></div>
+          }
+        </div>
+      }
+
+      <div class="dashboard-grid">
+        <!-- Activity Timeline -->
+        <div class="card card-activity">
+          <div class="card-header">
+            <h3>Activité en Temps Réel</h3>
+            <span class="badge badge-gray">10 derniers événements</span>
+          </div>
+          <div class="activity-list">
+            @for (act of activities; track act.id) {
+              <div class="activity-item">
+                <div class="activity-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div class="activity-details">
+                  <p class="activity-title">{{act.title.split(': ')[1]}}</p>
+                  <p class="activity-meta">{{act.time}}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Heatmap & Performance -->
+        <div class="sidebar">
+          <div class="card">
+            <div class="card-header">
+              <h3>Matrice de Présence</h3>
+            </div>
+            <div class="heatmap-grid">
+              @for (day of heatmapDays; track day.date) {
+                <div [style.background-color]="getHeatmapColor(day.level)" 
+                     class="heatmap-cell"></div>
+              }
+            </div>
+            <div class="heatmap-legend">
+              <span>Faible</span>
+              <div class="legend-scale">
+                <div class="scale-item"></div>
+                <div class="scale-item"></div>
+                <div class="scale-item"></div>
+                <div class="scale-item"></div>
+              </div>
+              <span>Optimal</span>
+            </div>
+          </div>
+
+          <div class="card card-metric">
+            <h3>Vélocité de Recrutement</h3>
+            <div class="metric-value">
+              <span class="metric-number">{{delaiMoyenRecrutement}}</span>
+              <span class="metric-unit">Jours en Moyenne</span>
+            </div>
+            <p class="metric-description">
+              Temps moyen pour pourvoir les postes ouverts sur toutes les offres actives.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  

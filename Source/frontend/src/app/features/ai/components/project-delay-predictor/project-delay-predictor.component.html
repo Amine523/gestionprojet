@@ -1,0 +1,67 @@
+
+    <mat-card class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-6 border-none shadow-xl overflow-hidden relative group">
+      <!-- Animated Background SVG -->
+      <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
+      
+      <div class="relative z-10">
+        <div class="flex items-center space-x-3 mb-6">
+          <div class="p-3 bg-white/10 rounded-2xl">
+            <mat-icon class="text-indigo-400">psychology</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold">Prédiction de Retard IA</h3>
+            <p class="text-xs text-indigo-300">Analyse prédictive basée sur le backlog</p>
+          </div>
+        </div>
+
+        @if (isLoading()) {
+          <div class="py-12 flex flex-col items-center">
+            <mat-progress-bar mode="indeterminate" color="accent" class="w-full mb-4"></mat-progress-bar>
+            <p class="text-sm font-medium animate-pulse">L'IA analyse les patterns du projet...</p>
+          </div>
+        } @else if (prediction()) {
+          <div class="space-y-6">
+            <!-- Score -->
+            <div class="text-center p-6 bg-white/5 rounded-3xl border border-white/10">
+              <div class="text-sm text-indigo-300 uppercase font-bold tracking-widest mb-1">Probabilité de retard</div>
+              <div [class]="'text-5xl font-black ' + getScoreColor(prediction().probability)">
+                {{ prediction().probability }}%
+              </div>
+            </div>
+
+            <!-- Details -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-indigo-300">Date estimée finale:</span>
+                <span class="font-bold">{{ prediction().estimatedEndDate | date:'longDate' }}</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-indigo-300">Confiance IA:</span>
+                <span class="font-bold text-emerald-400">{{ prediction().confidence }}%</span>
+              </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="bg-white/5 p-4 rounded-2xl border-l-4 border-amber-500">
+              <h4 class="text-xs font-black uppercase mb-2 flex items-center">
+                <mat-icon class="text-sm mr-1">lightbulb</mat-icon> Recommandation IA
+              </h4>
+              <p class="text-xs text-slate-300 italic">{{ prediction().recommendation }}</p>
+            </div>
+
+            <button mat-flat-button class="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-500 py-4 font-bold" (click)="analyze()">
+              Réanalyser le projet
+            </button>
+          </div>
+        } @else {
+          <div class="py-12 text-center">
+            <mat-icon class="text-4xl text-indigo-400/30 mb-4 scale-150">insights</mat-icon>
+            <p class="text-sm text-indigo-200 mb-6 px-8">L'analyse n'a pas encore été effectuée pour ce projet.</p>
+            <button mat-flat-button class="rounded-2xl bg-indigo-600 py-4 px-8 font-bold" (click)="analyze()">
+              Lancer l'analyse IA
+            </button>
+          </div>
+        }
+      </div>
+    </mat-card>
+  

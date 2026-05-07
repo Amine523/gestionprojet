@@ -1,0 +1,54 @@
+
+
+    <div class="rapports-container">
+      <!-- Header -->
+      <div class="page-header">
+        <h1 class="header-title">Rapports Qualité - {{societeNom}}</h1>
+        <button class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exporter
+        </button>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value">{{rapports.tauxReussite}}%</div>
+          <div class="stat-label">Taux de réussite</div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="rapports.tauxReussite"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{rapports.totalTests}}</div>
+          <div class="stat-label">Total tests exécutés</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{rapports.totalBugs}}</div>
+          <div class="stat-label">Total bugs détectés</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{rapports.bugsCorriges}}</div>
+          <div class="stat-label">Bugs corrigés</div>
+        </div>
+      </div>
+
+      <!-- Chart Card -->
+      <div class="chart-card">
+        <h3 class="chart-title">Répartition des bugs par projet</h3>
+        @for (p of projets; track p.nom) {
+          <div class="bar-item">
+            <span class="bar-label">{{p.nom}}</span>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="p.percentage" [ngClass]="p.percentage > 50 ? 'warn' : 'primary'"></div>
+            </div>
+            <span class="bar-value">{{p.nombre}} bugs</span>
+          </div>
+        }
+      </div>
+    </div>
+  
